@@ -183,6 +183,7 @@ public class ProjectScanServiceTests
                 scope.SystemScope,
                 new DatabaseConnectionHolder(scope.Context),
                 new ProjectScanGate(),
+                new ScanProgressTracker(new NoopNotifier()),
                 NullLogger<ProjectScanService>.Instance);
         }
 

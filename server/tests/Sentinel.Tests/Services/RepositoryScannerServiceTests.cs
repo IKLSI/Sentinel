@@ -58,6 +58,11 @@ public class RepositoryScannerServiceTests
                 new Dictionary<RegistryPackageQuery, RegistryPackageMetadata>());
     }
 
+    private sealed class InlineProgress(Action<ScanStage> report) : IProgress<ScanStage>
+    {
+        public void Report(ScanStage value) => report(value);
+    }
+
     private static Task<ScanOutcome> ScanAsync(Dictionary<string, string> filesByUrl)
     {
         RepositoryScannerService scanner = new RepositoryScannerService(
@@ -68,6 +73,25 @@ public class RepositoryScannerServiceTests
 
         return scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app", null, null, null,
             TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task ScanRepository_ReportsManifestsThenRegistriesStages()
+    {
+        List<ScanStage> stages = [];
+        RepositoryScannerService scanner = new RepositoryScannerService(
+            new FakeRepositoryHost(new Dictionary<string, string>
+            {
+                ["https://host/package.json"] = """{ "dependencies": { "redis": "4.6.13" } }""",
+            }),
+            new ManifestParserService(),
+            new RegistryMetadataApplier(new NoopRegistry()),
+            NullLogger<RepositoryScannerService>.Instance);
+
+        await scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app", null, null, null,
+            TestContext.Current.CancellationToken, new InlineProgress(stages.Add));
+
+        stages.Should().Equal(ScanStage.Manifests, ScanStage.Registries);
     }
 
     [Fact]
@@ -362,6 +386,7 @@ public class RepositoryScannerServiceTests
 
         outcome.Dependencies.Should().ContainSingle();
         outcome.IsComplete.Should().BeFalse();
+        outcome.Gap.Should().Be(new InventoryGap(ErrorCodes.ScanInventoryUnreadableFile, "apps/api/package.json"));
     }
 
     [Fact]
@@ -372,7 +397,19 @@ public class RepositoryScannerServiceTests
             ["https://host/package.json"] = "{ not json",
         });
 
-        outcome.IsComplete.Should().BeFalse();
+        outcome.Gap.Should().Be(new InventoryGap(ErrorCodes.ScanInventoryUnreadableFile, "package.json"));
+    }
+
+    [Fact]
+    public async Task ScanRepository_SeveralUnreadableManifests_NamesTheFirstAndCountsTheOthers()
+    {
+        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
+        {
+            ["https://host/b/package.json"] = "{ not json",
+            ["https://host/a/package.json"] = null!,
+        });
+
+        outcome.Gap.Should().Be(new InventoryGap(ErrorCodes.ScanInventoryUnreadableFile, "a/package.json (+1)"));
     }
 
     [Fact]
@@ -474,7 +511,7 @@ public class RepositoryScannerServiceTests
         ScanOutcome outcome = await scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app", null, null, null,
             TestContext.Current.CancellationToken);
 
-        outcome.IsComplete.Should().BeFalse();
+        outcome.Gap.Should().Be(new InventoryGap(ErrorCodes.ScanInventoryTruncated));
     }
 
     [Fact]

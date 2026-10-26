@@ -14,6 +14,7 @@ using Sentinel.Application.TechHealth.ExportSbom;
 using Sentinel.Application.TechHealth.GetProject;
 using Sentinel.Application.TechHealth.ProjectOptions;
 using Sentinel.Application.TechHealth.ProjectSearch;
+using Sentinel.Application.TechHealth.ScanProgress;
 using Sentinel.Application.TechHealth.ProjectBadge;
 using Sentinel.Application.TechHealth.Projects;
 using Sentinel.Application.TechHealth.Remediation;
@@ -77,6 +78,14 @@ public class TechHealthController : BaseController
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<List<ProjectSummaryDto>>> GetProjects(
         [FromServices] ProjectListService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(cancellationToken));
+
+    [HttpGet("projects/scan-progress")]
+    [AllowApiKey]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    public async Task<ActionResult<List<ScanProgressDto>>> GetScanProgress(
+        [FromServices] ScanProgressListService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(cancellationToken));
 

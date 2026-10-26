@@ -38,6 +38,7 @@ const projectBase = {
   branch: "main",
   coverage: ScanCoverage.Covered,
   lastScanError: null,
+  lastScanErrorDetail: null,
   repositoryUrl: null,
   rootPath: null,
   scanFrequency: ScanFrequency.Daily,

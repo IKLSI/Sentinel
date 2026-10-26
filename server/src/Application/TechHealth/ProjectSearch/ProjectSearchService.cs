@@ -55,9 +55,7 @@ public class ProjectSearchService(
             {
                 Name = match.Name,
                 Version = match.Version,
-                Ecosystem = match.Ecosystem.ToString(),
-                Status = match.Status.ToString(),
-                IsDirect = match.IsDirect
+                Status = match.Status.ToString()
             })
             .ToList()
     };

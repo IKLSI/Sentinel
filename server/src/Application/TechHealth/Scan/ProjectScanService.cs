@@ -24,6 +24,7 @@ public class ProjectScanService(
     ISystemScope systemScope,
     IDatabaseConnectionHolder connectionHolder,
     ProjectScanGate scanGate,
+    ScanProgressTracker scanProgress,
     ILogger<ProjectScanService> logger)
 {
     [AutomaticRetry(Attempts = 0)]
@@ -42,6 +43,7 @@ public class ProjectScanService(
         finally
         {
             scanGate.Complete(projectId);
+            scanProgress.Complete(projectId);
         }
     }
 
@@ -69,6 +71,8 @@ public class ProjectScanService(
     private async Task RunScanAsync(Project project, CancellationToken cancellationToken)
     {
         Guid projectId = project.Id;
+        IProgress<ScanStage> progress = scanProgress.For(projectId, project.OrganizationId);
+        progress.Report(ScanStage.Repository);
 
         DateTime? alertBaseline = project.LastReliableScanAt;
         (int? scoreBefore, string? gradeBefore, ScanCoverage coverageBefore, string? errorBefore) =
@@ -77,7 +81,7 @@ public class ProjectScanService(
         Dictionary<string, DateTime> previousDetections =
             await vulnerabilityRepository.GetFirstDetectionsByProjectAsync(projectId, cancellationToken);
 
-        InventoryAcquisition acquisition = await inventoryAcquirer.AcquireAsync(project, cancellationToken);
+        InventoryAcquisition acquisition = await inventoryAcquirer.AcquireAsync(project, cancellationToken, progress);
 
         Project? reloadedProject = await projectRepository
             .GetOrDefaultWithHealthDetailsAsync(projectId, QueryTracking.Tracked, cancellationToken);
@@ -87,7 +91,9 @@ public class ProjectScanService(
         project = reloadedProject;
 
         bool vulnerabilityDataComplete = await findingsRefresher.RefreshAsync(project, acquisition,
-            previousDetections, cancellationToken);
+            previousDetections, cancellationToken, progress);
+
+        progress.Report(ScanStage.Scoring);
 
         await using IAsyncDisposable connection = await connectionHolder.HoldOpenAsync(cancellationToken);
 
@@ -104,8 +110,9 @@ public class ProjectScanService(
         DateTime scannedAt = DateTime.UtcNow;
         project.LastScanAt = scannedAt;
         project.LastScanError = acquisition.ScanError
-            ?? (acquisition.InventoryComplete ? null : ErrorCodes.ScanInventoryIncomplete)
+            ?? acquisition.Gap?.Code
             ?? (vulnerabilityDataComplete ? null : ErrorCodes.ScanVulnerabilityDataIncomplete);
+        project.LastScanErrorDetail = acquisition.ScanError == null ? acquisition.Gap?.Detail : null;
 
         bool findingsReliable = project.Coverage == ScanCoverage.Covered
             && vulnerabilityDataComplete

@@ -93,3 +93,12 @@ export const toastCountdown = keyframes`
     transform: scaleX(0);
   }
 `;
+
+export const progressSweep = keyframes`
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+`;

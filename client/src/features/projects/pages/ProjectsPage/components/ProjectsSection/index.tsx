@@ -8,6 +8,7 @@ import { useT } from "@/contexts/I18nContext";
 import type {
   ProjectSearchMatch,
   ProjectSummary,
+  ScanProgress,
 } from "@/domains/projects/types";
 import { SortableTh } from "@/components/ui/common/SortableTh";
 import {
@@ -31,8 +32,9 @@ interface Props {
   items: ProjectSummary[];
   collapsed: boolean;
   onToggleCollapsed: () => void;
-  scanningId: string | null;
+  scanningIds: ReadonlySet<string>;
   matchesById?: Map<string, ProjectSearchMatch>;
+  progressById: Map<string, ScanProgress>;
   onEdit: (project: ProjectSummary) => void;
   onDelete: (project: ProjectSummary) => void;
   onScan: (id: string) => void;
@@ -43,8 +45,9 @@ export const ProjectsSection: React.FC<Props> = ({
   items,
   collapsed,
   onToggleCollapsed,
-  scanningId,
+  scanningIds,
   matchesById,
+  progressById,
   onEdit,
   onDelete,
   onScan,
@@ -281,8 +284,11 @@ export const ProjectsSection: React.FC<Props> = ({
                   onEdit={onEdit}
                   onDelete={onDelete}
                   onScan={onScan}
-                  isScanning={scanningId === project.id}
+                  isScanning={
+                    scanningIds.has(project.id) || progressById.has(project.id)
+                  }
                   dependencyMatch={matchesById?.get(project.id)}
+                  scanProgress={progressById.get(project.id)}
                 />
               ))}
             </Box>

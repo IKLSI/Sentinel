@@ -368,6 +368,10 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<string>("LastScanError")
                         .HasColumnType("text");
 
+                    b.Property<string>("LastScanErrorDetail")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("LastScannedCommitSha")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");

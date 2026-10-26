@@ -8,6 +8,8 @@ export type ProjectOption = components["schemas"]["ProjectOptionDto"];
 
 export type ProjectSearchMatch = components["schemas"]["ProjectSearchMatchDto"];
 
+export type ScanProgress = components["schemas"]["ScanProgressDto"];
+
 export type Dependency = components["schemas"]["DependencyDto"];
 
 export type Runtime = components["schemas"]["RuntimeDto"];

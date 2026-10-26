@@ -13,6 +13,7 @@ public class ProjectScanTriggerService(
     IProjectRepository projectRepository,
     IJobScheduler backgroundJobs,
     ProjectScanGate scanGate,
+    ScanProgressTracker scanProgress,
     IAuditLogService auditLog,
     ITenantContext tenant) : IService
 {
@@ -28,8 +29,11 @@ public class ProjectScanTriggerService(
             return Result.NotFound(ErrorCodes.ProjectNotFound);
 
         if (scanGate.TryQueue(projectId))
+        {
+            scanProgress.Report(projectId, organizationId, ScanStage.Queued);
             backgroundJobs.Enqueue<ProjectScanService>(JobQueues.Scans, service => service.ScanProjectAsync(projectId,
                 CancellationToken.None));
+        }
 
         await auditLog.LogAsync(
             AuditAction.ScanTriggered,

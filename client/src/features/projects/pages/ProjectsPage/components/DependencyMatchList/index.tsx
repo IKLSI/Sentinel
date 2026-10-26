@@ -25,7 +25,7 @@ export const DependencyMatchList: React.FC<Props> = ({ match }) => {
     >
       {match.dependencies.map((dependency) => (
         <Box
-          key={`${dependency.ecosystem}-${dependency.name}-${dependency.version}`}
+          key={`${dependency.name}@${dependency.version}`}
           component="span"
           sx={{
             whiteSpace: "nowrap",

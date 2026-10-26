@@ -8,7 +8,8 @@ import GppMaybeOutlined from "@mui/icons-material/GppMaybeOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import { useI18n } from "@/contexts/I18nContext";
-import type { Project } from "@/domains/projects/types";
+import type { Project, ScanProgress } from "@/domains/projects/types";
+import { ScanProgressBar } from "@/components/ui/common/ScanProgressBar";
 import {
   GRADE_VISUAL,
   UNTRACKED_SECTION,
@@ -20,12 +21,14 @@ import { formatShortDateTime } from "@/formatters/date";
 interface Props {
   project: Project;
   eolRuntimes: number;
+  scanProgress?: ScanProgress;
   action?: React.ReactNode;
 }
 
 export const ProjectHeaderCard: React.FC<Props> = ({
   project,
   eolRuntimes,
+  scanProgress,
   action,
 }) => {
   const { t, culture } = useI18n();
@@ -200,7 +203,29 @@ export const ProjectHeaderCard: React.FC<Props> = ({
         )}
       </Box>
 
-      {project.lastScanError && (
+      {scanProgress && (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            px: "24px",
+            py: "10px",
+            borderTop: "1px solid var(--border)",
+            background: "var(--accent-subtle)",
+          }}
+        >
+          <Box
+            component="span"
+            sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text)" }}
+          >
+            {t("tech_health.scan_stage.title")}
+          </Box>
+          <ScanProgressBar progress={scanProgress} width={180} />
+        </Box>
+      )}
+
+      {project.lastScanError && !scanProgress && (
         <Box
           role="alert"
           sx={{
@@ -219,7 +244,9 @@ export const ProjectHeaderCard: React.FC<Props> = ({
           <Box component="span" sx={{ fontWeight: 600 }}>
             {t("tech_health.last_scan_error")}
           </Box>
-          {t(project.lastScanError)}
+          {t(project.lastScanError, {
+            detail: project.lastScanErrorDetail ?? "",
+          })}
         </Box>
       )}
 

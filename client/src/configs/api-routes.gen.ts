@@ -118,6 +118,9 @@ export const ROUTES_API = {
         options: {
           __path: "/api/tech-health/projects/options",
         },
+        scanProgress: {
+          __path: "/api/tech-health/projects/scan-progress",
+        },
         search: {
           __path: "/api/tech-health/projects/search",
         },

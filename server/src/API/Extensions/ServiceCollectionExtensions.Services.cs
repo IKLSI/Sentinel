@@ -153,6 +153,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ProjectScanService>();
         services.AddScoped<DueProjectScanService>();
         services.AddSingleton<ProjectScanGate>();
+        services.AddSingleton<ScanProgressTracker>();
         services.AddSingleton<PublicScanThrottle>();
         services.AddScoped<SbomService>();
         services.AddScoped<ComplianceReportService>();

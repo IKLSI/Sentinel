@@ -9,7 +9,7 @@ namespace Sentinel.Infrastructure.Http;
 public partial class RepositoryHostClient
 {
     private const int GitLabTreePageSize = 100;
-    private const int GitLabTreePageLimit = 100;
+    private const int GitLabTreePageLimit = 500;
     private const int MaxConcurrentGitLabTreeRequests = 4;
 
     private async Task<RepositoryListing> ListGitLabUserRepositoriesAsync(string token, GitLabInstance gitLab,

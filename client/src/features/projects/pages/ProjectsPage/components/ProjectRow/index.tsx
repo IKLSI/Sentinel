@@ -10,7 +10,9 @@ import { useT } from "@/contexts/I18nContext";
 import type {
   ProjectSearchMatch,
   ProjectSummary,
+  ScanProgress,
 } from "@/domains/projects/types";
+import { ScanProgressBar } from "@/components/ui/common/ScanProgressBar";
 import { DependencyMatchList } from "@/features/projects/pages/ProjectsPage/components/DependencyMatchList";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { spin } from "@/styles/keyframes";
@@ -22,10 +24,19 @@ interface Props {
   onScan: (id: string) => void;
   isScanning: boolean;
   dependencyMatch?: ProjectSearchMatch;
+  scanProgress?: ScanProgress;
 }
 
 export const ProjectRow: React.FC<Props> = React.memo(
-  ({ project, onEdit, onDelete, onScan, isScanning, dependencyMatch }) => {
+  ({
+    project,
+    onEdit,
+    onDelete,
+    onScan,
+    isScanning,
+    dependencyMatch,
+    scanProgress,
+  }) => {
     const navigate = useNavigate();
     const router = useRouter();
     const t = useT();
@@ -109,7 +120,10 @@ export const ProjectRow: React.FC<Props> = React.memo(
                   whiteSpace: "nowrap",
                 }}
               >
-                {dependencyMatch && dependencyMatch.dependencies.length > 0 ? (
+                {scanProgress ? (
+                  <ScanProgressBar progress={scanProgress} width={84} />
+                ) : dependencyMatch &&
+                  dependencyMatch.dependencies.length > 0 ? (
                   <DependencyMatchList match={dependencyMatch} />
                 ) : project.lastScanAt ? (
                   `${project.totalDependencies} ${project.totalDependencies > 1 ? t("projects.dependencies_plural") : t("projects.dependency_singular")}`

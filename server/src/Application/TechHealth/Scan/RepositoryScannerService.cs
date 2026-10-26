@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Versioning;
 using Sentinel.Domain.Abstractions;
@@ -8,8 +10,13 @@ using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.TechHealth.Scan;
 
+public sealed record InventoryGap(string Code, string? Detail = null);
+
 public record ScanOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes, string? Error, int ManifestsRead = 0,
-    bool IsComplete = true);
+    InventoryGap? Gap = null)
+{
+    public bool IsComplete => Gap == null;
+}
 
 public sealed record RepositoryScanScope(string? Branch, string? RootPath)
 {
@@ -27,6 +34,24 @@ public class RepositoryScannerService(
 {
     private const int MaxConcurrentDownloads = 10;
     private const int MaxManifestFiles = 200;
+    private const int MaxGapPathLength = 300;
+
+    private static InventoryGap? InventoryGapOf(bool listingTruncated, int discoveredManifests,
+        IReadOnlyCollection<string> unreadableFiles)
+    {
+        if (listingTruncated) return new InventoryGap(ErrorCodes.ScanInventoryTruncated);
+
+        if (discoveredManifests > MaxManifestFiles)
+            return new InventoryGap(ErrorCodes.ScanInventoryManifestCap,
+                discoveredManifests.ToString(CultureInfo.InvariantCulture));
+
+        if (unreadableFiles.Count == 0) return null;
+
+        string firstFile = unreadableFiles.Order(StringComparer.Ordinal).First();
+        if (firstFile.Length > MaxGapPathLength) firstFile = $"…{firstFile[^MaxGapPathLength..]}";
+        string detail = unreadableFiles.Count == 1 ? firstFile : $"{firstFile} (+{unreadableFiles.Count - 1})";
+        return new InventoryGap(ErrorCodes.ScanInventoryUnreadableFile, detail);
+    }
 
     private static void ApplyDeclaredTypes(List<Dependency> lockDeps, List<Dependency> manifestDeps)
     {
@@ -121,7 +146,8 @@ public class RepositoryScannerService(
     }
 
     public async Task<ScanOutcome> ScanRepositoryAsync(Guid projectId, string repoUrl, RepositoryAccess? access,
-        string? commitSha, RepositoryScanScope? scope, CancellationToken cancellationToken)
+        string? commitSha, RepositoryScanScope? scope, CancellationToken cancellationToken,
+        IProgress<ScanStage>? progress = null)
     {
         RepositoryScanScope effectiveScope = scope ?? RepositoryScanScope.Default;
         string? rootPath = RepositoryScanPaths.NormalizeRootPath(effectiveScope.RootPath);
@@ -145,6 +171,8 @@ public class RepositoryScannerService(
                     ErrorCodes.ScanNoAccessibleFiles);
             }
 
+            progress?.Report(ScanStage.Manifests);
+
             List<(string Name, string Url, string Path)> discoveredManifests = listing.Files
                 .Where(f => RepositoryScanPaths.IsInScope(f.Path, rootPath)
                     || (rootPath != null && ManifestParserService.IsWorkflowFile(f.Url)))
@@ -165,7 +193,7 @@ public class RepositoryScannerService(
             }
 
             using SemaphoreSlim throttle = new SemaphoreSlim(MaxConcurrentDownloads);
-            int unreadableFiles = 0;
+            ConcurrentQueue<string> unreadableFiles = new();
 
             ParsedManifest?[] parsedManifests = await Task.WhenAll(manifestFiles.Select(async file =>
             {
@@ -177,7 +205,7 @@ public class RepositoryScannerService(
 
                 if (content == null)
                 {
-                    Interlocked.Increment(ref unreadableFiles);
+                    unreadableFiles.Enqueue(file.Path);
                     return null;
                 }
 
@@ -187,7 +215,7 @@ public class RepositoryScannerService(
 
                     if (outcome.Failure != null)
                     {
-                        Interlocked.Increment(ref unreadableFiles);
+                        unreadableFiles.Enqueue(file.Path);
                         logger.LogWarning(outcome.Failure, "Manifest {Path} is malformed, only its readable part is kept",
                             file.Path);
                     }
@@ -203,17 +231,15 @@ public class RepositoryScannerService(
                 }
                 catch (Exception ex)
                 {
-                    Interlocked.Increment(ref unreadableFiles);
+                    unreadableFiles.Enqueue(file.Path);
                     logger.LogWarning(ex, "Manifest {File} could not be parsed and is ignored", file.Name);
                     return null;
                 }
             }));
 
-            bool isComplete = !listing.Truncated
-                && discoveredManifests.Count <= MaxManifestFiles
-                && unreadableFiles == 0;
+            InventoryGap? gap = InventoryGapOf(listing.Truncated, discoveredManifests.Count, unreadableFiles);
 
-            if (!isComplete)
+            if (gap != null)
             {
                 logger.LogWarning(
                     "Repository {RepoUrl}: inventory incomplete (truncated listing, manifest cap or unreadable files)",
@@ -262,12 +288,13 @@ public class RepositoryScannerService(
                 .ThenBy(r => r.Version, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
+            progress?.Report(ScanStage.Registries);
             await registryMetadata.ApplyAsync(RegistryCandidates(dedupedDeps), cancellationToken);
 
             foreach (Dependency dep in dedupedDeps)
                 dep.Status = DependencyStatusCalculator.For(dep);
 
-            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, parsed.Count, isComplete);
+            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, parsed.Count, gap);
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {

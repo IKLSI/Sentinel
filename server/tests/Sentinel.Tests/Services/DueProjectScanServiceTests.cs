@@ -122,7 +122,8 @@ public class DueProjectScanServiceTests
     }
 
     private static DueProjectScanService Build(TestScope scope, IJobScheduler jobs) =>
-        new DueProjectScanService(scope.Projects, jobs, new ProjectScanGate(), NullLogger<DueProjectScanService>.Instance);
+        new DueProjectScanService(scope.Projects, jobs, new ProjectScanGate(),
+            new ScanProgressTracker(new NoopRealtimeNotifier()), NullLogger<DueProjectScanService>.Instance);
 
     private static Project NewProject(TestScope scope, ScanFrequency frequency, DateTime? lastScanAt) => new()
     {

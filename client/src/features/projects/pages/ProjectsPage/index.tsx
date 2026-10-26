@@ -6,6 +6,7 @@ import { useDeleteProjectMutation } from "@/domains/projects/mutations";
 import {
   useProjectSearchQuery,
   useProjectsQuery,
+  useScanProgressQuery,
 } from "@/domains/projects/queries";
 import Box from "@mui/material/Box";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
@@ -17,6 +18,7 @@ import { useT } from "@/contexts/I18nContext";
 import type {
   ProjectSearchMatch,
   ProjectSummary,
+  ScanProgress,
 } from "@/domains/projects/types";
 import { useApiError } from "@/hooks/useApiError";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -56,7 +58,7 @@ export const ProjectsPage: React.FC = () => {
   } = useProjectsQuery();
   const deleteProjectMutation = useDeleteProjectMutation();
   const exportProjectsMutation = useExportProjectsExcelMutation();
-  const { scanningId, startScan: handleScan } = useScanFeedback(projects);
+  const { scanningIds, startScan: handleScan } = useScanFeedback(projects);
   const deleting = deleteProjectMutation.isPending;
   const exporting = exportProjectsMutation.isPending;
   const [search, setSearch] = useState("");
@@ -113,6 +115,15 @@ export const ProjectsPage: React.FC = () => {
   const searchError = searchFailure
     ? apiError(searchFailure, t("projects.search.error"))
     : null;
+
+  const { data: scanProgress } = useScanProgressQuery();
+  const progressById = useMemo(
+    () =>
+      new Map<string, ScanProgress>(
+        (scanProgress ?? []).map((progress) => [progress.projectId, progress]),
+      ),
+    [scanProgress],
+  );
 
   const matchesById = useMemo(
     () =>
@@ -241,8 +252,9 @@ export const ProjectsPage: React.FC = () => {
                         [grade]: !prev[grade],
                       }))
                     }
-                    scanningId={scanningId}
+                    scanningIds={scanningIds}
                     matchesById={searchQuery ? matchesById : undefined}
+                    progressById={progressById}
                     onEdit={setEditTarget}
                     onDelete={setDeleteTarget}
                     onScan={handleScan}

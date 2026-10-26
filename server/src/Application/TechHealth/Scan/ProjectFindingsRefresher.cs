@@ -10,12 +10,20 @@ public class ProjectFindingsRefresher(
     ProjectInventoryWriter inventoryWriter)
 {
     public async Task<bool> RefreshAsync(Project project, InventoryAcquisition acquisition,
-        IReadOnlyDictionary<string, DateTime> previousDetections, CancellationToken cancellationToken)
+        IReadOnlyDictionary<string, DateTime> previousDetections, CancellationToken cancellationToken,
+        IProgress<ScanStage>? progress = null)
     {
         if (acquisition.ReusesExistingInventory)
+        {
+            progress?.Report(ScanStage.Registries);
             await repositoryScanner.RefreshVersionsAsync(project.Dependencies.ToList(), cancellationToken);
+        }
         else if (acquisition.InventoryReplaced)
+        {
             project.LastScannedCommitSha = acquisition.ScannedCommitSha;
+        }
+
+        progress?.Report(ScanStage.Advisories);
 
         Task<VulnerabilityScanOutcome> vulnerabilityScan = vulnerabilityScanner
             .ScanAsync(project.Dependencies.ToList(), previousDetections, cancellationToken);

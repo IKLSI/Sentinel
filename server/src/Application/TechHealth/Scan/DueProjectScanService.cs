@@ -10,6 +10,7 @@ public class DueProjectScanService(
     IProjectRepository projectRepository,
     IJobScheduler jobs,
     ProjectScanGate scanGate,
+    ScanProgressTracker scanProgress,
     ILogger<DueProjectScanService> logger)
 {
     private static readonly TimeSpan DueMargin = TimeSpan.FromHours(6);
@@ -27,8 +28,11 @@ public class DueProjectScanService(
         List<Guid> queuedProjectIds = projectIds.Where(scanGate.TryQueue).ToList();
 
         foreach (Guid projectId in queuedProjectIds)
+        {
+            scanProgress.Report(projectId, organizationId, ScanStage.Queued);
             jobs.Enqueue<ProjectScanService>(JobQueues.Scans, service => service.ScanProjectAsync(projectId,
                 CancellationToken.None));
+        }
 
         logger.LogInformation("{Count} project scans queued for organization {OrganizationId}",
             queuedProjectIds.Count, organizationId);

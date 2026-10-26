@@ -155,14 +155,14 @@ public class RepositoryHostClientGitLabTests
     [Fact]
     public async Task ListFilesAsync_BeyondThePageLimit_IsTruncated()
     {
-        TreeHandler handler = new TreeHandler(totalPages: 150, sendTotalPagesHeader: true);
+        TreeHandler handler = new TreeHandler(totalPages: 550, sendTotalPagesHeader: true);
 
         RepositoryFileListing listing = await Client(handler).ListFilesAsync("gitlab.com", "group", "repo", null, null,
             TestContext.Current.CancellationToken);
 
         listing.Truncated.Should().BeTrue();
-        handler.RequestedPages.Max().Should().Be(100);
-        listing.Files.Should().HaveCount(100 * 100);
+        handler.RequestedPages.Max().Should().Be(500);
+        listing.Files.Should().HaveCount(500 * 100);
     }
 
     [Fact]

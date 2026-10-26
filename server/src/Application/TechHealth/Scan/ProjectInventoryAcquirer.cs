@@ -13,11 +13,13 @@ public sealed record InventoryAcquisition(
     int ManifestsRead,
     bool RepositoryUnchanged,
     bool InventoryReplaced,
-    bool InventoryComplete,
+    InventoryGap? Gap,
     bool KeepExistingInventory,
     string? ScannedCommitSha)
 {
-    public static readonly InventoryAcquisition NotScanned = new(false, null, 0, false, false, true, false, null);
+    public static readonly InventoryAcquisition NotScanned = new(false, null, 0, false, false, null, false, null);
+
+    public bool InventoryComplete => Gap == null;
 
     public bool ReusesExistingInventory => RepositoryUnchanged || KeepExistingInventory;
 }
@@ -29,7 +31,8 @@ public class ProjectInventoryAcquirer(
     TokenProtector tokenProtector,
     ILogger<ProjectInventoryAcquirer> logger)
 {
-    public async Task<InventoryAcquisition> AcquireAsync(Project project, CancellationToken cancellationToken)
+    public async Task<InventoryAcquisition> AcquireAsync(Project project, CancellationToken cancellationToken,
+        IProgress<ScanStage>? progress = null)
     {
         if (string.IsNullOrEmpty(project.RepositoryUrl)) return InventoryAcquisition.NotScanned;
 
@@ -49,12 +52,12 @@ public class ProjectInventoryAcquirer(
             logger.LogInformation("Project {ProjectId}: repository unchanged at {Sha}, manifests not re-read",
                 project.Id, headCommitSha);
 
-            return new InventoryAcquisition(true, null, 0, true, false, true, false, null);
+            return new InventoryAcquisition(true, null, 0, true, false, null, false, null);
         }
 
         ScanOutcome outcome = await repositoryScanner.ScanRepositoryAsync(project.Id, project.RepositoryUrl,
             repositoryAccess, headCommitSha, new RepositoryScanScope(project.Branch, project.RootPath),
-            cancellationToken);
+            cancellationToken, progress);
 
         bool keepExistingInventory = !outcome.IsComplete && project.Coverage == ScanCoverage.Covered;
 
@@ -68,7 +71,7 @@ public class ProjectInventoryAcquirer(
                 cancellationToken);
 
             return new InventoryAcquisition(true, outcome.Error, outcome.ManifestsRead, false, true,
-                outcome.IsComplete, false, outcome.IsComplete ? headCommitSha : null);
+                outcome.Gap, false, outcome.IsComplete ? headCommitSha : null);
         }
         else if (outcome.Error != null)
         {
@@ -81,6 +84,6 @@ public class ProjectInventoryAcquirer(
         }
 
         return new InventoryAcquisition(true, outcome.Error, outcome.ManifestsRead, false, false,
-            outcome.IsComplete, keepExistingInventory, null);
+            outcome.Gap, keepExistingInventory, null);
     }
 }

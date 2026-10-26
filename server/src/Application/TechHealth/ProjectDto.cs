@@ -17,6 +17,7 @@ public class ProjectDto
     public string RepositoryType { get; set; } = string.Empty;
     public DateTime? LastScanAt { get; set; }
     public string? LastScanError { get; set; }
+    public string? LastScanErrorDetail { get; set; }
     public int? HealthScore { get; set; }
     public string? HealthGrade { get; set; }
     [EnumValues(typeof(ScanCoverage))]

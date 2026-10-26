@@ -19,6 +19,7 @@ export const REALTIME_RESOURCES = {
   ApiKeys: "apiKeys",
   Organization: "organization",
   Integrations: "integrations",
+  ScanProgress: "scanProgress",
 } as const;
 
 export type RealtimeResource =

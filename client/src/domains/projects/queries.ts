@@ -9,6 +9,7 @@ import type {
   ProjectRepositoryOptions,
   ProjectSearchMatch,
   ProjectSummary,
+  ScanProgress,
 } from "@/domains/projects/types";
 
 export const projectsQueryOptions = getQueryOptions<ProjectSummary[]>(
@@ -44,6 +45,13 @@ export const useProjectSearchQuery = (query: string) =>
       retry: false,
     },
     { q: query },
+  );
+
+export const useScanProgressQuery = () =>
+  useGetQuery<ScanProgress[]>(
+    ROUTES_API.api.techHealth.projects.scanProgress.__path,
+    {},
+    { queryKey: projectKeys.scanProgress() },
   );
 
 export const useProjectOptionsQuery = () =>

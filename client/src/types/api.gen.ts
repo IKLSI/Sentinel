@@ -747,6 +747,20 @@ export interface paths {
       };
     };
   };
+  "/api/tech-health/projects/scan-progress": {
+    get: {
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["ScanProgressDto"][];
+            "text/json": components["schemas"]["ScanProgressDto"][];
+            "text/plain": components["schemas"]["ScanProgressDto"][];
+          };
+        };
+      };
+    };
+  };
   "/api/tech-health/projects/search": {
     get: {
       parameters: {
@@ -1373,22 +1387,6 @@ export interface components {
       vulnerabilities: components["schemas"]["VulnerabilityDto"][];
     };
     DependencyMatchDto: {
-      /** @enum {string} */
-      ecosystem:
-        | "Npm"
-        | "PyPI"
-        | "Composer"
-        | "Gem"
-        | "Maven"
-        | "NuGet"
-        | "Go"
-        | "Cargo"
-        | "Hex"
-        | "Pub"
-        | "Swift"
-        | "CocoaPods"
-        | "GitHubActions";
-      isDirect: boolean;
       name: string;
       /** @enum {string} */
       status: "UpToDate" | "MinorUpdate" | "MajorUpdate" | "EOL" | "Vulnerable";
@@ -1496,6 +1494,7 @@ export interface components {
       /** Format: date-time */
       lastScanAt: string | null;
       lastScanError: string | null;
+      lastScanErrorDetail: string | null;
       name: string;
       /** Format: int32 */
       remediableVulnerabilities: number;
@@ -1696,6 +1695,22 @@ export interface components {
       upcomingNames: string[];
       /** Format: int32 */
       warningWindowDays: number;
+    };
+    ScanProgressDto: {
+      /** Format: uuid */
+      projectId: string;
+      /** @enum {string} */
+      stage:
+        | "Queued"
+        | "Repository"
+        | "Manifests"
+        | "Registries"
+        | "Advisories"
+        | "Scoring";
+      /** Format: int32 */
+      step: number;
+      /** Format: int32 */
+      totalSteps: number;
     };
     ScorePenaltyDto: {
       kind: string;

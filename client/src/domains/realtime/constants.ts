@@ -32,6 +32,8 @@ export const resolveInvalidatedKeys = ({
   projectIds,
 }: RealtimeEvent): QueryKey[] => {
   switch (resource) {
+    case REALTIME_RESOURCES.ScanProgress:
+      return [projectKeys.scanProgress()];
     case REALTIME_RESOURCES.Projects:
       return [
         projectKeys.list(),

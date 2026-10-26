@@ -12,4 +12,5 @@ public static class RealtimeResources
     public const string ApiKeys = "apiKeys";
     public const string Organization = "organization";
     public const string Integrations = "integrations";
+    public const string ScanProgress = "scanProgress";
 }

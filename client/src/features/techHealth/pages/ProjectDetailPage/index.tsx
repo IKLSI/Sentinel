@@ -9,7 +9,10 @@ import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
-import { useProjectQuery } from "@/domains/projects/queries";
+import {
+  useProjectQuery,
+  useScanProgressQuery,
+} from "@/domains/projects/queries";
 
 import { toVulnerabilityRows } from "@/features/techHealth/pages/ProjectDetailPage/filters";
 import { FindingActionsProvider } from "@/features/techHealth/pages/ProjectDetailPage/findingActions";
@@ -35,6 +38,7 @@ export const ProjectDetailPage: React.FC = () => {
   const [, startTransition] = useTransition();
 
   const projectQuery = useProjectQuery(id);
+  const { data: scanProgress } = useScanProgressQuery();
   const project = projectQuery.data ?? null;
   const loading = projectQuery.isLoading;
   const error = projectQuery.isError;
@@ -80,6 +84,9 @@ export const ProjectDetailPage: React.FC = () => {
       <ProjectHeaderCard
         project={project}
         eolRuntimes={eolRuntimes}
+        scanProgress={scanProgress?.find(
+          (progress) => progress.projectId === project.id,
+        )}
         action={<ProjectActions projectId={project.id} />}
       />
 

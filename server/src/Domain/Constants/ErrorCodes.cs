@@ -81,6 +81,9 @@ public static class ErrorCodes
     public const string ScanFailed = "errors.scan.failed";
     public const string ScanVulnerabilityDataIncomplete = "errors.scan.vulnerability_data_incomplete";
     public const string ScanInventoryIncomplete = "errors.scan.inventory_incomplete";
+    public const string ScanInventoryTruncated = "errors.scan.inventory_truncated";
+    public const string ScanInventoryManifestCap = "errors.scan.inventory_manifest_cap";
+    public const string ScanInventoryUnreadableFile = "errors.scan.inventory_unreadable_file";
     public const string ScanNoDependencies = "errors.scan.no_dependencies";
     public const string PublicScanBusy = "errors.scan.busy";
 }
