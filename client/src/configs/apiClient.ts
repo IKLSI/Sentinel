@@ -13,6 +13,7 @@ import {
   subjectOf,
 } from "@/configs/session";
 import { ROUTES } from "@/constants/routes";
+import type { AuthUser, LoginResponse } from "@/domains/auth/types";
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -39,34 +40,36 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 const TOKEN_REFRESH_LOCK = "sentinel:access-token-refresh";
 
-let refreshInFlight: Promise<string> | null = null;
+type RenewedSession = { accessToken: string; user?: AuthUser };
 
-const requestNewAccessToken = async (): Promise<string> => {
-  const response = await axios.post(
+let refreshInFlight: Promise<RenewedSession> | null = null;
+
+const requestNewSession = async (): Promise<RenewedSession> => {
+  const response = await axios.post<LoginResponse>(
     `${API_BASE_URL}${ROUTES_API.api.auth.refresh.__path}`,
     {},
     { withCredentials: true },
   );
-  const { accessToken } = response.data;
+  const { accessToken, user } = response.data;
   const previousToken = getAccessToken();
   startSession(accessToken);
   if (previousToken && subjectOf(previousToken) !== subjectOf(accessToken))
     window.location.reload();
-  return accessToken;
+  return { accessToken, user };
 };
 
 const refreshUnlessAlreadyRenewed = (
   staleToken: string | null,
-): Promise<string> => {
+): Promise<RenewedSession> => {
   const current = getAccessToken();
   return current && current !== staleToken
-    ? Promise.resolve(current)
-    : requestNewAccessToken();
+    ? Promise.resolve({ accessToken: current })
+    : requestNewSession();
 };
 
-export const refreshAccessToken = (
+export const refreshSession = (
   staleToken: string | null,
-): Promise<string> => {
+): Promise<RenewedSession> => {
   refreshInFlight ??= (
     navigator.locks
       ? navigator.locks.request(TOKEN_REFRESH_LOCK, () =>
@@ -78,6 +81,11 @@ export const refreshAccessToken = (
   });
   return refreshInFlight;
 };
+
+export const refreshAccessToken = (
+  staleToken: string | null,
+): Promise<string> =>
+  refreshSession(staleToken).then(({ accessToken }) => accessToken);
 
 const tokenOf = (authorization: unknown): string | null =>
   typeof authorization === "string"

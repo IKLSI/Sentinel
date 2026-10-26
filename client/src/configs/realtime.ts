@@ -1,4 +1,4 @@
-import { HubConnectionBuilder, type HubConnection } from "@microsoft/signalr";
+import type { HubConnection } from "@microsoft/signalr";
 import { refreshAccessToken } from "@/configs/apiClient";
 import { API_BASE_URL } from "@/configs/env";
 import { getAccessToken } from "@/configs/session";
@@ -16,10 +16,12 @@ const resolveAccessToken = async (): Promise<string> => {
   }
 };
 
-export const createRealtimeConnection = (): HubConnection =>
-  new HubConnectionBuilder()
+export const createRealtimeConnection = async (): Promise<HubConnection> => {
+  const { HubConnectionBuilder } = await import("@microsoft/signalr");
+  return new HubConnectionBuilder()
     .withUrl(`${API_BASE_URL}${REALTIME_HUB_PATH}`, {
       accessTokenFactory: resolveAccessToken,
     })
     .withAutomaticReconnect()
     .build();
+};

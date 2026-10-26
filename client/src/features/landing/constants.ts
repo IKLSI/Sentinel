@@ -61,8 +61,9 @@ export const LANDING_THEME = {
   "--grade-d": "#ea580c",
   "--grade-e": "#dc2626",
   "--grade-f": "#dc2626",
-  "--font-display": '"Bricolage Grotesque", var(--font-ui), sans-serif',
-  "--font-text": '"Plus Jakarta Sans", var(--font-ui), sans-serif',
+  "--font-display":
+    '"Bricolage Grotesque Variable", var(--font-ui), sans-serif',
+  "--font-text": '"Plus Jakarta Sans Variable", var(--font-ui), sans-serif',
   "--font-code": '"JetBrains Mono", ui-monospace, monospace',
   "--bg": "#ffffff",
   "--s1": "#ffffff",

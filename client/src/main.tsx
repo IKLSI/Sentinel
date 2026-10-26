@@ -11,6 +11,8 @@ import { ErrorBoundary } from "@/components/ui/common/ErrorBoundary";
 import type { UserRole } from "@/enums";
 import { router } from "@/router";
 import { queryClient } from "@/configs/queryClient";
+import "@fontsource-variable/bricolage-grotesque/opsz.css";
+import "@fontsource-variable/plus-jakarta-sans";
 import "./styles/global.css";
 
 const rootElement = document.getElementById("root");

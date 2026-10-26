@@ -7,7 +7,7 @@ import {
   useMemo,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { refreshAccessToken } from "@/configs/apiClient";
+import { refreshSession } from "@/configs/apiClient";
 import {
   endSession,
   hasPersistedSession,
@@ -57,6 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const loginMutation = useLoginMutation();
   const logoutMutation = useLogoutMutation();
   const runMe = meMutation.mutate;
+  const fetchMe = meMutation.mutateAsync;
   const runLogin = loginMutation.mutateAsync;
   const runLogout = logoutMutation.mutateAsync;
 
@@ -75,26 +76,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
-    refreshAccessToken(null)
-      .then(() =>
-        runMe(
-          {},
-          {
-            onSuccess: applyUser,
-            onError: (error) => {
-              const status = (error as { response?: { status?: number } })
-                ?.response?.status;
-              if (status === 401 || status === 403) endSession();
-            },
-            onSettled: () => setLoading(false),
-          },
-        ),
-      )
-      .catch(() => {
-        endSession();
-        setLoading(false);
-      });
-  }, [runMe, applyUser]);
+    refreshSession(null)
+      .then(({ user: renewedUser }) => renewedUser ?? fetchMe({}))
+      .then(applyUser)
+      .catch(endSession)
+      .finally(() => setLoading(false));
+  }, [fetchMe, applyUser]);
 
   const refreshUser = useCallback(
     () => runMe({}, { onSuccess: applyUser }),

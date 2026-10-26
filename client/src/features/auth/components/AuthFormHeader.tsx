@@ -16,7 +16,8 @@ export const AuthFormHeader: React.FC<AuthFormHeaderProps> = ({
       component="h2"
       sx={{
         m: "0 0 5px",
-        fontFamily: '"Bricolage Grotesque", var(--font-ui), sans-serif',
+        fontFamily:
+          '"Bricolage Grotesque Variable", var(--font-ui), sans-serif',
         fontSize: "26px",
         fontWeight: 800,
         letterSpacing: "-0.04em",

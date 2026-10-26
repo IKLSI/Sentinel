@@ -11,7 +11,7 @@ import { ROUTES_API } from "@/configs/api-routes.gen";
 import apiClient from "@/configs/apiClient";
 import { Language } from "@/enums";
 import { STORAGE_KEYS } from "@/constants/storage";
-import { readStoredValue, writeStorage } from "@/helpers/storage";
+import { readStorage, readStoredValue, writeStorage } from "@/helpers/storage";
 import { buildUrl } from "@/helpers/url";
 
 type Translations = Record<string, string>;
@@ -38,6 +38,31 @@ const I18nContext = createContext<I18nContextValue>({
 const STORAGE_KEY = STORAGE_KEYS.LANGUAGE;
 
 const loadedTranslations = new Map<Language, Translations>();
+
+const translationsStorageKey = (language: Language) =>
+  `${STORAGE_KEYS.TRANSLATIONS}:${language}`;
+
+type CachedTranslations = { raw: string; translations: Translations };
+
+const cachedTranslations = new Map<Language, CachedTranslations | null>();
+
+function parseTranslations(raw: string | null): CachedTranslations | null {
+  if (!raw) return null;
+  try {
+    return { raw, translations: JSON.parse(raw) as Translations };
+  } catch {
+    return null;
+  }
+}
+
+function readCachedTranslations(language: Language): CachedTranslations | null {
+  if (!cachedTranslations.has(language))
+    cachedTranslations.set(
+      language,
+      parseTranslations(readStorage(translationsStorageKey(language))),
+    );
+  return cachedTranslations.get(language) ?? null;
+}
 
 function interpolate(
   template: string,
@@ -72,25 +97,40 @@ export const I18nProvider: React.FC<{
       detectBrowserLanguage(),
   );
   const [translations, setTranslations] = useState<Translations | null>(
-    () => loadedTranslations.get(language) ?? null,
+    () =>
+      loadedTranslations.get(language) ??
+      readCachedTranslations(language)?.translations ??
+      null,
   );
 
   useEffect(() => {
-    const cached = loadedTranslations.get(language);
-    if (cached) {
-      setTranslations(cached);
+    const loaded = loadedTranslations.get(language);
+    if (loaded) {
+      setTranslations(loaded);
       return;
     }
+    const cached = readCachedTranslations(language);
+    if (cached) setTranslations(cached.translations);
     let cancelled = false;
     apiClient
-      .get<Translations>(
+      .get<string>(
         buildUrl(ROUTES_API.api.locales[":culture"].__path, {
           culture: language,
         }),
+        { responseType: "text" },
       )
       .then((response) => {
-        loadedTranslations.set(language, response.data);
-        if (!cancelled) setTranslations(response.data);
+        const fresh =
+          cached?.raw === response.data
+            ? cached
+            : parseTranslations(response.data);
+        if (!fresh) throw new Error();
+        if (fresh !== cached) {
+          writeStorage(translationsStorageKey(language), fresh.raw);
+          cachedTranslations.set(language, fresh);
+        }
+        loadedTranslations.set(language, fresh.translations);
+        if (!cancelled) setTranslations(fresh.translations);
       })
       .catch(() => {
         if (!cancelled) setTranslations((previous) => previous ?? {});

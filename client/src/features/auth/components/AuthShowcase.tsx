@@ -4,7 +4,8 @@ import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { riseInSx } from "@/features/auth/styles";
 import type { AuthShowcaseItem } from "@/features/auth/types";
 
-const HEADLINE_FONT = '"Bricolage Grotesque", var(--font-ui), sans-serif';
+const HEADLINE_FONT =
+  '"Bricolage Grotesque Variable", var(--font-ui), sans-serif';
 const FIRST_ITEM_DELAY = 0.52;
 const ITEM_DELAY_STEP = 0.1;
 

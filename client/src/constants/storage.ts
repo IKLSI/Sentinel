@@ -4,4 +4,5 @@ export const STORAGE_KEYS = {
   THEME: "theme",
   SIDEBAR_COLLAPSED: "sidebar-collapsed",
   LANGUAGE: "sentinel_language",
+  TRANSLATIONS: "sentinel_translations",
 } as const;

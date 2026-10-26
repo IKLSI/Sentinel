@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import type { HubConnection } from "@microsoft/signalr";
 import { queryClient } from "@/configs/queryClient";
 import { createRealtimeConnection } from "@/configs/realtime";
 import { invalidateKeys } from "@/domains/helpers";
@@ -22,7 +23,6 @@ export const useRealtimeSync = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const connection = createRealtimeConnection();
     const batcher = createInvalidationBatcher(
       invalidateKeys,
       REALTIME_INVALIDATION_BATCH_MS,
@@ -56,16 +56,35 @@ export const useRealtimeSync = () => {
       if (missedEvents) resynchronize();
     };
 
-    function start() {
-      connection.start().then(onStarted).catch(scheduleRetry);
-    }
+    let connecting: Promise<HubConnection> | null = null;
 
-    connection.on(REALTIME_INVALIDATE_METHOD, (event: RealtimeEvent) => {
-      batcher.enqueue(resolveInvalidatedKeys(event));
-      if (event.resource === REALTIME_RESOURCES.Users) refreshUser();
-    });
-    connection.onreconnected(resynchronize);
-    connection.onclose(scheduleRetry);
+    const connect = () => {
+      connecting ??= createRealtimeConnection().then(
+        (connection) => {
+          connection.on(REALTIME_INVALIDATE_METHOD, (event: RealtimeEvent) => {
+            batcher.enqueue(resolveInvalidatedKeys(event));
+            if (event.resource === REALTIME_RESOURCES.Users) refreshUser();
+          });
+          connection.onreconnected(resynchronize);
+          connection.onclose(scheduleRetry);
+          return connection;
+        },
+        (error) => {
+          connecting = null;
+          throw error;
+        },
+      );
+      return connecting;
+    };
+
+    function start() {
+      connect()
+        .then((connection) => {
+          if (disposed) return;
+          return connection.start().then(onStarted);
+        })
+        .catch(scheduleRetry);
+    }
 
     start();
 
@@ -73,7 +92,7 @@ export const useRealtimeSync = () => {
       disposed = true;
       batcher.clear();
       if (retryTimer) clearTimeout(retryTimer);
-      connection.stop();
+      connecting?.then((connection) => connection.stop()).catch(() => {});
     };
   }, [isAuthenticated, refreshUser]);
 };

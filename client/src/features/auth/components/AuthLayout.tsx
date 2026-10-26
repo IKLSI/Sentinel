@@ -59,7 +59,7 @@ const PANEL_SX = {
   overflowY: "auto",
   p: { xs: "36px 28px", md: "36px 48px", lg: "56px 64px" },
   background: "var(--auth-surface)",
-  fontFamily: '"Plus Jakarta Sans", var(--font-ui), sans-serif',
+  fontFamily: '"Plus Jakarta Sans Variable", var(--font-ui), sans-serif',
 } as const;
 
 interface AuthLayoutProps {

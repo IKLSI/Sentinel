@@ -53,7 +53,10 @@ const defaultAdapter = apiClient.defaults.adapter;
 beforeAll(() => {
   apiClient.defaults.adapter = (config) =>
     Promise.resolve({
-      data: TRANSLATIONS,
+      data:
+        config.responseType === "text"
+          ? JSON.stringify(TRANSLATIONS)
+          : TRANSLATIONS,
       status: 200,
       statusText: "OK",
       headers: {},
