@@ -683,6 +683,19 @@ export interface paths {
         };
       };
     };
+    delete: {
+      parameters: {
+        path: {
+          id: string;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: never;
+        };
+      };
+    };
   };
   "/api/tech-health/projects/{id}/suppressions": {
     post: {

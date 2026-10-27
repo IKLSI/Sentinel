@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  useCancelProjectScanMutation,
   useDeleteProjectMutation,
   useScanProjectMutation,
 } from "@/domains/projects/mutations";
@@ -25,7 +26,9 @@ export function useScanFeedback(projects: ProjectSummary[]) {
   const { showToast } = useToast();
   const t = useT();
   const onScanError = useApiErrorToast("projects.toast.scan_start_error");
+  const onCancelError = useApiErrorToast("projects.toast.scan_cancel_error");
   const { mutate: scanProject } = useScanProjectMutation();
+  const { mutate: cancelProjectScan } = useCancelProjectScanMutation();
   const [scanningIds, setScanningIds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
@@ -65,6 +68,27 @@ export function useScanFeedback(projects: ProjectSummary[]) {
     [projects, showToast, t, scanProject, onScanError, stopTracking],
   );
 
+  const cancelScan = useCallback(
+    (id: string) => {
+      const project = projects.find((p) => p.id === id);
+
+      cancelProjectScan(
+        { id },
+        {
+          onSuccess: () => {
+            stopTracking(id);
+            showToast(
+              t("projects.toast.scan_cancelled", { name: project?.name ?? "" }),
+              "info",
+            );
+          },
+          onError: onCancelError,
+        },
+      );
+    },
+    [projects, showToast, t, cancelProjectScan, onCancelError, stopTracking],
+  );
+
   useEffect(() => {
     for (const [id, baseline] of baselinesRef.current) {
       const scanned = projects.find((p) => p.id === id);
@@ -84,7 +108,7 @@ export function useScanFeedback(projects: ProjectSummary[]) {
     }
   }, [projects, stopTracking, showToast, t]);
 
-  return { scanningIds, startScan };
+  return { scanningIds, startScan, cancelScan };
 }
 
 const SEARCH_DEBOUNCE_MS = 250;

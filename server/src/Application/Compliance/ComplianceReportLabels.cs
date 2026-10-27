@@ -109,6 +109,7 @@ internal sealed class ComplianceReportLabels(ILocalizer localizer, string cultur
         "ProjectDeleted" => Text("exports.compliance.audit_action.project_deleted"),
         "ScanTriggered" => Text("exports.compliance.audit_action.scan_triggered"),
         "ScanCompleted" => Text("exports.compliance.audit_action.scan_completed"),
+        "ScanCancelled" => Text("exports.compliance.audit_action.scan_cancelled"),
         _ => action
     };
 

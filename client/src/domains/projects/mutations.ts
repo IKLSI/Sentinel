@@ -47,6 +47,11 @@ export const useScanProjectMutation = () =>
     ROUTES_API.api.techHealth.projects[":id"].scan.__path,
   );
 
+export const useCancelProjectScanMutation = () =>
+  useDeleteMutation<void, void, { id: string }>(
+    ROUTES_API.api.techHealth.projects[":id"].scan.__path,
+  );
+
 export const useUpdateProjectSettingsMutation = () =>
   usePatchMutation<
     ProjectScanSettings,

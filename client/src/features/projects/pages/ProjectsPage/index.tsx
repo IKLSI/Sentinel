@@ -46,7 +46,11 @@ export const ProjectsPage: React.FC = () => {
     refetch,
   } = useProjectsQuery();
   const exportProjectsMutation = useExportProjectsExcelMutation();
-  const { scanningIds, startScan: handleScan } = useScanFeedback(projects);
+  const {
+    scanningIds,
+    startScan: handleScan,
+    cancelScan: handleCancelScan,
+  } = useScanFeedback(projects);
   const deleteDialog = useDeleteProjectDialog();
   const [editTarget, setEditTarget] = useState<ProjectSummary | null>(null);
   const [showSyncModal, setShowSyncModal] = useState(() => !!openImport);
@@ -133,6 +137,7 @@ export const ProjectsPage: React.FC = () => {
                 onEdit={setEditTarget}
                 onDelete={deleteDialog.setTarget}
                 onScan={handleScan}
+                onCancelScan={handleCancelScan}
               />
             ))}
           </Box>

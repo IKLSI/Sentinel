@@ -84,5 +84,6 @@ public static class ErrorCodes
     public const string ScanInventoryManifestCap = "errors.scan.inventory_manifest_cap";
     public const string ScanInventoryUnreadableFile = "errors.scan.inventory_unreadable_file";
     public const string ScanNoDependencies = "errors.scan.no_dependencies";
+    public const string ScanNotCancellable = "errors.scan.not_cancellable";
     public const string PublicScanBusy = "errors.scan.busy";
 }

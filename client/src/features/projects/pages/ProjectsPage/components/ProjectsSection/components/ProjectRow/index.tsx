@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
+import StopCircleOutlined from "@mui/icons-material/StopCircleOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
@@ -19,13 +20,13 @@ import type {
 } from "@/domains/projects/types";
 import { DependencyStatus } from "@/enums";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { spin } from "@/styles/keyframes";
 
 interface Props {
   project: ProjectSummary;
   onEdit: (project: ProjectSummary) => void;
   onDelete: (project: ProjectSummary) => void;
   onScan: (id: string) => void;
+  onCancelScan: (id: string) => void;
   isScanning: boolean;
   dependencyMatch?: ProjectSearchMatch;
   scanProgress?: ScanProgress;
@@ -62,6 +63,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
     onEdit,
     onDelete,
     onScan,
+    onCancelScan,
     isScanning,
     dependencyMatch,
     scanProgress,
@@ -153,7 +155,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
                   display: "block",
                   textDecoration: "none",
                   fontFamily: "inherit",
-                  fontWeight: 700,
+                  fontWeight: 600,
                   color: "var(--text)",
                   fontSize: "13px",
                   lineHeight: 1.25,
@@ -215,22 +217,19 @@ export const ProjectRow: React.FC<Props> = React.memo(
                     },
                   ]
                 : []),
-              {
-                icon: (
-                  <RefreshOutlined
-                    sx={{
-                      fontSize: 14,
-                      animation: isScanning
-                        ? `${spin} 1s linear infinite`
-                        : "none",
-                    }}
-                  />
-                ),
-                label: t("projects.action.scan"),
-                onClick: stopAndRun(() => onScan(project.id)),
-                color: "yellow",
-                disabled: isScanning,
-              },
+              isScanning
+                ? {
+                    icon: <StopCircleOutlined sx={{ fontSize: 14 }} />,
+                    label: t("projects.action.cancel_scan"),
+                    onClick: stopAndRun(() => onCancelScan(project.id)),
+                    color: "red" as const,
+                  }
+                : {
+                    icon: <RefreshOutlined sx={{ fontSize: 14 }} />,
+                    label: t("projects.action.scan"),
+                    onClick: stopAndRun(() => onScan(project.id)),
+                    color: "yellow" as const,
+                  },
               ...(isAdmin
                 ? [
                     {

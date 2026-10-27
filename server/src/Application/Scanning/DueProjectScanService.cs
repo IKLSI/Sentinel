@@ -26,19 +26,25 @@ public class DueProjectScanService(
         IReadOnlyList<Guid> projectIds =
             await projectRepository.ListIdsByOrganizationAsync(organizationId, cancellationToken);
 
-        List<Guid> queuedProjectIds = projectIds.Where(scanGate.TryQueue).ToList();
+        int queuedCount = 0;
 
-        foreach (Guid projectId in queuedProjectIds)
+        foreach (Guid projectId in projectIds)
         {
+            ScanQueueing queueing = scanGate.Queue(projectId);
+            if (queueing == ScanQueueing.AlreadyPending) continue;
+
             scanProgress.Report(projectId, organizationId, ScanStage.Queued);
-            jobs.Enqueue<ProjectScanService>(JobQueues.Scans, service => service.ScanProjectAsync(projectId,
-                CancellationToken.None));
+            if (queueing == ScanQueueing.NewJob)
+                jobs.Enqueue<ProjectScanService>(JobQueues.Scans, service => service.ScanProjectAsync(projectId,
+                    CancellationToken.None));
+
+            queuedCount++;
         }
 
         logger.LogInformation("{Count} project scans queued for organization {OrganizationId}",
-            queuedProjectIds.Count, organizationId);
+            queuedCount, organizationId);
 
-        return queuedProjectIds.Count;
+        return queuedCount;
     }
 
     private async Task<int> ScheduleDueAsync(CancellationToken cancellationToken)
@@ -48,7 +54,7 @@ public class DueProjectScanService(
         IReadOnlyList<Guid> monthly = await ListDueAsync(ScanFrequency.Monthly, 30, cancellationToken);
 
         List<Guid> dueProjectIds = daily.Concat(weekly).Concat(monthly)
-            .Where(scanGate.TryQueue)
+            .Where(projectId => scanGate.Queue(projectId) == ScanQueueing.NewJob)
             .ToList();
 
         TimeSpan spacing = SpacingFor(dueProjectIds.Count);

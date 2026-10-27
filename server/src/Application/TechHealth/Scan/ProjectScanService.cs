@@ -32,15 +32,22 @@ public class ProjectScanService(
     [AutomaticRetry(Attempts = 0)]
     public async Task ScanProjectAsync(Guid projectId, CancellationToken cancellationToken)
     {
-        if (!scanGate.TryStart(projectId))
+        using CancellationTokenSource? cancellation = scanGate.TryStart(projectId, cancellationToken);
+
+        if (cancellation == null)
         {
-            logger.LogInformation("Project {ProjectId}: a scan is already running, this one is skipped", projectId);
+            logger.LogInformation("Project {ProjectId}: a scan is already running or was cancelled, this one is skipped",
+                projectId);
             return;
         }
 
         try
         {
-            await ScanExclusivelyAsync(projectId, cancellationToken);
+            await ScanExclusivelyAsync(projectId, cancellation.Token);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogInformation("Project {ProjectId}: scan cancelled by a user", projectId);
         }
         finally
         {
@@ -72,6 +79,7 @@ public class ProjectScanService(
         catch (OperationCanceledException)
         {
             await RefreshInventoryCountsAsync(projectId);
+            await NotifyProjectChangedAsync(project.OrganizationId, projectId);
             throw;
         }
     }
@@ -101,6 +109,7 @@ public class ProjectScanService(
             previousDetections, cancellationToken, progress);
 
         progress.Report(ScanStage.Scoring);
+        scanGate.Seal(projectId);
 
         await using IAsyncDisposable connection = await connectionHolder.HoldOpenAsync(cancellationToken);
 

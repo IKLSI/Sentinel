@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Sentinel.API.Attributes;
 using Sentinel.API.Constants;
+using Sentinel.Application.Scanning.Cancel;
 using Sentinel.Application.Scanning.GetProgress;
 using Sentinel.Application.Scanning.Trigger;
 using Sentinel.Domain.Entities;
@@ -27,6 +28,14 @@ public class ScanningController : BaseController
     public async Task<IActionResult> TriggerScan(
         Guid id,
         [FromServices] ProjectScanTriggerService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, cancellationToken));
+
+    [HttpDelete("projects/{id:guid}/scan")]
+    [AllowApiKey]
+    public async Task<IActionResult> CancelScan(
+        Guid id,
+        [FromServices] ProjectScanCancelService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 }

@@ -44,6 +44,7 @@ interface Props {
   onEdit: (project: ProjectSummary) => void;
   onDelete: (project: ProjectSummary) => void;
   onScan: (id: string) => void;
+  onCancelScan: (id: string) => void;
 }
 
 export const ProjectsSection: React.FC<Props> = ({
@@ -57,6 +58,7 @@ export const ProjectsSection: React.FC<Props> = ({
   onEdit,
   onDelete,
   onScan,
+  onCancelScan,
 }) => {
   const t = useT();
   const { bodyRef, overflowing } = useHorizontalScrollSync();
@@ -212,6 +214,7 @@ export const ProjectsSection: React.FC<Props> = ({
                   onEdit={onEdit}
                   onDelete={onDelete}
                   onScan={onScan}
+                  onCancelScan={onCancelScan}
                   isScanning={
                     scanningIds.has(project.id) || progressById.has(project.id)
                   }

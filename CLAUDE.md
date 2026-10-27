@@ -4,7 +4,7 @@
 
 SaaS multi-tenant de tech health : branche des dépôts GitHub/GitLab, parse leurs manifestes de dépendances, croise avec OSV (vulnérabilités), les registries publics (versions) et endoflife.date (runtimes EOL), calcule un score de santé par projet. Autour : tickets, conformité, SBOM, audit. SaaS ouvert : inscription publique, landing, scan public anonyme. Aucune facturation, aucun plan ni quota.
 
-`Organization` → `Project` → `Dependency`/`Runtime`/`Vulnerability`, plus `Ticket`. Rôles : `Admin`, `Developer`. Features `Application/` nommées comme l'UI : `Projects/` (CRUD, détail, import, badge, export Excel), `Scanning/` (scan, parseurs, déclenchement, progression), `Suppressions/`, `Remediation/`, `Compliance/`, `Sbom/`, `PublicScan/`, `ScoringModel/`, `RuntimeLifecycles/` ; règles de score dans `Domain/TechHealth/`.
+`Organization` → `Project` → `Dependency`/`Runtime`/`Vulnerability`, plus `Ticket`. Rôles : `Admin`, `Developer`. Features `Application/` nommées comme l'UI : `Projects/` (CRUD, détail, import, badge, export Excel), `Scanning/` (scan, parseurs, déclenchement, annulation, progression), `Suppressions/`, `Remediation/`, `Compliance/`, `Sbom/`, `PublicScan/`, `ScoringModel/`, `RuntimeLifecycles/` ; règles de score dans `Domain/TechHealth/`.
 
 ## Stack
 
