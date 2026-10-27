@@ -4,12 +4,14 @@ import { baseComponents } from "./components";
 import { darkCssVars, lightCssVars } from "./cssVars";
 import { darkPalette, lightPalette } from "./palettes";
 import { darkShadows, lightShadows } from "./shadows";
+import { typographyVariants } from "./typography";
 
 const sharedThemeOptions: Pick<ThemeOptions, "shape" | "typography"> = {
   shape: { borderRadius: 8 },
   typography: {
-    fontFamily: "Inter, system-ui, -apple-system, sans-serif",
+    fontFamily: "var(--font-ui)",
     button: { textTransform: "none", fontWeight: 600 },
+    ...typographyVariants,
   },
 };
 

@@ -35,11 +35,8 @@ const sectionSx = {
 
 const sectionTitleSx = {
   display: "block",
-  fontSize: "11px",
-  fontWeight: 700,
+  typography: "label",
   color: "var(--text)",
-  letterSpacing: "0.04em",
-  textTransform: "uppercase",
 } as const;
 
 const rescanNoticeSx = {

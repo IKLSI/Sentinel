@@ -98,7 +98,7 @@ export const ApiKeySecretDialog: React.FC<Props> = ({ secretKey, onClose }) => {
             borderRadius: "var(--r-sm)",
             p: "14px 16px",
             fontSize: "13px",
-            fontFamily: "monospace",
+            fontFamily: "var(--font-mono)",
             color: "var(--text)",
             letterSpacing: "0.04em",
           }}

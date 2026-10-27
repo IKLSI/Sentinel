@@ -2,6 +2,8 @@ import type React from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import MenuItem from "@mui/material/MenuItem";
+import TableCell from "@mui/material/TableCell";
+import TableRow from "@mui/material/TableRow";
 import TextField from "@mui/material/TextField";
 import BlockOutlined from "@mui/icons-material/BlockOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
@@ -33,17 +35,8 @@ export const MemberRow: React.FC<Props> = ({
   const isActive = member.accessStatus === UserAccessStatus.Active;
 
   return (
-    <Box
-      component="tr"
-      sx={{
-        borderBottom: "1px solid var(--border)",
-        "&:last-child": { borderBottom: "none" },
-        "&:hover": { background: "var(--s2)" },
-        "&:hover .row-actions": { opacity: "1 !important" },
-        transition: "background 0.1s",
-      }}
-    >
-      <Box component="td" sx={{ px: "16px", py: "8px" }}>
+    <TableRow hover>
+      <TableCell>
         <Box sx={{ minWidth: 0 }}>
           <Box
             sx={{
@@ -65,8 +58,8 @@ export const MemberRow: React.FC<Props> = ({
             {member.email}
           </Box>
         </Box>
-      </Box>
-      <Box component="td" sx={{ px: "16px", py: "6px" }}>
+      </TableCell>
+      <TableCell sx={{ py: "6px" }}>
         {isCurrentUser ? (
           <Box sx={{ color: "var(--text)", lineHeight: 1.3 }}>
             {roleLabels[member.role] ?? member.role}
@@ -91,8 +84,8 @@ export const MemberRow: React.FC<Props> = ({
             ))}
           </TextField>
         )}
-      </Box>
-      <Box component="td" sx={{ px: "16px", py: "8px" }}>
+      </TableCell>
+      <TableCell>
         <Box
           sx={{
             fontWeight: 400,
@@ -104,21 +97,13 @@ export const MemberRow: React.FC<Props> = ({
             ? t("settings.members.status_active")
             : t("settings.members.status_suspended")}
         </Box>
-      </Box>
-      <Box
-        component="td"
-        sx={{
-          px: "16px",
-          py: "8px",
-          color: "var(--muted2)",
-          fontSize: "11px",
-        }}
-      >
+      </TableCell>
+      <TableCell sx={{ color: "var(--muted2)", fontSize: "11px" }}>
         {member.lastLoginAt
           ? formatRelativeToNow(member.lastLoginAt, culture)
           : "—"}
-      </Box>
-      <Box component="td" sx={{ px: "16px", py: "8px", textAlign: "center" }}>
+      </TableCell>
+      <TableCell align="center">
         {!isCurrentUser &&
           (busy ? (
             <CircularProgress size={13} />
@@ -140,7 +125,7 @@ export const MemberRow: React.FC<Props> = ({
               ]}
             />
           ))}
-      </Box>
-    </Box>
+      </TableCell>
+    </TableRow>
   );
 };

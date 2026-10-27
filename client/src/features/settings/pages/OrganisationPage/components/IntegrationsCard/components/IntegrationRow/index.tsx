@@ -127,7 +127,7 @@ export const IntegrationRow: React.FC<Props> = ({
                           "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
                         color: "var(--accent)",
                         fontSize: "11px",
-                        fontFamily: "monospace",
+                        fontFamily: "var(--font-mono)",
                         fontWeight: 500,
                         letterSpacing: "0.01em",
                       }}

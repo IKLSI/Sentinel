@@ -36,6 +36,13 @@ export const TYPE_SCALE = [
   { key: "4xl", rem: "2.25rem" },
 ] as const;
 
+export const LABEL_VARIANTS = [
+  "label",
+  "cardTitle",
+  "monoLabel",
+  "monoCaption",
+] as const;
+
 export const WEIGHTS = [
   { label: "Regular", weight: 400 },
   { label: "Medium", weight: 500 },

@@ -1,6 +1,11 @@
 import type React from "react";
 import { Fragment } from "react";
 import Box from "@mui/material/Box";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
 import {
   type CellAlign,
   type SortDirection,
@@ -46,8 +51,6 @@ interface VirtualTableProps<T> {
 const DEFAULT_MIN_WIDTH = "960px";
 
 const tableSx = {
-  width: "100%",
-  borderCollapse: "collapse",
   tableLayout: "fixed",
   ...STICKY_ACTIONS_COLUMN_SX,
 } as const;
@@ -55,7 +58,6 @@ const tableSx = {
 const noResultsSx = {
   padding: "48px 16px",
   textAlign: "center",
-  verticalAlign: "middle",
   color: "var(--muted)",
   fontSize: "13px",
   borderBottom: "none",
@@ -116,10 +118,10 @@ export function VirtualTable<T>({
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <Box component="table" sx={{ ...tableSx, minWidth }}>
+        <Table sx={{ ...tableSx, minWidth }}>
           {columnGroup}
-          <Box component="thead">
-            <Box component="tr">
+          <TableHead>
+            <TableRow>
               {columns.map((column) => (
                 <SortableTh
                   key={column.key}
@@ -132,9 +134,9 @@ export function VirtualTable<T>({
                   {column.label}
                 </SortableTh>
               ))}
-            </Box>
-          </Box>
-        </Box>
+            </TableRow>
+          </TableHead>
+        </Table>
       </Box>
 
       <Box
@@ -147,8 +149,7 @@ export function VirtualTable<T>({
           scrollbarGutter: "stable",
         }}
       >
-        <Box
-          component="table"
+        <Table
           sx={{
             ...tableSx,
             minWidth,
@@ -156,13 +157,13 @@ export function VirtualTable<T>({
           }}
         >
           {columnGroup}
-          <Box component="tbody">
+          <TableBody>
             {showNoResults ? (
-              <Box component="tr">
-                <Box component="td" colSpan={columnCount} sx={noResultsSx}>
+              <TableRow>
+                <TableCell colSpan={columnCount} sx={noResultsSx}>
                   {noResultsLabel}
-                </Box>
-              </Box>
+                </TableCell>
+              </TableRow>
             ) : (
               <VirtualRowMeasureContext.Provider
                 value={virtualizer.measureElement}
@@ -185,8 +186,8 @@ export function VirtualTable<T>({
                 />
               </VirtualRowMeasureContext.Provider>
             )}
-          </Box>
-        </Box>
+          </TableBody>
+        </Table>
       </Box>
 
       {footer}

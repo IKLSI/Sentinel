@@ -26,11 +26,8 @@ export const SectionDivider: React.FC<Props> = ({ icon, label, my }) => (
         display: "inline-flex",
         alignItems: "center",
         gap: "6px",
-        fontSize: "11px",
-        fontWeight: 600,
+        typography: "label",
         color: DETAIL_PALETTE.sectionLabel,
-        textTransform: "uppercase",
-        letterSpacing: "0.1em",
         whiteSpace: "nowrap",
       }}
     >

@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import { useT } from "@/contexts/I18nContext";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
 import {
+  LABEL_VARIANTS,
   TYPE_SCALE,
   WEIGHTS,
 } from "@/features/styleGuide/pages/StyleGuidePage/constants";
@@ -44,6 +45,36 @@ export const TypographySection: React.FC = () => {
               }}
             >
               Sentinel
+            </Box>
+          </Box>
+        ))}
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+          mb: "28px",
+        }}
+      >
+        {LABEL_VARIANTS.map((variant) => (
+          <Box
+            key={variant}
+            sx={{ display: "flex", alignItems: "baseline", gap: "16px" }}
+          >
+            <Box
+              sx={{
+                width: "110px",
+                flexShrink: 0,
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: "var(--muted2)",
+              }}
+            >
+              {variant}
+            </Box>
+            <Box sx={{ typography: variant, color: "var(--muted)" }}>
+              Open tickets
             </Box>
           </Box>
         ))}

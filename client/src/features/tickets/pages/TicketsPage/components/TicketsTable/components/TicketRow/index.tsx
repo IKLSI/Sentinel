@@ -1,11 +1,14 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import TableCell from "@mui/material/TableCell";
+import TableRow from "@mui/material/TableRow";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { TruncatedText } from "@/components/ui/common/TruncatedText";
 import { RowActions } from "@/components/ui/common/table/RowActions";
+import { ROW_ACTIONS_CELL_SX } from "@/components/ui/common/table/stickyActionsColumn";
 import { useT } from "@/contexts/I18nContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import type { Ticket } from "@/domains/tickets/types";
@@ -17,12 +20,6 @@ import {
   typeIconOf,
   typeTooltipKeyOf,
 } from "@/features/tickets/pages/TicketsPage/helpers";
-
-const TICKET_CELL_SX = {
-  padding: "9px 16px",
-  borderBottom: "1px solid var(--border)",
-  verticalAlign: "middle",
-} as const;
 
 const TICKET_CELL_TEXT_SX = {
   fontSize: "13px",
@@ -63,8 +60,8 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
   };
 
   return (
-    <Box
-      component="tr"
+    <TableRow
+      hover
       onClick={() =>
         navigate({ to: "/tickets/$id", params: { id: ticket.id } })
       }
@@ -74,13 +71,9 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
           params: { id: ticket.id },
         })
       }
-      sx={{
-        cursor: "pointer",
-        "&:hover td": { background: "var(--s2)" },
-        "&:hover .row-actions": { opacity: "1 !important" },
-      }}
+      sx={{ cursor: "pointer" }}
     >
-      <Box component="td" sx={TICKET_CELL_SX}>
+      <TableCell>
         <Box
           sx={{ display: "flex", alignItems: "center", gap: "7px", mb: "4px" }}
         >
@@ -129,19 +122,19 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
             </>
           )}
         </Box>
-      </Box>
+      </TableCell>
 
-      <Box component="td" sx={TICKET_CELL_SX}>
+      <TableCell>
         <Box sx={TICKET_CELL_TEXT_SX}>
           {t(priorityLabelKeyOf(ticket.priority))}
         </Box>
-      </Box>
+      </TableCell>
 
-      <Box component="td" sx={TICKET_CELL_SX}>
+      <TableCell>
         <Box sx={TICKET_CELL_TEXT_SX}>{statusLabel(t, ticket.status)}</Box>
-      </Box>
+      </TableCell>
 
-      <Box component="td" sx={TICKET_CELL_SX}>
+      <TableCell>
         {ticket.assignedToName ? (
           <Box sx={{ lineHeight: 1.25, color: "var(--text)" }}>
             <TruncatedText text={ticket.assignedToName} fontSize="13px" />
@@ -153,9 +146,9 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
             —
           </Box>
         )}
-      </Box>
+      </TableCell>
 
-      <Box component="td" sx={{ ...TICKET_CELL_SX, textAlign: "center" }}>
+      <TableCell align="center">
         <Box
           sx={{
             fontSize: "13px",
@@ -167,25 +160,18 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
         >
           {ticket.commentCount}
         </Box>
-      </Box>
+      </TableCell>
 
-      <Box
-        component="td"
+      <TableCell
+        align="right"
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
-        sx={{
-          padding: "6px 20px 6px 0",
-          borderBottom: "1px solid var(--border)",
-          whiteSpace: "nowrap",
-          overflow: "visible",
-          textAlign: "right",
-          verticalAlign: "middle",
-        }}
+        sx={ROW_ACTIONS_CELL_SX}
       >
         <RowActions
           actions={isAdmin ? [editAction, deleteAction] : [editAction]}
         />
-      </Box>
-    </Box>
+      </TableCell>
+    </TableRow>
   );
 };
 

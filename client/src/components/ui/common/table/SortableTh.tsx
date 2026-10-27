@@ -1,6 +1,7 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
+import TableCell from "@mui/material/TableCell";
 import ArrowDownwardOutlined from "@mui/icons-material/ArrowDownwardOutlined";
 import type { CellAlign } from "@/components/ui/common/table/VirtualTable/TableCells";
 
@@ -48,11 +49,7 @@ export const SortableTh: React.FC<SortableThProps> = ({
     gap: "5px",
     width: "100%",
     padding: "10px 16px",
-    fontFamily: "var(--font-mono)",
-    fontSize: "10px",
-    fontWeight: 700,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
+    typography: "monoLabel",
     color: sorted ? "var(--accent)" : "var(--muted)",
     userSelect: "none",
   } as const;
@@ -78,9 +75,7 @@ export const SortableTh: React.FC<SortableThProps> = ({
   );
 
   return (
-    <Box
-      component="th"
-      scope="col"
+    <TableCell
       aria-sort={
         sorted
           ? ascending
@@ -91,11 +86,7 @@ export const SortableTh: React.FC<SortableThProps> = ({
             : undefined
       }
       sx={{
-        padding: 0,
         width,
-        whiteSpace: "nowrap",
-        background: "var(--s2)",
-        borderBottom: "1px solid var(--border)",
         [`&:hover .${ARROW_CLASS}`]: {
           opacity: sorted ? 1 : IDLE_ARROW_OPACITY,
         },
@@ -118,6 +109,6 @@ export const SortableTh: React.FC<SortableThProps> = ({
       ) : (
         <Box sx={labelSx}>{children}</Box>
       )}
-    </Box>
+    </TableCell>
   );
 };

@@ -20,10 +20,7 @@ export const CardHeader: React.FC<Props> = ({ label }) => (
       component="h3"
       sx={{
         m: 0,
-        fontSize: "11px",
-        fontWeight: 700,
-        letterSpacing: "0.08em",
-        textTransform: "uppercase",
+        typography: "cardTitle",
         color: "var(--muted)",
       }}
     >

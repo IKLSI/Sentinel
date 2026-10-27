@@ -11,7 +11,7 @@ export const buttonComponents = {
         fontWeight: 600,
         letterSpacing: "-0.01em",
         borderRadius: "var(--r)",
-        fontFamily: "Inter, system-ui, sans-serif",
+        fontFamily: "var(--font-ui)",
         transition: "all 0.15s ease",
         "&:hover": {
           backgroundColor: "transparent",

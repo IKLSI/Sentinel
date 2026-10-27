@@ -1,5 +1,9 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
 import { useT } from "@/contexts/I18nContext";
@@ -54,9 +58,7 @@ const TICKETS_COLUMN_WIDTHS = [
 ] as const;
 
 const TICKETS_TABLE_SX = {
-  width: "100%",
   minWidth: "820px",
-  borderCollapse: "collapse",
   tableLayout: "fixed",
   ...STICKY_ACTIONS_COLUMN_SX,
 } as const;
@@ -145,10 +147,10 @@ const TicketsTableComponent: React.FC<Props> = ({
           boxShadow: "inset 0 -1px 0 var(--border)",
         }}
       >
-        <Box component="table" sx={TICKETS_TABLE_SX}>
+        <Table sx={TICKETS_TABLE_SX}>
           {COL_GROUP}
-          <Box component="thead">
-            <Box component="tr">
+          <TableHead>
+            <TableRow>
               {columns.map(({ col, label }) => {
                 const sortable = isSortableColumn(col);
                 return (
@@ -164,9 +166,9 @@ const TicketsTableComponent: React.FC<Props> = ({
                   </SortableTh>
                 );
               })}
-            </Box>
-          </Box>
-        </Box>
+            </TableRow>
+          </TableHead>
+        </Table>
       </Box>
 
       <Box
@@ -181,9 +183,9 @@ const TicketsTableComponent: React.FC<Props> = ({
           scrollbarGutter: "stable",
         }}
       >
-        <Box component="table" sx={TICKETS_TABLE_SX}>
+        <Table sx={TICKETS_TABLE_SX}>
           {COL_GROUP}
-          <Box component="tbody" sx={loading ? DELAYED_REVEAL_SX : undefined}>
+          <TableBody sx={loading ? DELAYED_REVEAL_SX : undefined}>
             {loading ? (
               <TableSkeletonRows cells={SKELETON_CELLS} />
             ) : (
@@ -196,8 +198,8 @@ const TicketsTableComponent: React.FC<Props> = ({
                 />
               ))
             )}
-          </Box>
-        </Box>
+          </TableBody>
+        </Table>
         {loading && <LoadingStatus label={t("tickets.list.loading")} />}
       </Box>
     </Box>

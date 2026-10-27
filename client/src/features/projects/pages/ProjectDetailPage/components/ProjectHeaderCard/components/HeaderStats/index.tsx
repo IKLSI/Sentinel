@@ -73,10 +73,7 @@ export const HeaderStats: React.FC<Props> = ({ project, eolRuntimes }) => {
             <Box
               component="span"
               sx={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "9px",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
+                typography: "monoCaption",
                 color: "var(--muted)",
               }}
             >

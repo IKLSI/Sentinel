@@ -1,10 +1,13 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import TableCell from "@mui/material/TableCell";
+import TableRow from "@mui/material/TableRow";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { RowActions } from "@/components/ui/common/table/RowActions";
+import { ROW_ACTIONS_CELL_SX } from "@/components/ui/common/table/stickyActionsColumn";
 import { ScanProgressBar } from "@/components/ui/common/feedback/ScanProgressBar";
 import { gradeToneOf } from "@/constants/grades";
 import { TEXT_ELLIPSIS_SX } from "@/constants/display";
@@ -28,17 +31,12 @@ interface Props {
   scanProgress?: ScanProgress;
 }
 
-const CELL_SX = {
-  padding: "6px 12px",
-  borderBottom: "1px solid var(--border)",
-} as const;
-
 const renderMetricCell = (
   value: React.ReactNode,
   emphasized: boolean,
   accent: string | undefined,
 ) => (
-  <Box component="td" sx={{ ...CELL_SX, textAlign: "center" }}>
+  <TableCell size="small" align="center">
     <Box
       sx={{
         color: emphasized ? accent : "var(--muted2)",
@@ -50,7 +48,7 @@ const renderMetricCell = (
     >
       {value}
     </Box>
-  </Box>
+  </TableCell>
 );
 
 const stopAndRun = (action: () => void) => (event: React.MouseEvent) => {
@@ -124,8 +122,8 @@ export const ProjectRow: React.FC<Props> = React.memo(
     };
 
     return (
-      <Box
-        component="tr"
+      <TableRow
+        hover
         onClick={() =>
           navigate({ to: "/projects/$id", params: { id: project.id } })
         }
@@ -135,19 +133,9 @@ export const ProjectRow: React.FC<Props> = React.memo(
             params: { id: project.id },
           })
         }
-        sx={{
-          cursor: "pointer",
-          position: "relative",
-          transition: "background 0.12s ease",
-          "& td": {
-            transition: "background 0.12s ease, border-color 0.12s ease",
-            verticalAlign: "middle",
-          },
-          "&:hover td": { background: "var(--s2)" },
-          "&:hover .row-actions": { opacity: "1 !important" },
-        }}
+        sx={{ cursor: "pointer", position: "relative" }}
       >
-        <Box component="td" sx={{ ...CELL_SX, fontSize: "12px" }}>
+        <TableCell size="small" sx={{ fontSize: "12px" }}>
           <Box
             sx={{
               display: "flex",
@@ -191,7 +179,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
               </Box>
             </Box>
           </Box>
-        </Box>
+        </TableCell>
 
         {renderMetricCell(
           project.healthScore ?? "—",
@@ -210,16 +198,10 @@ export const ProjectRow: React.FC<Props> = React.memo(
         )}
         {renderMetricCell(ticketCount, ticketCount > 0, "var(--text)")}
 
-        <Box
-          component="td"
+        <TableCell
+          align="right"
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          sx={{
-            padding: "6px 20px 6px 0",
-            borderBottom: "1px solid var(--border)",
-            whiteSpace: "nowrap",
-            overflow: "visible",
-            textAlign: "right",
-          }}
+          sx={ROW_ACTIONS_CELL_SX}
         >
           <RowActions
             actions={[
@@ -261,8 +243,8 @@ export const ProjectRow: React.FC<Props> = React.memo(
                 : []),
             ]}
           />
-        </Box>
-      </Box>
+        </TableCell>
+      </TableRow>
     );
   },
 );

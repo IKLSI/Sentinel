@@ -1,5 +1,9 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
 import { LoadingStatus } from "@/components/ui/common/feedback/LoadingStatus";
 import { SortableTh } from "@/components/ui/common/table/SortableTh";
 import {
@@ -77,17 +81,9 @@ export const MembersTable: React.FC<Props> = ({
 
   return (
     <Box sx={{ position: "relative", flex: 1, overflow: "hidden" }}>
-      <Box
-        component="table"
-        sx={{
-          width: "100%",
-          borderCollapse: "collapse",
-          tableLayout: "fixed",
-          fontSize: "12px",
-        }}
-      >
-        <Box component="thead">
-          <Box component="tr">
+      <Table sx={{ tableLayout: "fixed", fontSize: "12px" }}>
+        <TableHead>
+          <TableRow>
             {columns.map(({ key, label, width }) => {
               const sortable = key !== ACTIONS_COLUMN_KEY;
               return (
@@ -103,10 +99,9 @@ export const MembersTable: React.FC<Props> = ({
                 </SortableTh>
               );
             })}
-          </Box>
-        </Box>
-        <Box
-          component="tbody"
+          </TableRow>
+        </TableHead>
+        <TableBody
           aria-busy={loading || undefined}
           sx={loading ? DELAYED_REVEAL_SX : undefined}
         >
@@ -125,8 +120,8 @@ export const MembersTable: React.FC<Props> = ({
               />
             ))
           )}
-        </Box>
-      </Box>
+        </TableBody>
+      </Table>
       {loading && <LoadingStatus label={t("settings.members.loading")} />}
     </Box>
   );

@@ -1,6 +1,10 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
 import { LoadingRegion } from "@/components/ui/common/feedback/LoadingRegion";
 import { SortableTh } from "@/components/ui/common/table/SortableTh";
 import {
@@ -57,36 +61,29 @@ export const ProjectsSkeleton: React.FC = () => {
                 <Skeleton variant="rounded" width={180} height={10} />
               </Box>
             </Box>
-            <Box
-              component="table"
-              sx={{
-                width: "100%",
-                borderCollapse: "collapse",
-                tableLayout: "fixed",
-              }}
-            >
+            <Table sx={{ tableLayout: "fixed" }}>
               <Box component="colgroup">
                 {PROJECT_COLUMNS.map(({ id: column, width }) => (
                   <Box key={column} component="col" sx={{ width }} />
                 ))}
               </Box>
-              <Box component="thead">
-                <Box component="tr">
+              <TableHead>
+                <TableRow>
                   {PROJECT_COLUMNS.map(({ id, labelKey, align }) => (
                     <SortableTh key={id} align={align}>
                       {labelKey && t(labelKey)}
                     </SortableTh>
                   ))}
-                </Box>
-              </Box>
-              <Box component="tbody">
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 <TableSkeletonRows
                   cells={SKELETON_CELLS}
                   rows={rows}
-                  cellPadding="6px 12px"
+                  size="small"
                 />
-              </Box>
-            </Box>
+              </TableBody>
+            </Table>
           </Box>
         ))}
       </Box>

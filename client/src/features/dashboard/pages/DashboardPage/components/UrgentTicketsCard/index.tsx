@@ -133,11 +133,8 @@ export const UrgentTicketsCard: React.FC<Props> = ({ tickets }) => {
                       component="span"
                       sx={{
                         flexShrink: 0,
-                        fontSize: "10px",
+                        typography: "label",
                         color: PRIORITY_TONES[ticket.priority],
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                        fontWeight: 700,
                       }}
                     >
                       • {t(`dashboard.tickets.priority.${ticket.priority}`)}

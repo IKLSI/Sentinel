@@ -32,11 +32,8 @@ export const HistoryCard: React.FC<Props> = ({ ticket }) => {
           px: "10px",
           pt: "4px",
           pb: "6px",
-          textTransform: "uppercase",
-          letterSpacing: "0.12em",
-          fontWeight: 800,
+          typography: "label",
           color: DETAIL_PALETTE.muted,
-          fontSize: "10px",
         }}
       >
         {t("tickets.detail.section_history")}

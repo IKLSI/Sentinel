@@ -12,7 +12,7 @@ export const surfaceComponents = {
   MuiChip: {
     styleOverrides: {
       root: {
-        fontFamily: "JetBrains Mono, monospace",
+        fontFamily: "var(--font-mono)",
         fontSize: "10px",
         fontWeight: 700,
         letterSpacing: "0.04em",
@@ -87,7 +87,7 @@ export const surfaceComponents = {
   MuiAvatar: {
     styleOverrides: {
       root: {
-        fontFamily: "JetBrains Mono, monospace",
+        fontFamily: "var(--font-mono)",
         fontWeight: 700,
       },
     },

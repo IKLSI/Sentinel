@@ -1,5 +1,11 @@
 export const OVERFLOWING_ATTRIBUTE = "data-x-overflow";
 
+export const ROW_ACTIONS_CELL_SX = {
+  padding: "6px 20px 6px 0",
+  whiteSpace: "nowrap",
+  overflow: "visible",
+} as const;
+
 export const STICKY_ACTIONS_COLUMN_SX = {
   "& th:last-child, & td:last-child": {
     position: "sticky",

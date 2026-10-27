@@ -1,6 +1,8 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
+import TableCell from "@mui/material/TableCell";
+import TableRow from "@mui/material/TableRow";
 import {
   chipWidthAt,
   skeletonRowIds,
@@ -19,7 +21,7 @@ export type SkeletonCell =
 interface Props {
   cells: readonly SkeletonCell[];
   rows?: number;
-  cellPadding?: string;
+  size?: "small" | "medium";
 }
 
 const TitleLines: React.FC<{ position: number }> = ({ position }) => (
@@ -90,7 +92,7 @@ const CellShape: React.FC<{ cell: SkeletonCell; position: number }> = ({
 export const TableSkeletonRows: React.FC<Props> = ({
   cells,
   rows = 6,
-  cellPadding = "9px 16px",
+  size = "medium",
 }) => {
   const columns = cells.map((cell, offset) => ({
     cell,
@@ -99,21 +101,12 @@ export const TableSkeletonRows: React.FC<Props> = ({
   }));
 
   return skeletonRowIds(rows).map(({ id, position }) => (
-    <Box component="tr" key={id}>
+    <TableRow key={id}>
       {columns.map((column) => (
-        <Box
-          component="td"
-          key={column.id}
-          sx={{
-            padding: cellPadding,
-            height: 36,
-            borderBottom: "1px solid var(--border)",
-            verticalAlign: "middle",
-          }}
-        >
+        <TableCell key={column.id} size={size} sx={{ height: 36 }}>
           <CellShape cell={column.cell} position={position + column.offset} />
-        </Box>
+        </TableCell>
       ))}
-    </Box>
+    </TableRow>
   ));
 };

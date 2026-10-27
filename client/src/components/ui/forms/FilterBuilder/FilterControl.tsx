@@ -100,11 +100,7 @@ export const FilterControl: React.FC<Props> = ({
           ...segmentSx,
           pr: 0,
           flexShrink: 0,
-          fontFamily: "var(--font-mono)",
-          fontSize: "10px",
-          fontWeight: 700,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
+          typography: "monoLabel",
           color: "var(--muted)",
         }}
       >

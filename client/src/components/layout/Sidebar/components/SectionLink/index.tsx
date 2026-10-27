@@ -42,10 +42,7 @@ export const SectionLink: React.FC<Props> = ({ section }) => {
           <Box
             component="span"
             sx={{
-              fontSize: "10.5px",
-              fontWeight: 700,
-              letterSpacing: "0.07em",
-              textTransform: "uppercase",
+              typography: "label",
               ...TEXT_ELLIPSIS_SX,
               color: isActive ? "var(--accent)" : "var(--muted2)",
               transition: "color 0.15s",

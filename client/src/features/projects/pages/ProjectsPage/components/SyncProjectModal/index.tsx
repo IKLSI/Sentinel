@@ -21,11 +21,8 @@ import {
 } from "@/features/projects/pages/ProjectsPage/components/SyncProjectModal/helpers";
 
 const sectionLabelSx = {
-  fontSize: "11px",
-  fontWeight: 700,
+  typography: "label",
   color: "var(--text)",
-  letterSpacing: "0.04em",
-  textTransform: "uppercase",
 } as const;
 
 interface Props {

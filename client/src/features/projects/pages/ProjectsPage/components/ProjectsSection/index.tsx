@@ -2,6 +2,10 @@ import type React from "react";
 import { useMemo } from "react";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { GradeRing } from "@/components/ui/common/GradeRing";
 import { SortableTh } from "@/components/ui/common/table/SortableTh";
@@ -172,12 +176,9 @@ export const ProjectsSection: React.FC<Props> = ({
           {...{ [OVERFLOWING_ATTRIBUTE]: overflowing }}
           sx={{ overflowX: "auto", overflowY: "hidden" }}
         >
-          <Box
-            component="table"
+          <Table
             sx={{
-              width: "100%",
               minWidth: "760px",
-              borderCollapse: "collapse",
               tableLayout: "fixed",
               ...STICKY_ACTIONS_COLUMN_SX,
             }}
@@ -187,8 +188,8 @@ export const ProjectsSection: React.FC<Props> = ({
                 <Box key={id} component="col" sx={{ width }} />
               ))}
             </Box>
-            <Box component="thead">
-              <Box component="tr">
+            <TableHead>
+              <TableRow>
                 {PROJECT_COLUMNS.map(({ id, labelKey, align }) => (
                   <SortableTh
                     key={id}
@@ -201,9 +202,9 @@ export const ProjectsSection: React.FC<Props> = ({
                     {labelKey && t(labelKey)}
                   </SortableTh>
                 ))}
-              </Box>
-            </Box>
-            <Box component="tbody">
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {sortedItems.map((project) => (
                 <ProjectRow
                   key={project.id}
@@ -218,8 +219,8 @@ export const ProjectsSection: React.FC<Props> = ({
                   scanProgress={progressById.get(project.id)}
                 />
               ))}
-            </Box>
-          </Box>
+            </TableBody>
+          </Table>
         </Box>
       )}
     </Box>

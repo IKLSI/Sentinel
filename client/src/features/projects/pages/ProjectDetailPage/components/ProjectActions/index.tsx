@@ -26,10 +26,7 @@ import { useEnableProjectBadgeMutation } from "@/domains/projects/mutations";
 import { BadgeSnippet } from "@/features/projects/pages/ProjectDetailPage/components/ProjectActions/components/BadgeSnippet";
 
 const groupHeaderSx = {
-  fontFamily: "var(--font-mono)",
-  fontSize: "9px",
-  letterSpacing: "0.1em",
-  textTransform: "uppercase",
+  typography: "monoCaption",
   color: "var(--muted)",
   lineHeight: "28px",
   background: "transparent",

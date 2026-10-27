@@ -51,10 +51,7 @@ export const DashboardCard: React.FC<Props> = ({
           component="h2"
           sx={{
             m: 0,
-            fontSize: "12px",
-            fontWeight: 700,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
+            typography: "cardTitle",
             color: "var(--text)",
           }}
         >

@@ -1,5 +1,10 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import TableCell from "@mui/material/TableCell";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { RowActions } from "@/components/ui/common/table/RowActions";
 import { SortableTh } from "@/components/ui/common/table/SortableTh";
@@ -120,16 +125,9 @@ export const ApiKeyTable: React.FC<Props> = ({
         transition: "opacity 0.15s",
       }}
     >
-      <Box
-        component="table"
-        sx={{
-          width: "100%",
-          borderCollapse: "collapse",
-          fontSize: "12px",
-        }}
-      >
-        <Box component="thead">
-          <Box component="tr">
+      <Table sx={{ fontSize: "12px" }}>
+        <TableHead>
+          <TableRow>
             {columns.map(({ col, key, label, width }) => {
               const sortable = col !== "actions";
               return (
@@ -145,10 +143,9 @@ export const ApiKeyTable: React.FC<Props> = ({
                 </SortableTh>
               );
             })}
-          </Box>
-        </Box>
-        <Box
-          component="tbody"
+          </TableRow>
+        </TableHead>
+        <TableBody
           aria-busy={loading || undefined}
           sx={loading ? DELAYED_REVEAL_SX : undefined}
         >
@@ -156,25 +153,11 @@ export const ApiKeyTable: React.FC<Props> = ({
             <TableSkeletonRows cells={SKELETON_CELLS} rows={4} />
           ) : (
             keys.map((apiKey) => (
-              <Box
-                key={apiKey.id}
-                component="tr"
-                sx={{
-                  borderBottom: "1px solid var(--border)",
-                  "&:last-child": { borderBottom: "none" },
-                  "&:hover": { background: "var(--s2)" },
-                  "&:hover .row-actions": { opacity: "1 !important" },
-                  transition: "background 0.1s",
-                  "& > td": { px: "16px", py: "8px" },
-                }}
-              >
-                <Box
-                  component="td"
-                  sx={{ fontWeight: 500, color: "var(--text)" }}
-                >
+              <TableRow key={apiKey.id} hover>
+                <TableCell sx={{ fontWeight: 500, color: "var(--text)" }}>
                   {apiKey.name}
-                </Box>
-                <Box component="td">
+                </TableCell>
+                <TableCell>
                   <Box
                     component="span"
                     sx={{
@@ -185,23 +168,22 @@ export const ApiKeyTable: React.FC<Props> = ({
                       borderRadius: "var(--r-xs, 5px)",
                       background: "var(--s3)",
                       border: "1px solid var(--border)",
-                      fontFamily: "monospace",
+                      fontFamily: "var(--font-mono)",
                       fontSize: "11px",
                       color: "var(--text-secondary)",
                     }}
                   >
                     {apiKey.prefix}…
                   </Box>
-                </Box>
-                <Box component="td" sx={{ color: "var(--text-secondary)" }}>
+                </TableCell>
+                <TableCell sx={{ color: "var(--text-secondary)" }}>
                   {apiKey.createdByName}
-                </Box>
-                <Box component="td" sx={{ color: "var(--text-secondary)" }}>
+                </TableCell>
+                <TableCell sx={{ color: "var(--text-secondary)" }}>
                   {fmtDate(apiKey.createdAt, culture)}
-                </Box>
-                <Box component="td">{renderExpiry(apiKey)}</Box>
-                <Box
-                  component="td"
+                </TableCell>
+                <TableCell>{renderExpiry(apiKey)}</TableCell>
+                <TableCell
                   sx={{
                     color: apiKey.lastUsedAt
                       ? "var(--text-secondary)"
@@ -212,8 +194,8 @@ export const ApiKeyTable: React.FC<Props> = ({
                   {apiKey.lastUsedAt
                     ? fmtDate(apiKey.lastUsedAt, culture)
                     : t("settings.api_keys.never_used")}
-                </Box>
-                <Box component="td" sx={{ textAlign: "right" }}>
+                </TableCell>
+                <TableCell align="right">
                   <RowActions
                     actions={[
                       {
@@ -224,12 +206,12 @@ export const ApiKeyTable: React.FC<Props> = ({
                       },
                     ]}
                   />
-                </Box>
-              </Box>
+                </TableCell>
+              </TableRow>
             ))
           )}
-        </Box>
-      </Box>
+        </TableBody>
+      </Table>
       {loading && <LoadingStatus label={t("settings.api_keys.loading")} />}
     </Box>
   );

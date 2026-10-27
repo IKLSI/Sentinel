@@ -6,10 +6,7 @@ export const SubLabel: React.FC<{ children: React.ReactNode }> = ({
 }) => (
   <Box
     sx={{
-      fontSize: "10px",
-      fontWeight: 700,
-      letterSpacing: "0.07em",
-      textTransform: "uppercase",
+      typography: "label",
       color: "var(--muted2)",
       mb: "12px",
     }}

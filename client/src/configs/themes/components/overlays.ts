@@ -43,7 +43,7 @@ export const overlayComponents = {
         fontSize: "13px",
         fontWeight: 400,
         lineHeight: 1.4,
-        fontFamily: "Inter, sans-serif",
+        fontFamily: "var(--font-ui)",
         borderRadius: "8px",
         padding: "8px 12px",
         maxWidth: 280,
