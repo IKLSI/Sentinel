@@ -53,6 +53,7 @@ export const RecentActivityCard: React.FC<Props> = ({ activity }) => {
       {activity.length === 0 ? (
         <EmptyState
           icon={HistoryOutlined}
+          size="compact"
           title={t("dashboard.activity.empty_title")}
           subtitle={t("dashboard.activity.empty_subtitle")}
           sx={{ flex: 1 }}

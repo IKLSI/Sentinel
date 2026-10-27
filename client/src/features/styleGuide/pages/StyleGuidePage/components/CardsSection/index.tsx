@@ -1,12 +1,12 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Avatar from "@mui/material/Avatar";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import NotificationsNoneOutlined from "@mui/icons-material/NotificationsNoneOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
-import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";

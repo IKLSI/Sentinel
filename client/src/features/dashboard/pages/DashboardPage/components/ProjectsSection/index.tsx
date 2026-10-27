@@ -1,7 +1,7 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import ButtonBase from "@mui/material/ButtonBase";
-import FolderOpenOutlined from "@mui/icons-material/FolderOpenOutlined";
 import { useNavigate } from "@tanstack/react-router";
 import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
 import { GradeRing } from "@/components/ui/common/GradeRing";
@@ -52,7 +52,8 @@ export const ProjectsSection: React.FC<Props> = ({ projects }) => {
     >
       {projects.length === 0 ? (
         <EmptyState
-          icon={FolderOpenOutlined}
+          icon={FolderOutlined}
+          size="compact"
           title={t("dashboard.projects.empty_title")}
           subtitle={t("dashboard.projects.empty_subtitle")}
         />

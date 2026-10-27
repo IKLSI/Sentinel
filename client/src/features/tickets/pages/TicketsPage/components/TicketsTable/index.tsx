@@ -1,10 +1,11 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
 import { useT } from "@/contexts/I18nContext";
 import type { Ticket } from "@/domains/tickets/types";
@@ -103,6 +104,18 @@ const TicketsTableComponent: React.FC<Props> = ({
   ];
 
   if (!loading && tickets.length === 0) {
+    const emptyContent = hasFiltersApplied
+      ? ({
+          icon: SearchOutlined,
+          title: t("common.no_results"),
+          subtitle: t("tickets.list.empty_subtitle_search"),
+        } as const)
+      : ({
+          icon: ConfirmationNumberOutlined,
+          title: t("tickets.list.empty_title"),
+          subtitle: t("tickets.list.empty_subtitle_create"),
+        } as const);
+
     return (
       <Box
         sx={{
@@ -112,16 +125,7 @@ const TicketsTableComponent: React.FC<Props> = ({
           justifyContent: "center",
         }}
       >
-        <EmptyState
-          icon={ConfirmationNumberOutlined}
-          title={t("tickets.list.empty_title")}
-          subtitle={
-            !hasFiltersApplied
-              ? t("tickets.list.empty_subtitle_create")
-              : t("tickets.list.empty_subtitle_search")
-          }
-          iconSize={40}
-        />
+        <EmptyState {...emptyContent} />
       </Box>
     );
   }

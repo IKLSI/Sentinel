@@ -1,6 +1,6 @@
 import type React from "react";
-import { useMemo } from "react";
 import ShowChartOutlined from "@mui/icons-material/ShowChartOutlined";
+import { useMemo } from "react";
 import {
   Area,
   AreaChart,
@@ -67,6 +67,7 @@ export const ScoreTrendCard: React.FC<Props> = ({ history }) => {
       {known.length < MINIMUM_POINTS ? (
         <EmptyState
           icon={ShowChartOutlined}
+          size="compact"
           title={t("dashboard.trend.empty_title")}
           subtitle={t("dashboard.trend.empty_subtitle")}
           sx={{ flex: 1 }}

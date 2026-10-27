@@ -1,6 +1,6 @@
 import type React from "react";
+import TaskAltOutlined from "@mui/icons-material/TaskAltOutlined";
 import { useMemo } from "react";
-import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
 import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
 import type { VirtualTableColumn } from "@/components/ui/common/table/VirtualTable";
 import { useT } from "@/contexts/I18nContext";
@@ -77,10 +77,10 @@ export const VulnerabilitiesTab: React.FC<Props> = ({
   if (vulns.length === 0) {
     return (
       <EmptyState
-        icon={CheckCircleOutlined}
+        icon={TaskAltOutlined}
+        tone="success"
         title={t("tech_health.empty.no_vulns_title")}
         subtitle={t("tech_health.empty.no_vulns_subtitle")}
-        iconSize={40}
         sx={EMPTY_STATE_SX}
       />
     );

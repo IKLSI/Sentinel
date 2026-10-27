@@ -7,8 +7,9 @@ import {
   useScanProgressQuery,
 } from "@/domains/projects/queries";
 import Box from "@mui/material/Box";
+import FolderOutlined from "@mui/icons-material/FolderOutlined";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import Button from "@mui/material/Button";
-import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import CloudDownloadOutlined from "@mui/icons-material/CloudDownloadOutlined";
 import { DeleteModal } from "@/components/ui/common/modal/DeleteModal";
 import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
@@ -83,10 +84,18 @@ export const ProjectsPage: React.FC = () => {
     [scanProgress],
   );
 
-  const emptySubtitle =
+  const emptyContent =
     projects.length > 0
-      ? t("projects.empty.adjust_search")
-      : t("projects.empty.create_first");
+      ? ({
+          icon: SearchOutlined,
+          title: t("common.no_results"),
+          subtitle: t("projects.empty.adjust_search"),
+        } as const)
+      : ({
+          icon: FolderOutlined,
+          title: t("projects.empty.title"),
+          subtitle: t("projects.empty.create_first"),
+        } as const);
 
   const renderContent = () => {
     if (loading) return <ProjectsSkeleton />;
@@ -116,10 +125,8 @@ export const ProjectsPage: React.FC = () => {
             }}
           >
             <EmptyState
-              icon={AccountTreeOutlined}
-              title={t("projects.empty.title")}
-              subtitle={searchError ?? emptySubtitle}
-              iconSize={40}
+              {...emptyContent}
+              subtitle={searchError ?? emptyContent.subtitle}
             />
           </Box>
         ) : (

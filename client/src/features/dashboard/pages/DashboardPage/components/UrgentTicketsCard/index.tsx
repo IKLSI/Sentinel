@@ -1,9 +1,9 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import TaskAltOutlined from "@mui/icons-material/TaskAltOutlined";
 import ButtonBase from "@mui/material/ButtonBase";
 import BoltOutlined from "@mui/icons-material/BoltOutlined";
 import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
-import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import PersonOffOutlined from "@mui/icons-material/PersonOffOutlined";
 import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
 import { useNavigate } from "@tanstack/react-router";
@@ -67,7 +67,9 @@ export const UrgentTicketsCard: React.FC<Props> = ({ tickets }) => {
     >
       {tickets.length === 0 ? (
         <EmptyState
-          icon={ConfirmationNumberOutlined}
+          icon={TaskAltOutlined}
+          tone="success"
+          size="compact"
           title={t("dashboard.tickets.empty_title")}
           subtitle={t("dashboard.tickets.empty_subtitle")}
           sx={{ flex: 1 }}

@@ -1,6 +1,8 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
+import TaskAltOutlined from "@mui/icons-material/TaskAltOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
 import { ListSkeleton } from "@/components/ui/common/feedback/ListSkeleton";
@@ -45,11 +47,36 @@ export const SkeletonsSection: React.FC = () => {
       </Box>
 
       <SubLabel>{t("style_guide.skeletons.empty")}</SubLabel>
-      <EmptyState
-        icon={FolderOutlined}
-        title={t("style_guide.skeletons.empty_title")}
-        subtitle={t("style_guide.skeletons.empty_subtitle")}
-      />
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gap: "16px",
+        }}
+      >
+        <EmptyState
+          icon={FolderOutlined}
+          title={t("style_guide.skeletons.empty_title")}
+          subtitle={t("style_guide.skeletons.empty_subtitle")}
+          sx={PANEL_SX}
+        />
+        <EmptyState
+          icon={TaskAltOutlined}
+          tone="success"
+          size="compact"
+          title={t("dashboard.tickets.empty_title")}
+          subtitle={t("dashboard.tickets.empty_subtitle")}
+          sx={PANEL_SX}
+        />
+        <EmptyState
+          icon={ErrorOutlineOutlined}
+          tone="danger"
+          size="compact"
+          title={t("common.load_error_title")}
+          subtitle={t("common.load_error_subtitle")}
+          sx={PANEL_SX}
+        />
+      </Box>
     </Section>
   );
 };

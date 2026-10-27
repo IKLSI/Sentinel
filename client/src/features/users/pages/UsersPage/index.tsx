@@ -2,8 +2,8 @@ import type React from "react";
 import { useCallback, useMemo, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import Button from "@mui/material/Button";
-import GroupOutlined from "@mui/icons-material/GroupOutlined";
 import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
@@ -128,11 +128,10 @@ export const UsersPage: React.FC = () => {
         <Box sx={PANEL_BODY_SX}>
           {!loadingMembers && members.length === 0 ? (
             <EmptyState
-              icon={GroupOutlined}
-              title={t("settings.members.empty")}
+              icon={SearchOutlined}
+              title={t("common.no_results")}
               subtitle={t("settings.members.empty_subtitle")}
-              iconSize={40}
-              sx={{ flex: 1, justifyContent: "center" }}
+              sx={{ flex: 1 }}
             />
           ) : (
             <Box

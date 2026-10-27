@@ -2,6 +2,7 @@ import type React from "react";
 import { useRef } from "react";
 import Box from "@mui/material/Box";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import { useT } from "@/contexts/I18nContext";
 import type { AvailableRepo } from "@/domains/projects/types";
 import { useVirtualRows } from "@/hooks/useVirtualRows";
@@ -35,6 +36,17 @@ export const RepoList: React.FC<Props> = ({
 }) => {
   const t = useT();
   const listRef = useRef<HTMLDivElement>(null);
+  const emptyContent = hasRepos
+    ? ({
+        icon: SearchOutlined,
+        title: t("common.no_results"),
+        subtitle: t("projects.sync_modal.no_results"),
+      } as const)
+    : ({
+        icon: FolderOutlined,
+        title: emptyTitle,
+        subtitle: emptySubtitle,
+      } as const);
 
   const virtualRows = useVirtualRows({
     count: visible.length,
@@ -90,10 +102,7 @@ export const RepoList: React.FC<Props> = ({
         </Box>
       ) : visible.length === 0 ? (
         <EmptyState
-          icon={FolderOutlined}
-          iconSize={40}
-          title={hasRepos ? t("projects.sync_modal.no_results") : emptyTitle}
-          subtitle={hasRepos ? undefined : emptySubtitle}
+          {...emptyContent}
           sx={{ p: { xs: "40px 20px", md: "72px 24px" } }}
         />
       ) : (

@@ -1,5 +1,5 @@
-import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import { describe, expect, it } from "vitest";
+import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
 import { render, screen } from "@/tests/test-utils";
 

@@ -82,8 +82,7 @@ export const ApiKeysTab: React.FC = () => {
             icon={KeyOutlined}
             title={t("settings.api_keys.empty")}
             subtitle={t("settings.api_keys.empty_subtitle")}
-            iconSize={40}
-            sx={{ flex: 1, justifyContent: "center" }}
+            sx={{ flex: 1 }}
           />
         ) : (
           <ApiKeyTable
