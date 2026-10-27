@@ -58,7 +58,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     handleSubmit: handleFormSubmit,
     getValues,
     reset,
-    setFocus,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -79,9 +78,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     if (open) {
       reset(EMPTY_FORM);
       setDone(false);
-      setTimeout(() => setFocus("organizationName"), 150);
     }
-  }, [open, reset, setFocus]);
+  }, [open, reset]);
 
   const onSubmit = handleFormSubmit((data) => {
     registerMutation.mutate(
@@ -150,6 +148,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             id={orgId}
             label={t("auth.register.organization_label")}
             registration={register("organizationName")}
+            autoFocus
             error={errors.organizationName}
             t={t}
             placeholder={t("auth.register.organization_placeholder")}

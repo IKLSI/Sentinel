@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { UserRole } from "@/enums";
 
+export const profileInfoSchema = z.object({
+  firstName: z.string().trim().min(1),
+  lastName: z.string().trim().min(1),
+});
+export type ProfileInfoFormValues = z.infer<typeof profileInfoSchema>;
+
 export const deleteAccountSchema = z.object({
   password: z.string().trim().min(1),
 });

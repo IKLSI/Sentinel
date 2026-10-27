@@ -31,7 +31,6 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     register,
     handleSubmit: handleFormSubmit,
     reset,
-    setFocus,
     formState: { errors },
   } = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -47,9 +46,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     if (open) {
       reset({ email: "" });
       setDone(false);
-      setTimeout(() => setFocus("email"), 150);
     }
-  }, [open, reset, setFocus]);
+  }, [open, reset]);
 
   const onSubmit = handleFormSubmit((data) => {
     forgotPasswordMutation.mutate(
@@ -97,6 +95,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             id={emailId}
             label={t("auth.forgot_password.email_label")}
             registration={register("email")}
+            autoFocus
             error={errors.email}
             t={t}
             type="email"

@@ -1,5 +1,7 @@
 import type React from "react";
-import { useEffect, useId, useState } from "react";
+import { useId } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +13,10 @@ import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { UserRole } from "@/enums";
 import { CARD_SX } from "@/features/users/pages/ProfilePage/constants";
 import { CardHeader } from "@/components/ui/common/CardHeader";
+import {
+  profileInfoSchema,
+  type ProfileInfoFormValues,
+} from "@/features/users/schemas";
 
 const ROLE_LABEL_KEYS: Record<UserRole, string> = {
   [UserRole.Admin]: "profile.role.admin",
@@ -24,42 +30,40 @@ export const InfoCard: React.FC = () => {
   const fieldId = useId();
   const onUpdateError = useApiErrorToast("profile.toast.update_error");
 
-  const firstName = user?.firstName ?? "";
-  const lastName = user?.lastName ?? "";
-  const [pf, setPf] = useState({ firstName, lastName });
-
-  useEffect(() => {
-    setPf({ firstName, lastName });
-  }, [firstName, lastName]);
+  const {
+    register,
+    handleSubmit,
+    formState: { isDirty },
+  } = useForm<ProfileInfoFormValues>({
+    resolver: zodResolver(profileInfoSchema),
+    values: {
+      firstName: user?.firstName ?? "",
+      lastName: user?.lastName ?? "",
+    },
+  });
 
   const updateProfile = useUpdateMyProfileMutation();
   const savingPf = updateProfile.isPending;
 
-  const pfUnchanged =
-    pf.firstName === user?.firstName && pf.lastName === user?.lastName;
-
-  const handleSave = () => {
-    if (pfUnchanged) return;
-    if (!pf.firstName.trim() || !pf.lastName.trim()) {
-      showToast(t("profile.toast.name_required"), "warning");
-      return;
-    }
-    updateProfile.mutate(
-      { data: pf },
-      {
-        onSuccess: (updated) => {
-          if (user)
-            setUser({
-              ...user,
-              firstName: updated.firstName,
-              lastName: updated.lastName,
-            });
-          showToast(t("profile.toast.updated"), "success");
+  const handleSave = handleSubmit(
+    (values) =>
+      updateProfile.mutate(
+        { data: values },
+        {
+          onSuccess: (updated) => {
+            if (user)
+              setUser({
+                ...user,
+                firstName: updated.firstName,
+                lastName: updated.lastName,
+              });
+            showToast(t("profile.toast.updated"), "success");
+          },
+          onError: onUpdateError,
         },
-        onError: onUpdateError,
-      },
-    );
-  };
+      ),
+    () => showToast(t("profile.toast.name_required"), "warning"),
+  );
 
   return (
     <Box sx={CARD_SX}>
@@ -78,14 +82,12 @@ export const InfoCard: React.FC = () => {
         <FormTextField
           id={`${fieldId}-first_name`}
           label={t("profile.field.first_name")}
-          value={pf.firstName}
-          onValueChange={(value) => setPf((f) => ({ ...f, firstName: value }))}
+          registration={register("firstName")}
         />
         <FormTextField
           id={`${fieldId}-last_name`}
           label={t("profile.field.last_name")}
-          value={pf.lastName}
-          onValueChange={(value) => setPf((f) => ({ ...f, lastName: value }))}
+          registration={register("lastName")}
         />
       </Box>
 
@@ -130,7 +132,7 @@ export const InfoCard: React.FC = () => {
           variant="contained"
           size="small"
           onClick={handleSave}
-          disabled={savingPf || pfUnchanged}
+          disabled={savingPf || !isDirty}
           sx={{ minWidth: "110px" }}
         >
           {savingPf ? t("profile.button.saving") : t("profile.button.save")}
