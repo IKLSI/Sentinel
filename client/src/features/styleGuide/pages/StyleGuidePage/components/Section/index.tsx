@@ -1,36 +1,64 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 
-export const Section: React.FC<{
+interface Props {
+  id: string;
   title: string;
-  desc?: string;
+  description: string;
   children: React.ReactNode;
-}> = ({ title, desc, children }) => (
+}
+
+export const Section: React.FC<Props> = ({
+  id,
+  title,
+  description,
+  children,
+}) => (
   <Box
     component="section"
+    id={id}
+    aria-labelledby={`${id}-title`}
     sx={{
-      py: "40px",
+      py: "36px",
       borderTop: "1px solid var(--border)",
-      "&:first-of-type": { borderTop: "none", pt: 0 },
+      "&:first-of-type": { borderTop: "none" },
     }}
   >
     <Box
+      component="h2"
+      id={`${id}-title`}
       sx={{
-        fontSize: "20px",
-        fontWeight: 700,
-        letterSpacing: "-0.01em",
-        mb: desc ? "6px" : "20px",
+        m: 0,
+        fontSize: "22px",
+        fontWeight: 650,
+        lineHeight: 1.25,
+        letterSpacing: "-0.02em",
+        color: "var(--text)",
       }}
     >
       {title}
     </Box>
-    {desc && (
-      <Box
-        sx={{ fontSize: "13px", color: "var(--text-secondary)", mb: "24px" }}
-      >
-        {desc}
-      </Box>
-    )}
-    {children}
+    <Box
+      component="p"
+      sx={{
+        mt: "8px",
+        mb: 0,
+        fontSize: "14px",
+        lineHeight: 1.6,
+        color: "var(--text-secondary)",
+      }}
+    >
+      {description}
+    </Box>
+    <Box
+      sx={{
+        mt: "20px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+      }}
+    >
+      {children}
+    </Box>
   </Box>
 );

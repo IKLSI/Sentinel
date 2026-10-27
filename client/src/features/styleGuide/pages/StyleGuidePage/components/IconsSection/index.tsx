@@ -1,63 +1,78 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import AutorenewOutlined from "@mui/icons-material/AutorenewOutlined";
-import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
-import { ICONS } from "@/features/styleGuide/pages/StyleGuidePage/constants";
-import { spin } from "@/styles/keyframes";
+import { AppTooltip } from "@/components/ui/common/AppTooltip";
+import { TEXT_ELLIPSIS_SX } from "@/constants/display";
+import { useT } from "@/contexts/I18nContext";
+import { ICONS } from "@/features/styleGuide/pages/StyleGuidePage/components/IconsSection/constants";
+import { Specimen } from "@/features/styleGuide/pages/StyleGuidePage/components/Specimen";
 
 export const IconsSection: React.FC = () => {
+  const t = useT();
+
   return (
-    <Section
-      title="Icons"
-      desc="MUI Icons Outlined — sous-ensemble utilisé dans l'application."
+    <Specimen
+      title={t("style_guide.icons.library")}
+      source="@mui/icons-material/<Nom>Outlined"
     >
       <Box
+        component="ul"
         sx={{
+          m: 0,
+          p: 0,
+          listStyle: "none",
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))",
-          gap: "10px",
+          gridTemplateColumns: "repeat(auto-fill, minmax(128px, 1fr))",
+          gap: "8px",
         }}
       >
-        {ICONS.map(({ Icon, name }) => (
-          <Box
-            key={name}
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "8px",
-              p: "14px 6px",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--r-md)",
-              background: "var(--s1)",
-            }}
-          >
-            <Icon sx={{ fontSize: 18, color: "var(--text-secondary)" }} />
-            <Box sx={{ fontSize: "10px", color: "var(--muted2)" }}>{name}</Box>
-          </Box>
+        {ICONS.map(({ name, Icon, meaningKey }) => (
+          <AppTooltip key={name} title={t(meaningKey)}>
+            <Box
+              component="li"
+              tabIndex={0}
+              aria-label={`${name}Outlined, ${t(meaningKey)}`}
+              sx={{
+                minWidth: 0,
+                height: 64,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                px: "8px",
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                color: "var(--text-secondary)",
+                transition: "border-color 0.15s, color 0.15s",
+                "&:hover": {
+                  borderColor: "var(--border2)",
+                  color: "var(--text)",
+                },
+              }}
+            >
+              <Icon
+                aria-hidden
+                sx={{
+                  fontSize: 20,
+                }}
+              />
+              <Box
+                component="code"
+                sx={{
+                  maxWidth: "100%",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "11px",
+                  color: "var(--muted2)",
+                  ...TEXT_ELLIPSIS_SX,
+                }}
+              >
+                {name}
+              </Box>
+            </Box>
+          </AppTooltip>
         ))}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "8px",
-            p: "14px 6px",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--r-md)",
-            background: "var(--s1)",
-          }}
-        >
-          <AutorenewOutlined
-            sx={{
-              fontSize: 18,
-              color: "var(--text-secondary)",
-              animation: `${spin} 1.2s linear infinite`,
-            }}
-          />
-          <Box sx={{ fontSize: "10px", color: "var(--muted2)" }}>Loader</Box>
-        </Box>
       </Box>
-    </Section>
+    </Specimen>
   );
 };

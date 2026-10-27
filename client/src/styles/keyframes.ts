@@ -1,11 +1,5 @@
 import { keyframes } from "@mui/material/styles";
 
-export const spin = keyframes`
-  to {
-    transform: rotate(360deg);
-  }
-`;
-
 export const fadeInUp = keyframes`
   from {
     opacity: 0;

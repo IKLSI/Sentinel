@@ -1,91 +1,66 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import { useT } from "@/contexts/I18nContext";
-import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
+import { Specimen } from "@/features/styleGuide/pages/StyleGuidePage/components/Specimen";
+import { FontFamilyCard } from "@/features/styleGuide/pages/StyleGuidePage/components/TypographySection/components/FontFamilyCard";
+import { TypeScaleRow } from "@/features/styleGuide/pages/StyleGuidePage/components/TypographySection/components/TypeScaleRow";
+import { VariantRow } from "@/features/styleGuide/pages/StyleGuidePage/components/TypographySection/components/VariantRow";
 import {
-  LABEL_VARIANTS,
+  FONT_FAMILIES,
+  THEME_VARIANTS,
   TYPE_SCALE,
-  WEIGHTS,
-} from "@/features/styleGuide/pages/StyleGuidePage/constants";
+} from "@/features/styleGuide/pages/StyleGuidePage/components/TypographySection/constants";
+
+const LIST_CANVAS_SX = {
+  p: { xs: "4px 16px", md: "4px 20px" },
+  backgroundColor: "var(--s1)",
+  backgroundImage: "none",
+} as const;
 
 export const TypographySection: React.FC = () => {
   const t = useT();
 
   return (
-    <Section title={t("style_guide.section.typography")}>
+    <>
       <Box
         sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "14px",
-          mb: "28px",
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            sm: "repeat(2, minmax(0, 1fr))",
+          },
+          gap: "16px",
         }}
       >
-        {TYPE_SCALE.map((s) => (
-          <Box
-            key={s.key}
-            sx={{ display: "flex", alignItems: "baseline", gap: "16px" }}
-          >
-            <Box
-              sx={{
-                width: "110px",
-                flexShrink: 0,
-                fontFamily: "var(--font-mono)",
-                fontSize: "11px",
-                color: "var(--muted2)",
-              }}
-            >
-              {s.key} — {s.rem}
-            </Box>
-            <Box
-              sx={{
-                fontSize: s.rem,
-                fontWeight: 600,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Sentinel
-            </Box>
-          </Box>
+        {FONT_FAMILIES.map(({ token, name, usageKey }) => (
+          <FontFamilyCard
+            key={token}
+            token={token}
+            name={name}
+            usage={t(usageKey)}
+          />
         ))}
       </Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          mb: "28px",
-        }}
+
+      <Specimen
+        title={t("style_guide.typography.scale")}
+        note={t("style_guide.typography.scale_note")}
+        canvasSx={LIST_CANVAS_SX}
       >
-        {LABEL_VARIANTS.map((variant) => (
-          <Box
-            key={variant}
-            sx={{ display: "flex", alignItems: "baseline", gap: "16px" }}
-          >
-            <Box
-              sx={{
-                width: "110px",
-                flexShrink: 0,
-                fontFamily: "var(--font-mono)",
-                fontSize: "11px",
-                color: "var(--muted2)",
-              }}
-            >
-              {variant}
-            </Box>
-            <Box sx={{ typography: variant, color: "var(--muted)" }}>
-              Open tickets
-            </Box>
-          </Box>
+        {TYPE_SCALE.map((step) => (
+          <TypeScaleRow key={step.size} step={step} />
         ))}
-      </Box>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        {WEIGHTS.map((w) => (
-          <Box key={w.label} sx={{ fontSize: "14px", fontWeight: w.weight }}>
-            {w.label} — The quick brown fox jumps over the lazy dog
-          </Box>
+      </Specimen>
+
+      <Specimen
+        title={t("style_guide.typography.variants")}
+        source="configs/themes/typography.ts"
+        canvasSx={LIST_CANVAS_SX}
+      >
+        {THEME_VARIANTS.map(({ name, exampleKey }) => (
+          <VariantRow key={name} name={name} example={t(exampleKey)} />
         ))}
-      </Box>
-    </Section>
+      </Specimen>
+    </>
   );
 };
