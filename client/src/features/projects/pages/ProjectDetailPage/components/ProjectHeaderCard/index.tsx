@@ -3,10 +3,9 @@ import Box from "@mui/material/Box";
 import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import { GradeRing } from "@/components/ui/common/GradeRing";
-import { ScanProgressBar } from "@/components/ui/common/feedback/ScanProgressBar";
 import { LABEL_KEYS } from "@/components/ui/forms/ScanFrequencyPicker";
 import { useI18n } from "@/contexts/I18nContext";
-import type { ProjectHeader, ScanProgress } from "@/domains/projects/types";
+import type { ProjectHeader } from "@/domains/projects/types";
 import { HeaderStats } from "@/features/projects/pages/ProjectDetailPage/components/ProjectHeaderCard/components/HeaderStats";
 import {
   GRADE_VISUAL,
@@ -21,7 +20,6 @@ import { PANEL_SX } from "@/helpers/cardSx";
 interface Props {
   project: ProjectHeader;
   eolRuntimes: number;
-  scanProgress?: ScanProgress;
   action?: React.ReactNode;
 }
 
@@ -38,7 +36,6 @@ const BANNER_SX = {
 export const ProjectHeaderCard: React.FC<Props> = ({
   project,
   eolRuntimes,
-  scanProgress,
   action,
 }) => {
   const { t, culture } = useI18n();
@@ -52,22 +49,7 @@ export const ProjectHeaderCard: React.FC<Props> = ({
         LABEL_KEYS[ScanFrequency.Manual],
     );
 
-  const renderScanBanner = () => {
-    if (scanProgress)
-      return (
-        <Box
-          sx={{ ...BANNER_SX, gap: "12px", background: "var(--accent-subtle)" }}
-        >
-          <Box
-            component="span"
-            sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text)" }}
-          >
-            {t("tech_health.scan_stage.title")}
-          </Box>
-          <ScanProgressBar progress={scanProgress} width={180} />
-        </Box>
-      );
-
+  const renderScanError = () => {
     if (!project.lastScanError) return null;
 
     return (
@@ -204,7 +186,7 @@ export const ProjectHeaderCard: React.FC<Props> = ({
           </Box>
         )}
       </Box>
-      {renderScanBanner()}
+      {renderScanError()}
       <HeaderStats project={project} eolRuntimes={eolRuntimes} />
     </Box>
   );

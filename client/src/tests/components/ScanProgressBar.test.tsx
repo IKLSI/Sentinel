@@ -3,7 +3,7 @@ import { ScanProgressBar } from "@/components/ui/common/feedback/ScanProgressBar
 import { render, screen } from "@/tests/test-utils";
 
 describe("ScanProgressBar", () => {
-  it("affiche l'étape courante et sa position dans le scan", async () => {
+  it("affiche un segment par étape du scan", async () => {
     render(
       <ScanProgressBar
         progress={{
@@ -15,6 +15,8 @@ describe("ScanProgressBar", () => {
       />,
     );
 
-    expect(await screen.findByRole("status")).toHaveTextContent("3/6");
+    expect(
+      (await screen.findByRole("status")).firstElementChild?.children,
+    ).toHaveLength(6);
   });
 });
