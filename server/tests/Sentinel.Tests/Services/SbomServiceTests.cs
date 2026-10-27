@@ -1,10 +1,10 @@
 using System.Text;
 using System.Text.Json;
 using FluentAssertions;
-using Sentinel.Infrastructure.Repositories;
 using Sentinel.Application.Exports;
-using Sentinel.Application.TechHealth.ExportSbom;
+using Sentinel.Application.Sbom;
 using Sentinel.Domain.Entities;
+using Sentinel.Infrastructure.Repositories;
 using Sentinel.Tests.Helpers;
 
 namespace Sentinel.Tests.Services;

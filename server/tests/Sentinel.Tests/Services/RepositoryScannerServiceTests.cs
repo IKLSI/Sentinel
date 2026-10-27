@@ -1,10 +1,10 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
-using Sentinel.Application.TechHealth.Scan;
+using Sentinel.Application.Scanning;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Git;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.Git;
 
 namespace Sentinel.Tests.Services;
 

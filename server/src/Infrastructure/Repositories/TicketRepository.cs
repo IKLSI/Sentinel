@@ -37,111 +37,6 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
         return new PagedList<TicketGridRow>(items, totalCount);
     }
 
-    private IQueryable<Ticket> ApplySearch(IQueryable<Ticket> query, string? search)
-    {
-        if (string.IsNullOrWhiteSpace(search)) return query;
-
-        string pattern = SearchPattern.Like(search);
-        IQueryable<TicketComment> comments = Context.TicketComments.AsNoTracking();
-
-        return query.Where(t =>
-            EF.Functions.ILike(t.Title, pattern) ||
-            EF.Functions.ILike(t.Description, pattern) ||
-            comments.Any(c => c.TicketId == t.Id && EF.Functions.ILike(c.Content, pattern)));
-    }
-
-    private static readonly Expression<Func<Ticket, int>> StatusRank = t =>
-        t.Status == TicketStatus.New ? 0
-        : t.Status == TicketStatus.InProgress ? 1
-        : t.Status == TicketStatus.Testing ? 2
-        : t.Status == TicketStatus.Resolved ? 3
-        : 4;
-
-    internal static IOrderedQueryable<Ticket> ApplySort(IQueryable<Ticket> query, TicketSortField sortBy,
-        SortDirection sortDirection)
-    {
-        bool descending = sortDirection == SortDirection.Desc;
-
-        return sortBy switch
-        {
-            TicketSortField.Title => query.OrderBy(t => t.Title, descending),
-            TicketSortField.Status => query.OrderBy(StatusRank, descending),
-            TicketSortField.Assignee => query.OrderBy(t => t.AssignedTo == null)
-                .ThenBy(t => t.AssignedTo!.FirstName, descending)
-                .ThenBy(t => t.AssignedTo!.LastName, descending),
-            TicketSortField.Comments => query.OrderBy(t => t.Comments.Count, descending),
-            _ => query.OrderBy(t => t.PriorityRank, descending)
-        };
-    }
-
-    private static readonly Expression<Func<Ticket, TicketGridRow>> ToGridRow = t => new TicketGridRow(
-        t.Id,
-        t.Number,
-        t.ProjectId,
-        t.Project != null ? t.Project.Name : null,
-        t.Title,
-        t.Description,
-        t.Priority,
-        t.Type,
-        t.Status,
-        t.AssignedToId,
-        t.AssignedTo != null ? t.AssignedTo.FirstName : null,
-        t.AssignedTo != null ? t.AssignedTo.LastName : null,
-        t.CreatedBy != null ? t.CreatedBy.FirstName : null,
-        t.CreatedBy != null ? t.CreatedBy.LastName : null,
-        t.CreatedAt,
-        t.UpdatedAt,
-        t.Comments.Count);
-
-    private static readonly Expression<Func<Ticket, TicketDetailRow>> ToDetailRow = t => new TicketDetailRow(
-        t.Id,
-        t.Number,
-        t.ProjectId,
-        t.Project != null ? t.Project.Name : null,
-        t.Title,
-        t.Description,
-        t.Priority,
-        t.Type,
-        t.Status,
-        t.AssignedToId,
-        t.AssignedTo != null ? t.AssignedTo.FirstName : null,
-        t.AssignedTo != null ? t.AssignedTo.LastName : null,
-        t.CreatedBy != null ? t.CreatedBy.FirstName : null,
-        t.CreatedBy != null ? t.CreatedBy.LastName : null,
-        t.CreatedAt,
-        t.FindingKind,
-        t.FindingKey,
-        t.Comments
-            .OrderBy(c => c.CreatedAt)
-            .Select(c => new TicketCommentRow(c.Id, c.AuthorId, c.Author.FirstName, c.Author.LastName, c.Content,
-                c.CreatedAt))
-            .ToList(),
-        t.History
-            .OrderByDescending(h => h.CreatedAt)
-            .Select(h => new TicketHistoryRow(
-                h.Id,
-                h.User != null ? h.User.FirstName : null,
-                h.User != null ? h.User.LastName : null,
-                h.Field,
-                h.OldValue,
-                h.NewValue,
-                h.CreatedAt))
-            .ToList());
-
-    private static readonly Expression<Func<Ticket, TicketExportRow>> ToExportRow = t => new TicketExportRow(
-        t.Number,
-        t.Project != null ? t.Project.Name : null,
-        t.Title,
-        t.Priority,
-        t.Type,
-        t.Status,
-        t.AssignedTo != null ? t.AssignedTo.FirstName : null,
-        t.AssignedTo != null ? t.AssignedTo.LastName : null,
-        t.CreatedBy != null ? t.CreatedBy.FirstName : null,
-        t.CreatedBy != null ? t.CreatedBy.LastName : null,
-        t.CreatedAt,
-        t.UpdatedAt);
-
     public async Task<IReadOnlyList<TicketExportRow>> ListForExportAsync(Guid organizationId, TicketFilter filter,
         int maxRows, CancellationToken cancellationToken)
     {
@@ -212,6 +107,43 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
             .Where(t => t.ProjectId == projectId && t.FindingKind != null && t.FindingKey != null)
             .ToListAsync(cancellationToken);
 
+    private IQueryable<Ticket> ApplySearch(IQueryable<Ticket> query, string? search)
+    {
+        if (string.IsNullOrWhiteSpace(search)) return query;
+
+        string pattern = SearchPattern.Like(search);
+        IQueryable<TicketComment> comments = Context.TicketComments.AsNoTracking();
+
+        return query.Where(t =>
+            EF.Functions.ILike(t.Title, pattern) ||
+            EF.Functions.ILike(t.Description, pattern) ||
+            comments.Any(c => c.TicketId == t.Id && EF.Functions.ILike(c.Content, pattern)));
+    }
+
+    private static readonly Expression<Func<Ticket, int>> StatusRank = t =>
+        t.Status == TicketStatus.New ? 0
+        : t.Status == TicketStatus.InProgress ? 1
+        : t.Status == TicketStatus.Testing ? 2
+        : t.Status == TicketStatus.Resolved ? 3
+        : 4;
+
+    internal static IOrderedQueryable<Ticket> ApplySort(IQueryable<Ticket> query, TicketSortField sortBy,
+        SortDirection sortDirection)
+    {
+        bool descending = sortDirection == SortDirection.Desc;
+
+        return sortBy switch
+        {
+            TicketSortField.Title => query.OrderBy(t => t.Title, descending),
+            TicketSortField.Status => query.OrderBy(StatusRank, descending),
+            TicketSortField.Assignee => query.OrderBy(t => t.AssignedTo == null)
+                .ThenBy(t => t.AssignedTo!.FirstName, descending)
+                .ThenBy(t => t.AssignedTo!.LastName, descending),
+            TicketSortField.Comments => query.OrderBy(t => t.Comments.Count, descending),
+            _ => query.OrderBy(t => t.PriorityRank, descending)
+        };
+    }
+
     private IQueryable<Ticket> FilteredQuery(Guid organizationId) =>
         Query(QueryTracking.NoTracking)
             .Where(t => t.OrganizationId == organizationId);
@@ -256,4 +188,72 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
 
         return query;
     }
+
+    private static readonly Expression<Func<Ticket, TicketGridRow>> ToGridRow = t => new TicketGridRow(
+        t.Id,
+        t.Number,
+        t.ProjectId,
+        t.Project != null ? t.Project.Name : null,
+        t.Title,
+        t.Description,
+        t.Priority,
+        t.Type,
+        t.Status,
+        t.AssignedToId,
+        t.AssignedTo != null ? t.AssignedTo.FirstName : null,
+        t.AssignedTo != null ? t.AssignedTo.LastName : null,
+        t.CreatedBy != null ? t.CreatedBy.FirstName : null,
+        t.CreatedBy != null ? t.CreatedBy.LastName : null,
+        t.CreatedAt,
+        t.UpdatedAt,
+        t.Comments.Count);
+
+    private static readonly Expression<Func<Ticket, TicketDetailRow>> ToDetailRow = t => new TicketDetailRow(
+        t.Id,
+        t.Number,
+        t.ProjectId,
+        t.Project != null ? t.Project.Name : null,
+        t.Title,
+        t.Description,
+        t.Priority,
+        t.Type,
+        t.Status,
+        t.AssignedToId,
+        t.AssignedTo != null ? t.AssignedTo.FirstName : null,
+        t.AssignedTo != null ? t.AssignedTo.LastName : null,
+        t.CreatedBy != null ? t.CreatedBy.FirstName : null,
+        t.CreatedBy != null ? t.CreatedBy.LastName : null,
+        t.CreatedAt,
+        t.FindingKind,
+        t.FindingKey,
+        t.Comments
+            .OrderBy(c => c.CreatedAt)
+            .Select(c => new TicketCommentRow(c.Id, c.AuthorId, c.Author.FirstName, c.Author.LastName, c.Content,
+                c.CreatedAt))
+            .ToList(),
+        t.History
+            .OrderByDescending(h => h.CreatedAt)
+            .Select(h => new TicketHistoryRow(
+                h.Id,
+                h.User != null ? h.User.FirstName : null,
+                h.User != null ? h.User.LastName : null,
+                h.Field,
+                h.OldValue,
+                h.NewValue,
+                h.CreatedAt))
+            .ToList());
+
+    private static readonly Expression<Func<Ticket, TicketExportRow>> ToExportRow = t => new TicketExportRow(
+        t.Number,
+        t.Project != null ? t.Project.Name : null,
+        t.Title,
+        t.Priority,
+        t.Type,
+        t.Status,
+        t.AssignedTo != null ? t.AssignedTo.FirstName : null,
+        t.AssignedTo != null ? t.AssignedTo.LastName : null,
+        t.CreatedBy != null ? t.CreatedBy.FirstName : null,
+        t.CreatedBy != null ? t.CreatedBy.LastName : null,
+        t.CreatedAt,
+        t.UpdatedAt);
 }

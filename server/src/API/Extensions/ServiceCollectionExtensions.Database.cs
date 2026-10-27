@@ -15,8 +15,7 @@ public static partial class ServiceCollectionExtensions
 {
     public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
-        string connectionString = configuration.GetConnectionString(ConfigurationKeys.DefaultConnectionString)
-            ?? throw new InvalidOperationException("The DefaultConnection connection string is missing");
+        string connectionString = RequiredDefaultConnectionString(configuration);
 
         services.AddScoped<TenantSessionState>();
         services.AddScoped<TenantCommandInterceptor>();
@@ -50,6 +49,10 @@ public static partial class ServiceCollectionExtensions
         return services;
     }
 
+    private static string RequiredDefaultConnectionString(IConfiguration configuration) =>
+        configuration.GetConnectionString(ConfigurationKeys.DefaultConnectionString)
+        ?? throw new InvalidOperationException("The DefaultConnection connection string is missing");
+
     private const int TransactionPoolingPort = 6543;
 
     private static void EnsureSessionScopedConnection(NpgsqlConnectionStringBuilder builder)
@@ -73,8 +76,7 @@ public static partial class ServiceCollectionExtensions
 
     public static IServiceCollection AddHangfireServices(this IServiceCollection services, IConfiguration configuration)
     {
-        string connectionString = configuration.GetConnectionString(ConfigurationKeys.DefaultConnectionString)
-            ?? throw new InvalidOperationException("The DefaultConnection connection string is missing");
+        string connectionString = RequiredDefaultConnectionString(configuration);
 
         DatabaseSettings database = ReadSettings<DatabaseSettings>(configuration, ConfigurationKeys.Sections.Database);
 
@@ -95,24 +97,21 @@ public static partial class ServiceCollectionExtensions
             }, new PostgreSqlStorageOptions { PrepareSchemaIfNecessary = false });
         });
 
-        services.AddHangfireServer(options =>
-        {
-            options.ServerName = $"{Environment.MachineName}:general";
-            options.Queues = [JobQueues.Emails, JobQueues.Default];
-            options.WorkerCount = HangfireGeneralWorkerCount;
-            options.SchedulePollingInterval = HangfireSchedulePollingInterval;
-        });
-
-        services.AddHangfireServer(options =>
-        {
-            options.ServerName = $"{Environment.MachineName}:scans";
-            options.Queues = [JobQueues.Scans];
-            options.WorkerCount = HangfireScanWorkerCount;
-            options.SchedulePollingInterval = HangfireSchedulePollingInterval;
-        });
+        AddHangfireWorkerServer(services, "general", [JobQueues.Emails, JobQueues.Default], HangfireGeneralWorkerCount);
+        AddHangfireWorkerServer(services, "scans", [JobQueues.Scans], HangfireScanWorkerCount);
 
         return services;
     }
+
+    private static void AddHangfireWorkerServer(IServiceCollection services, string role, string[] queues,
+        int workerCount) =>
+        services.AddHangfireServer(options =>
+        {
+            options.ServerName = $"{Environment.MachineName}:{role}";
+            options.Queues = queues;
+            options.WorkerCount = workerCount;
+            options.SchedulePollingInterval = HangfireSchedulePollingInterval;
+        });
 
     public static IServiceCollection AddDataProtectionPolicy(this IServiceCollection services, IConfiguration configuration)
     {

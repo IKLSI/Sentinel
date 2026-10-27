@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Sentinel.Application.Common;
-using Sentinel.Application.TechHealth.ProjectOptions;
+using Sentinel.Application.Projects.Options;
 using Sentinel.Domain.Entities;
 using Sentinel.Tests.Helpers;
 

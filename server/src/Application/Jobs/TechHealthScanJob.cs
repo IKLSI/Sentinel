@@ -1,4 +1,4 @@
-using Sentinel.Application.TechHealth.Scan;
+using Sentinel.Application.Scanning;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Realtime;

@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Sentinel.Application.Common;
-using Sentinel.Application.TechHealth.Scan;
-using Sentinel.Application.TechHealth.ScanProgress;
+using Sentinel.Application.Scanning;
+using Sentinel.Application.Scanning.GetProgress;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Realtime;

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 using Serilog;
+using Serilog.AspNetCore;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Repositories;
 using Sentinel.Domain.Abstractions;
@@ -13,6 +14,14 @@ namespace Sentinel.API;
 public static class Program
 {
     private static readonly TimeSpan RegexMatchTimeout = TimeSpan.FromSeconds(2);
+    private const long MemoryCacheSizeLimit = 50_000;
+    private const string HealthPath = "/health";
+
+    private const string PermissionsPolicy =
+        "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
+
+    private const string ContentSecurityPolicy =
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'";
 
     public static async Task Main(string[] args)
     {
@@ -45,7 +54,7 @@ public static class Program
             .AddControllersWithJsonOptions()
             .AddForwardedHeadersPolicy(builder.Configuration, builder.Environment)
             .AddLoginRateLimiting()
-            .AddMemoryCache(options => options.SizeLimit = 50_000)
+            .AddMemoryCache(options => options.SizeLimit = MemoryCacheSizeLimit)
             .AddResponseCompressionPolicy()
             .AddDataProtectionPolicy(builder.Configuration);
 
@@ -60,66 +69,17 @@ public static class Program
 
         app.UseResponseCompression();
         app.UseMiddleware<CorrelationIdMiddleware>();
-        app.UseSerilogRequestLogging(options =>
-        {
-            options.GetLevel = GetRequestLoggingLevel;
-
-            options.EnrichDiagnosticContext = (diagCtx, httpCtx) =>
-            {
-                if (httpCtx.Items.TryGetValue(CorrelationIdMiddleware.HeaderName, out object? cid)
-                    && cid?.ToString() is string cidStr
-                    && !string.IsNullOrEmpty(cidStr))
-                {
-                    diagCtx.Set("CorrelationId", cidStr);
-                }
-            };
-        });
+        app.UseSerilogRequestLogging(ConfigureRequestLogging);
         app.UseMiddleware<ErrorHandlingMiddleware>();
         app.UseMiddleware<ETagMiddleware>();
         app.UseRouting();
+        app.Use(AppendSecurityHeadersAsync);
 
-        app.Use(async (context, next) =>
-        {
-            context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-            context.Response.Headers.Append("X-Frame-Options", "DENY");
-            context.Response.Headers.Append("Referrer-Policy", "no-referrer");
-            context.Response.Headers.Append("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()");
-            context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'");
-
-            await next();
-        });
-
-        using (IServiceScope scope = app.Services.CreateScope())
-        {
-            SentinelContext context = scope.ServiceProvider.GetRequiredService<SentinelContext>();
-            ISystemScope systemScope = scope.ServiceProvider.GetRequiredService<ISystemScope>();
-
-            using (systemScope.Enter())
-            {
-                await DatabaseSchemaMigrator.MigrateAsync(context, app.Configuration);
-
-                if (!app.Environment.IsDevelopment())
-                {
-                    await DatabaseRoleGuard.EnsureRowLevelSecurityAppliesAsync(context);
-                }
-            }
-
-            if (app.Environment.IsDevelopment())
-            {
-                DataSeeder seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
-                await seeder.SeedAsync();
-            }
-        }
+        await PrepareDatabaseAsync(app);
 
         if (app.Environment.IsDevelopment())
         {
-            app.UseSwagger();
-            app.MapScalarApiReference(options =>
-            {
-                options.Title = "Sentinel API";
-                options.Theme = ScalarTheme.DeepSpace;
-                options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
-            });
+            UseApiReference(app);
         }
 
         app.UseCors();
@@ -130,8 +90,76 @@ public static class Program
         app.UseAuthorization();
         app.ConfigureHangfire();
 
+        MapEndpoints(app);
+
+        app.Run();
+    }
+
+    private static void ConfigureRequestLogging(RequestLoggingOptions options)
+    {
+        options.GetLevel = GetRequestLoggingLevel;
+
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            if (httpContext.Items.TryGetValue(CorrelationIdMiddleware.HeaderName, out object? correlationId)
+                && correlationId?.ToString() is string correlationIdText
+                && !string.IsNullOrEmpty(correlationIdText))
+            {
+                diagnosticContext.Set("CorrelationId", correlationIdText);
+            }
+        };
+    }
+
+    private static async Task AppendSecurityHeadersAsync(HttpContext context, Func<Task> next)
+    {
+        context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+        context.Response.Headers.Append("X-Frame-Options", "DENY");
+        context.Response.Headers.Append("Referrer-Policy", "no-referrer");
+        context.Response.Headers.Append("Permissions-Policy", PermissionsPolicy);
+        context.Response.Headers.Append("Content-Security-Policy", ContentSecurityPolicy);
+
+        await next();
+    }
+
+    private static async Task PrepareDatabaseAsync(WebApplication app)
+    {
+        using IServiceScope scope = app.Services.CreateScope();
+
+        SentinelContext context = scope.ServiceProvider.GetRequiredService<SentinelContext>();
+        ISystemScope systemScope = scope.ServiceProvider.GetRequiredService<ISystemScope>();
+
+        using (systemScope.Enter())
+        {
+            await DatabaseSchemaMigrator.MigrateAsync(context, app.Configuration);
+
+            if (!app.Environment.IsDevelopment())
+            {
+                await DatabaseRoleGuard.EnsureRowLevelSecurityAppliesAsync(context);
+            }
+        }
+
+        if (app.Environment.IsDevelopment())
+        {
+            DataSeeder seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+            await seeder.SeedAsync();
+        }
+    }
+
+    private static void UseApiReference(WebApplication app)
+    {
+        app.UseSwagger();
+        app.MapScalarApiReference(options =>
+        {
+            options.Title = "Sentinel API";
+            options.Theme = ScalarTheme.DeepSpace;
+            options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
+        });
+    }
+
+    private static void MapEndpoints(WebApplication app)
+    {
         app.MapControllers();
-        app.MapHealthChecks("/health", new HealthCheckOptions
+        app.MapHealthChecks(HealthPath, new HealthCheckOptions
         {
             ResponseWriter = (context, report) =>
             {
@@ -141,8 +169,6 @@ public static class Program
         }).AllowAnonymous();
         app.MapHub<SentinelHub>(RealtimeConstants.HubPath,
             options => options.CloseOnAuthenticationExpiration = true);
-
-        app.Run();
     }
 
     private static Serilog.Events.LogEventLevel GetRequestLoggingLevel(HttpContext httpContext, double elapsedMs, Exception? exception)
@@ -158,7 +184,7 @@ public static class Program
             return Serilog.Events.LogEventLevel.Error;
         }
 
-        return httpContext.Request.Path.StartsWithSegments("/health")
+        return httpContext.Request.Path.StartsWithSegments(HealthPath)
             ? Serilog.Events.LogEventLevel.Debug
             : Serilog.Events.LogEventLevel.Information;
     }

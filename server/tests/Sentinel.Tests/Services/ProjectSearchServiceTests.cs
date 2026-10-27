@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Application.Common;
-using Sentinel.Application.TechHealth.ProjectSearch;
+using Sentinel.Application.Projects.Search;
 using Sentinel.Domain.Entities;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Repositories;

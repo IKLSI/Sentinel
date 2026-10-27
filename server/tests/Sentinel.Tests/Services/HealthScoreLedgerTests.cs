@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Sentinel.Application.TechHealth.ScoringModel;
+using Sentinel.Application.ScoringModel;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.TechHealth;
 

@@ -12,20 +12,20 @@ using Sentinel.Domain.Entities;
 
 namespace Sentinel.Infrastructure.Email;
 
-
 public partial class EmailService : IEmailService
 {
     private const int ImplicitTlsPort = 465;
+    private const int MaxAlertRows = 15;
 
-    private readonly EmailSettings _email;
     private readonly ILocalizer _localizer;
     private readonly ILogger<EmailService> _logger;
+    private readonly EmailSettings _settings;
 
     public EmailService(IOptions<EmailSettings> emailOptions, ILocalizer localizer, ILogger<EmailService> logger)
     {
-        _email = emailOptions.Value;
         _localizer = localizer;
         _logger = logger;
+        _settings = emailOptions.Value;
     }
 
     public async Task SendInvitationAsync(UserInvitation invitation, string rawToken, string organizationName, string invitedByName, string frontendBaseUrl, string culture,
@@ -151,7 +151,7 @@ public partial class EmailService : IEmailService
                 ? Text(culture, "emails.vuln_alert.scan_first")
                 : Text(culture, "emails.vuln_alert.scan_new");
 
-            string vulnRows = BuildVulnerabilityRows(newVulns, culture);
+            string vulnRows = BuildAlertRows(newVulns, culture);
 
             string html = RenderTemplate("vuln-alert.html", culture,
                 new Dictionary<string, string>
@@ -186,68 +186,6 @@ public partial class EmailService : IEmailService
         }
     }
 
-    private MimeMessage BuildMessage(string recipient, string subject, string htmlBody, string? textBody = null)
-    {
-        MimeMessage message = new MimeMessage();
-        message.From.Add(new MailboxAddress(_email.FromName, _email.FromAddress));
-        message.To.Add(new MailboxAddress(recipient, recipient));
-        message.Subject = subject;
-        message.Body = new BodyBuilder { HtmlBody = htmlBody, TextBody = textBody }.ToMessageBody();
-
-        return message;
-    }
-
-    private string BuildVulnerabilityRows(IReadOnlyList<VulnerabilityAlertEntry> newVulns, string culture)
-    {
-        string rows = string.Join("\n", newVulns.Take(15).Select(v =>
-        {
-            (string color, string bg, string border) = v.Severity switch
-            {
-                "Critical" => ("#b91c1c", "#fef2f2", "#f6c9c9"),
-                "High"     => ("#c2410c", "#fff7ed", "#fcd7ae"),
-                "Medium"   => ("#a16207", "#fefce8", "#f7e8a8"),
-                _          => ("#5c6f90", "#eef1f9", "#d8e0ee")
-            };
-            string severityLabel = v.Severity switch
-            {
-                "Critical" => Text(culture, "emails.severity.critical"),
-                "High"     => Text(culture, "emails.severity.high"),
-                "Medium"   => Text(culture, "emails.severity.medium"),
-                "Low"      => Text(culture, "emails.severity.low"),
-                _          => v.Severity
-            };
-            string fixLabel = Text(culture, "emails.vuln_alert.fix");
-            string fix = string.IsNullOrEmpty(v.FixedVersion) ? "" : $"""<tr><td style="padding-top:6px;font-size:12px;color:#5c6f90;">&rarr; {WebUtility.HtmlEncode(fixLabel)} : <span style="color:#16a34a;font-weight:700;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;">{WebUtility.HtmlEncode(v.FixedVersion)}</span></td></tr>""";
-            return $"""
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;background-color:{bg};border:1px solid {border};border-radius:10px;">
-                  <tr>
-                    <td style="padding:12px 16px;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                        <tr>
-                          <td>
-                            <span style="display:inline-block;padding:3px 8px;border-radius:6px;background-color:#ffffff;border:1px solid {border};color:{color};font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;margin-right:8px;">{WebUtility.HtmlEncode(severityLabel)}</span>
-                            <span style="color:#0e1220;font-weight:700;font-size:13px;">{WebUtility.HtmlEncode(v.PackageName)}</span>
-                          </td>
-                          <td align="right" style="font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;font-size:11.5px;color:#5c6f90;white-space:nowrap;">{WebUtility.HtmlEncode(v.CveId)} &middot; CVSS {v.CvssScore.ToString("F1", CultureInfo.InvariantCulture)}</td>
-                        </tr>
-                        {fix}
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-                """;
-        }));
-
-        if (newVulns.Count > 15)
-        {
-            string more = Text(culture, "emails.vuln_alert.more",
-                new Dictionary<string, string> { ["count"] = (newVulns.Count - 15).ToString() });
-            rows += $"""<p style="margin:12px 0 0;font-size:12px;color:#8898bb;">{WebUtility.HtmlEncode(more)}</p>""";
-        }
-
-        return rows;
-    }
-
     private async Task SendAsync(MimeMessage message, string recipient, string logLabel,
         CancellationToken cancellationToken)
     {
@@ -255,24 +193,6 @@ public partial class EmailService : IEmailService
 
         _logger.LogInformation("{EmailKind:l} sent to {Email}", logLabel, MaskEmail(recipient));
     }
-
-    private async Task DeliverAsync(MimeMessage message, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrEmpty(_email.Host)) throw new InvalidOperationException("Email:Host is missing");
-
-        using SmtpClient client = new SmtpClient();
-
-        await client.ConnectAsync(_email.Host, _email.Port, SocketOptionsFor(_email.Port), cancellationToken);
-
-        if (!string.IsNullOrEmpty(_email.Username))
-            await client.AuthenticateAsync(_email.Username, _email.Password, cancellationToken);
-
-        await client.SendAsync(message, cancellationToken);
-        await client.DisconnectAsync(true, cancellationToken);
-    }
-
-    internal static SecureSocketOptions SocketOptionsFor(int port) =>
-        port == ImplicitTlsPort ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
 
     private string Text(string culture, string key) => _localizer.Get(culture, key);
 
@@ -286,17 +206,6 @@ public partial class EmailService : IEmailService
         return at <= 0 ? "***" : $"{email[0]}***{email[at..]}";
     }
 
-    private static string LoadTemplate(string fileName)
-    {
-        Assembly assembly = Assembly.GetExecutingAssembly();
-        string resourceName = assembly.GetManifestResourceNames()
-            .First(n => n.EndsWith(fileName, StringComparison.OrdinalIgnoreCase));
-
-        using Stream stream = assembly.GetManifestResourceStream(resourceName)!;
-        using StreamReader reader = new StreamReader(stream);
-        return reader.ReadToEnd();
-    }
-
     private string RenderTemplate(
         string fileName,
         string culture,
@@ -305,7 +214,7 @@ public partial class EmailService : IEmailService
     {
         string template = LoadTemplate(fileName);
 
-        template = TranslationToken().Replace(template, match => Text(culture, match.Groups[1].Value));
+        template = TranslationToken().Replace(template, match => _localizer.Get(culture, match.Groups[1].Value));
 
         foreach ((string placeholder, string value) in values)
             template = template.Replace(placeholder, WebUtility.HtmlEncode(value));
@@ -318,6 +227,103 @@ public partial class EmailService : IEmailService
 
         return template;
     }
+
+    private static string LoadTemplate(string fileName)
+    {
+        Assembly assembly = Assembly.GetExecutingAssembly();
+        string resourceName = assembly.GetManifestResourceNames()
+            .First(n => n.EndsWith(fileName, StringComparison.OrdinalIgnoreCase));
+
+        using Stream stream = assembly.GetManifestResourceStream(resourceName)!;
+        using StreamReader reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
+
+    private string BuildAlertRows(IReadOnlyList<VulnerabilityAlertEntry> newVulns, string culture)
+    {
+        string rows = string.Join("\n", newVulns.Take(MaxAlertRows).Select(v => BuildAlertRow(v, culture)));
+
+        if (newVulns.Count > MaxAlertRows)
+        {
+            string more = _localizer.Get(culture, "emails.vuln_alert.more",
+                new Dictionary<string, string> { ["count"] = (newVulns.Count - MaxAlertRows).ToString() });
+            rows += $"""<p style="margin:12px 0 0;font-size:12px;color:#8898bb;">{WebUtility.HtmlEncode(more)}</p>""";
+        }
+
+        return rows;
+    }
+
+    private string BuildAlertRow(VulnerabilityAlertEntry v, string culture)
+    {
+        (string color, string bg, string border) = SeverityPalette(v.Severity);
+        string severityLabel = SeverityLabel(v.Severity, culture);
+        string fixLabel = _localizer.Get(culture, "emails.vuln_alert.fix");
+        string fix = string.IsNullOrEmpty(v.FixedVersion) ? "" : $"""<tr><td style="padding-top:6px;font-size:12px;color:#5c6f90;">&rarr; {WebUtility.HtmlEncode(fixLabel)} : <span style="color:#16a34a;font-weight:700;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;">{WebUtility.HtmlEncode(v.FixedVersion)}</span></td></tr>""";
+        return $"""
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;background-color:{bg};border:1px solid {border};border-radius:10px;">
+              <tr>
+                <td style="padding:12px 16px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td>
+                        <span style="display:inline-block;padding:3px 8px;border-radius:6px;background-color:#ffffff;border:1px solid {border};color:{color};font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;margin-right:8px;">{WebUtility.HtmlEncode(severityLabel)}</span>
+                        <span style="color:#0e1220;font-weight:700;font-size:13px;">{WebUtility.HtmlEncode(v.PackageName)}</span>
+                      </td>
+                      <td align="right" style="font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;font-size:11.5px;color:#5c6f90;white-space:nowrap;">{WebUtility.HtmlEncode(v.CveId)} &middot; CVSS {v.CvssScore.ToString("F1", CultureInfo.InvariantCulture)}</td>
+                    </tr>
+                    {fix}
+                  </table>
+                </td>
+              </tr>
+            </table>
+            """;
+    }
+
+    private static (string Color, string Background, string Border) SeverityPalette(string severity) => severity switch
+    {
+        "Critical" => ("#b91c1c", "#fef2f2", "#f6c9c9"),
+        "High"     => ("#c2410c", "#fff7ed", "#fcd7ae"),
+        "Medium"   => ("#a16207", "#fefce8", "#f7e8a8"),
+        _          => ("#5c6f90", "#eef1f9", "#d8e0ee")
+    };
+
+    private string SeverityLabel(string severity, string culture) => severity switch
+    {
+        "Critical" => _localizer.Get(culture, "emails.severity.critical"),
+        "High"     => _localizer.Get(culture, "emails.severity.high"),
+        "Medium"   => _localizer.Get(culture, "emails.severity.medium"),
+        "Low"      => _localizer.Get(culture, "emails.severity.low"),
+        _          => severity
+    };
+
+    private MimeMessage BuildMessage(string recipient, string subject, string htmlBody, string? textBody = null)
+    {
+        MimeMessage message = new MimeMessage();
+        message.From.Add(new MailboxAddress(_settings.FromName, _settings.FromAddress));
+        message.To.Add(new MailboxAddress(recipient, recipient));
+        message.Subject = subject;
+        message.Body = new BodyBuilder { HtmlBody = htmlBody, TextBody = textBody }.ToMessageBody();
+
+        return message;
+    }
+
+    private async Task DeliverAsync(MimeMessage message, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(_settings.Host)) throw new InvalidOperationException("Email:Host is missing");
+
+        using SmtpClient client = new SmtpClient();
+
+        await client.ConnectAsync(_settings.Host, _settings.Port, SocketOptionsFor(_settings.Port), cancellationToken);
+
+        if (!string.IsNullOrEmpty(_settings.Username))
+            await client.AuthenticateAsync(_settings.Username, _settings.Password, cancellationToken);
+
+        await client.SendAsync(message, cancellationToken);
+        await client.DisconnectAsync(true, cancellationToken);
+    }
+
+    internal static SecureSocketOptions SocketOptionsFor(int port) =>
+        port == ImplicitTlsPort ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
 
     [GeneratedRegex(@"\{\{T:([A-Za-z0-9_.]+)\}\}")]
     private static partial Regex TranslationToken();

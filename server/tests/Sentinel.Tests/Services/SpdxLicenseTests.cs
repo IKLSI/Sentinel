@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Sentinel.Application.TechHealth.ExportSbom;
+using Sentinel.Application.Sbom;
 
 namespace Sentinel.Tests.Services;
 

@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
-using Sentinel.Application.TechHealth.Scan;
+using Sentinel.Application.Scanning;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Entities;
 using Sentinel.Tests.Helpers;

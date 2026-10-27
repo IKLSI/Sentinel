@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Net.Http.Headers;
 using Sentinel.API.Constants;
 using Sentinel.Application.Common;
-using Sentinel.Application.TechHealth.ProjectBadge;
+using Sentinel.Application.Projects.Badge;
 using Sentinel.Domain.Constants;
 
 namespace Sentinel.API.Controllers;

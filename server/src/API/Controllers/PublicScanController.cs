@@ -2,7 +2,7 @@ using Sentinel.API.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Sentinel.API.Constants;
-using Sentinel.Application.TechHealth.PublicScan;
+using Sentinel.Application.PublicScan;
 
 namespace Sentinel.API.Controllers;
 

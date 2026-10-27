@@ -2,7 +2,7 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Audit;
 using Sentinel.Application.Common;
 using Sentinel.Application.Common.Contracts;
-using Sentinel.Application.TechHealth.Scan;
+using Sentinel.Application.Scanning;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;

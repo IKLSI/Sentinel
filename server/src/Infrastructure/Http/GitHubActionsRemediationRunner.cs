@@ -6,6 +6,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Parsing;
 
 namespace Sentinel.Infrastructure.Http;
 
@@ -93,8 +94,7 @@ public class GitHubActionsRemediationRunner(
                 if (!payload.TryGetProperty("workflow_runs", out JsonElement runs)) return RemediationRunState.Unknown;
 
                 JsonElement? run = runs.EnumerateArray()
-                    .Where(item => item.TryGetProperty("display_title", out JsonElement title)
-                        && title.GetString() == $"{RunNamePrefix}{runnerJobId}")
+                    .Where(item => item.StringProperty("display_title") == $"{RunNamePrefix}{runnerJobId}")
                     .Select(item => (JsonElement?)item)
                     .FirstOrDefault();
 
@@ -114,12 +114,12 @@ public class GitHubActionsRemediationRunner(
 
     private static RemediationRunState StateOf(JsonElement run)
     {
-        string? status = run.TryGetProperty("status", out JsonElement s) ? s.GetString() : null;
+        string? status = run.StringProperty("status");
 
         if (status == "in_progress") return RemediationRunState.Running;
         if (status != "completed") return RemediationRunState.Pending;
 
-        string? conclusion = run.TryGetProperty("conclusion", out JsonElement c) ? c.GetString() : null;
+        string? conclusion = run.StringProperty("conclusion");
 
         return conclusion == "success" ? RemediationRunState.Succeeded : RemediationRunState.Failed;
     }

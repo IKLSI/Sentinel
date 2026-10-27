@@ -1,8 +1,8 @@
 using Hangfire;
 using Microsoft.Extensions.Logging;
 using Sentinel.Application.Common;
+using Sentinel.Application.Projects;
 using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -58,14 +58,8 @@ public class RemediationRunJob(
 
         using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
-            if (runnerJobId == null)
-                MarkFailed(remediation, ErrorCodes.RemediationStartFailed);
-            else
-            {
-                remediation.RunnerJobId = runnerJobId;
-                remediation.Status = RemediationStatus.Running;
-                remediation.UpdatedAt = DateTime.UtcNow;
-            }
+            if (runnerJobId == null) MarkFailed(remediation, ErrorCodes.RemediationStartFailed);
+            else MarkRunning(remediation, runnerJobId);
 
             await commitScope.CommitAsync(cancellationToken);
         }
@@ -87,8 +81,7 @@ public class RemediationRunJob(
         RemediationRunState state = await runner.GetStateAsync(runnerJobId,
             remediation.CreatedAt - RunLookupMargin, cancellationToken);
 
-        if (state is RemediationRunState.Pending or RemediationRunState.Running or RemediationRunState.Unknown
-            && DateTime.UtcNow - remediation.CreatedAt < RemediationRules.MaxRunDuration)
+        if (IsStillInProgress(state, remediation))
         {
             ScheduleMonitor(remediationId);
             return;
@@ -119,16 +112,8 @@ public class RemediationRunJob(
 
         using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
-            if (mergeRequestUrl != null)
-            {
-                remediation.Status = RemediationStatus.Opened;
-                remediation.MergeRequestUrl = mergeRequestUrl;
-                remediation.FailureCode = null;
-                remediation.CompletionTicketHash = null;
-                remediation.UpdatedAt = DateTime.UtcNow;
-            }
-            else
-                MarkFailed(remediation, FailureCodeOf(state));
+            if (mergeRequestUrl != null) MarkOpened(remediation, mergeRequestUrl);
+            else MarkFailed(remediation, FailureCodeOf(state));
 
             await commitScope.CommitAsync(cancellationToken);
         }
@@ -163,6 +148,26 @@ public class RemediationRunJob(
         RemediationRunState.Failed => ErrorCodes.RemediationRunFailed,
         _ => ErrorCodes.RemediationTimedOut
     };
+
+    private static bool IsStillInProgress(RemediationRunState state, VulnerabilityRemediation remediation) =>
+        state is RemediationRunState.Pending or RemediationRunState.Running or RemediationRunState.Unknown
+        && DateTime.UtcNow - remediation.CreatedAt < RemediationRules.MaxRunDuration;
+
+    private static void MarkRunning(VulnerabilityRemediation remediation, string runnerJobId)
+    {
+        remediation.RunnerJobId = runnerJobId;
+        remediation.Status = RemediationStatus.Running;
+        remediation.UpdatedAt = DateTime.UtcNow;
+    }
+
+    private static void MarkOpened(VulnerabilityRemediation remediation, string mergeRequestUrl)
+    {
+        remediation.Status = RemediationStatus.Opened;
+        remediation.MergeRequestUrl = mergeRequestUrl;
+        remediation.FailureCode = null;
+        remediation.CompletionTicketHash = null;
+        remediation.UpdatedAt = DateTime.UtcNow;
+    }
 
     private static void MarkFailed(VulnerabilityRemediation remediation, string failureCode)
     {

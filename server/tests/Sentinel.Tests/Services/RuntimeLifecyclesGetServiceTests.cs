@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
-using Sentinel.Application.TechHealth.RuntimeLifecycles;
+using Sentinel.Application.RuntimeLifecycles;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.TechHealth;
 

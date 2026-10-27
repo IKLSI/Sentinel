@@ -2,7 +2,7 @@ using System.Net;
 using System.Text;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
-using Sentinel.Application.TechHealth.Scan;
+using Sentinel.Application.Scanning;
 using Sentinel.Domain.Entities;
 using Sentinel.Infrastructure.Http;
 

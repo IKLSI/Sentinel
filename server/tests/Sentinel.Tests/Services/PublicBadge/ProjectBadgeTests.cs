@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Common;
-using Sentinel.Application.TechHealth.ProjectBadge;
+using Sentinel.Application.Projects.Badge;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Tests.Helpers;

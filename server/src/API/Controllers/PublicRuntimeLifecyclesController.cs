@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Sentinel.API.Constants;
-using Sentinel.Application.TechHealth.RuntimeLifecycles;
+using Sentinel.Application.RuntimeLifecycles;
 
 namespace Sentinel.API.Controllers;
 

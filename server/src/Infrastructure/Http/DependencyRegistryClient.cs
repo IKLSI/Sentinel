@@ -33,17 +33,7 @@ public partial class DependencyRegistryClient(
         using SemaphoreSlim throttle = new SemaphoreSlim(MaxConcurrentRegistryRequests);
 
         (RegistryPackageQuery Query, RegistryPackage Package)[] resolved = await Task.WhenAll(packages
-            .Where(package => package.Ecosystem is
-                DependencyEcosystem.Npm or
-                DependencyEcosystem.NuGet or
-                DependencyEcosystem.PyPI or
-                DependencyEcosystem.Maven or
-                DependencyEcosystem.Go or
-                DependencyEcosystem.Composer or
-                DependencyEcosystem.Gem or
-                DependencyEcosystem.Cargo or
-                DependencyEcosystem.Hex or
-                DependencyEcosystem.Pub)
+            .Where(package => HasPublicRegistry(package.Ecosystem))
             .Select(async package =>
             {
                 await throttle.WaitAsync(cancellationToken);
@@ -56,6 +46,18 @@ public partial class DependencyRegistryClient(
             .ToDictionary(entry => entry.Query, entry => new RegistryPackageMetadata(entry.Package.LatestVersion,
                 entry.Package.Publisher, entry.Package.License, entry.Package.IsDeprecated));
     }
+
+    private static bool HasPublicRegistry(DependencyEcosystem ecosystem) => ecosystem is
+        DependencyEcosystem.Npm or
+        DependencyEcosystem.NuGet or
+        DependencyEcosystem.PyPI or
+        DependencyEcosystem.Maven or
+        DependencyEcosystem.Go or
+        DependencyEcosystem.Composer or
+        DependencyEcosystem.Gem or
+        DependencyEcosystem.Cargo or
+        DependencyEcosystem.Hex or
+        DependencyEcosystem.Pub;
 
     private async Task<RegistryPackage> ResolvePackageAsync(HttpClient client, RegistryPackageQuery package,
         CancellationToken cancellationToken)
@@ -101,6 +103,76 @@ public partial class DependencyRegistryClient(
         response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Gone
             ? RegistryPackage.Unresolved
             : RegistryPackage.Failure;
+
+    private static async Task<RegistryPackage> FetchJsonAsync(HttpClient client, string url,
+        Func<JsonElement, RegistryPackage> map)
+    {
+        using HttpResponseMessage response = await client.GetAsync(url);
+        if (!response.IsSuccessStatusCode) return Unsuccessful(response);
+        using JsonDocument doc = await ParseJsonAsync(response);
+
+        return map(doc.RootElement);
+    }
+
+    private static async Task<JsonDocument> ParseJsonAsync(HttpResponseMessage response)
+    {
+        await using Stream stream = await response.Content.ReadAsStreamAsync();
+        return await JsonDocument.ParseAsync(stream);
+    }
+
+    private static string? Text(JsonElement element, string property) =>
+        element.TryGetProperty(property, out JsonElement value) && value.ValueKind == JsonValueKind.String
+            ? Trim(value.GetString())
+            : null;
+
+    private static string? StringOrFirst(JsonElement element, string property)
+    {
+        if (!element.TryGetProperty(property, out JsonElement value)) return null;
+
+        return value.ValueKind switch
+        {
+            JsonValueKind.String => Trim(value.GetString()),
+            JsonValueKind.Array => value.EnumerateArray()
+                .Where(item => item.ValueKind == JsonValueKind.String)
+                .Select(item => Trim(item.GetString()))
+                .FirstOrDefault(item => item != null),
+            _ => null,
+        };
+    }
+
+    private static string? PersonName(JsonElement element, string property)
+    {
+        if (!element.TryGetProperty(property, out JsonElement person)) return null;
+
+        return person.ValueKind switch
+        {
+            JsonValueKind.String => Trim(person.GetString()),
+            JsonValueKind.Object => Text(person, "name"),
+            _ => null,
+        };
+    }
+
+    private static string? FirstPersonName(JsonElement element, string property)
+    {
+        if (!element.TryGetProperty(property, out JsonElement people) || people.ValueKind != JsonValueKind.Array)
+            return null;
+
+        foreach (JsonElement person in people.EnumerateArray())
+        {
+            string? name = person.ValueKind switch
+            {
+                JsonValueKind.String => Trim(person.GetString()),
+                JsonValueKind.Object => Text(person, "name") ?? Text(person, "username"),
+                _ => null,
+            };
+
+            if (name != null) return name;
+        }
+
+        return null;
+    }
+
+    private static string? Trim(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static Task<RegistryPackage> FetchNpmAsync(HttpClient client, string package) =>
         FetchJsonAsync(client, $"https://registry.npmjs.org/{Uri.EscapeDataString(package)}/latest", root =>
@@ -271,74 +343,4 @@ public partial class DependencyRegistryClient(
 
             return new RegistryPackage(Text(latest, "version"), publisher, IsDeprecated: isDiscontinued);
         });
-
-    private static async Task<RegistryPackage> FetchJsonAsync(HttpClient client, string url,
-        Func<JsonElement, RegistryPackage> map)
-    {
-        using HttpResponseMessage response = await client.GetAsync(url);
-        if (!response.IsSuccessStatusCode) return Unsuccessful(response);
-        using JsonDocument doc = await ParseJsonAsync(response);
-
-        return map(doc.RootElement);
-    }
-
-    private static async Task<JsonDocument> ParseJsonAsync(HttpResponseMessage response)
-    {
-        await using Stream stream = await response.Content.ReadAsStreamAsync();
-        return await JsonDocument.ParseAsync(stream);
-    }
-
-    private static string? Text(JsonElement element, string property) =>
-        element.TryGetProperty(property, out JsonElement value) && value.ValueKind == JsonValueKind.String
-            ? Trim(value.GetString())
-            : null;
-
-    private static string? StringOrFirst(JsonElement element, string property)
-    {
-        if (!element.TryGetProperty(property, out JsonElement value)) return null;
-
-        return value.ValueKind switch
-        {
-            JsonValueKind.String => Trim(value.GetString()),
-            JsonValueKind.Array => value.EnumerateArray()
-                .Where(item => item.ValueKind == JsonValueKind.String)
-                .Select(item => Trim(item.GetString()))
-                .FirstOrDefault(item => item != null),
-            _ => null,
-        };
-    }
-
-    private static string? PersonName(JsonElement element, string property)
-    {
-        if (!element.TryGetProperty(property, out JsonElement person)) return null;
-
-        return person.ValueKind switch
-        {
-            JsonValueKind.String => Trim(person.GetString()),
-            JsonValueKind.Object => Text(person, "name"),
-            _ => null,
-        };
-    }
-
-    private static string? FirstPersonName(JsonElement element, string property)
-    {
-        if (!element.TryGetProperty(property, out JsonElement people) || people.ValueKind != JsonValueKind.Array)
-            return null;
-
-        foreach (JsonElement person in people.EnumerateArray())
-        {
-            string? name = person.ValueKind switch
-            {
-                JsonValueKind.String => Trim(person.GetString()),
-                JsonValueKind.Object => Text(person, "name") ?? Text(person, "username"),
-                _ => null,
-            };
-
-            if (name != null) return name;
-        }
-
-        return null;
-    }
-
-    private static string? Trim(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

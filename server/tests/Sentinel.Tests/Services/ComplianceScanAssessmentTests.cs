@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Sentinel.Application.TechHealth.ComplianceReport;
+using Sentinel.Application.Compliance;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 

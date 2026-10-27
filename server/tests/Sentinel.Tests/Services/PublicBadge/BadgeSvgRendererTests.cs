@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Sentinel.Application.TechHealth.ProjectBadge;
+using Sentinel.Application.Projects.Badge;
 
 namespace Sentinel.Tests.Services.PublicBadge;
 

@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Sentinel.Application.TechHealth.Scan;
+using Sentinel.Application.Scanning;
 using Sentinel.Domain.Entities;
 
 namespace Sentinel.Tests.Services;

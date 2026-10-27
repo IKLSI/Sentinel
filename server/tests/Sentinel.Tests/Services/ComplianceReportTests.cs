@@ -1,6 +1,6 @@
 using FluentAssertions;
+using Sentinel.Application.Compliance;
 using Sentinel.Application.Exports;
-using Sentinel.Application.TechHealth.ComplianceReport;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Entities;
 using Sentinel.Tests.Helpers;

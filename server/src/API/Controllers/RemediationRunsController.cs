@@ -2,8 +2,8 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Sentinel.API.Constants;
-using Sentinel.Application.TechHealth.Remediation.CompleteRemediationRun;
-using Sentinel.Application.TechHealth.Remediation.GetRemediationConfig;
+using Sentinel.Application.Remediation.CompleteRun;
+using Sentinel.Application.Remediation.GetConfig;
 
 namespace Sentinel.API.Controllers;
 

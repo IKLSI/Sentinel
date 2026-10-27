@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Sentinel.Application.TechHealth.ScoringModel;
+using Sentinel.Application.ScoringModel;
 
 namespace Sentinel.API.Controllers;
 

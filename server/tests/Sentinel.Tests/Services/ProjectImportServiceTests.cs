@@ -1,8 +1,8 @@
 using FluentAssertions;
 using Sentinel.Application.Common;
-using Sentinel.Application.TechHealth;
-using Sentinel.Application.TechHealth.CreateProject;
-using Sentinel.Application.TechHealth.ImportProjects;
+using Sentinel.Application.Projects;
+using Sentinel.Application.Projects.Create;
+using Sentinel.Application.Projects.Import;
 using Sentinel.Tests.Helpers;
 
 namespace Sentinel.Tests.Services;

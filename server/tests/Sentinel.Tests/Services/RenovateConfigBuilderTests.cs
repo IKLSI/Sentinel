@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 using FluentAssertions;
-using Sentinel.Application.TechHealth.Remediation;
+using Sentinel.Application.Remediation;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Git;
 using Sentinel.Domain.TechHealth;

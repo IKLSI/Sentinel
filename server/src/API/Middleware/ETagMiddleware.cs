@@ -6,6 +6,7 @@ public class ETagMiddleware
 {
     private const int MaxBufferedBytes = 84 * 1024;
     private const string JsonContentType = "application/json";
+    private const int ETagHexLength = 32;
 
     private readonly RequestDelegate _next;
 
@@ -40,7 +41,7 @@ public class ETagMiddleware
             }
 
             byte[] hash = SHA256.HashData(payload.Span);
-            string etag = $"\"{Convert.ToHexString(hash)[..32]}\"";
+            string etag = $"\"{Convert.ToHexString(hash)[..ETagHexLength]}\"";
 
             context.Response.Headers.ETag = etag;
             context.Response.Headers.CacheControl = "private, no-cache";

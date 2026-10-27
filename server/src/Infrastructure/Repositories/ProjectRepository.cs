@@ -10,14 +10,87 @@ namespace Sentinel.Infrastructure.Repositories;
 
 public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRepository
 {
-    private const string PyPiSeparatorPattern = "[-_.]+";
-
     public ProjectRepository(SentinelContext context) : base(context) { }
 
     public Task<Project?> GetOrDefaultInOrganizationAsync(Guid projectId, Guid organizationId,
         QueryTracking tracking, CancellationToken cancellationToken) =>
         Query(tracking)
             .FirstOrDefaultAsync(p => p.Id == projectId && p.OrganizationId == organizationId, cancellationToken);
+
+    public Task<ProjectBadgeRow?> GetOrDefaultBadgeByTokenAcrossTenantsAsync(string badgeToken,
+        CancellationToken cancellationToken) =>
+        Context.Projects
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(p => p.BadgeToken == badgeToken)
+            .Select(p => new ProjectBadgeRow(p.Name, p.HealthScore, p.HealthGrade))
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<ProjectSummaryRow>> ListSummariesByHealthRankAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        await SummariesByHealthRank(organizationId).ToListAsync(cancellationToken);
+
+    internal IQueryable<ProjectSummaryRow> SummariesByHealthRank(Guid organizationId) =>
+        from project in Query(QueryTracking.NoTracking)
+        where project.OrganizationId == organizationId
+        orderby project.InventoryCounts.CriticalVulnerabilities > 0 descending,
+            project.Coverage == ScanCoverage.Covered ? 0 : 1,
+            project.HealthScore,
+            project.Name
+        select new ProjectSummaryRow(
+            project.Id,
+            project.Name,
+            project.RepositoryUrl,
+            project.Branch,
+            project.RootPath,
+            project.RepositoryType,
+            project.LastScanAt,
+            project.LastScanError,
+            project.HealthScore,
+            project.HealthGrade,
+            project.Coverage,
+            project.ScanFrequency,
+            project.InventoryCounts.Dependencies,
+            project.InventoryCounts.CriticalVulnerabilities,
+            project.InventoryCounts.Vulnerabilities,
+            project.InventoryCounts.KnownExploitedVulnerabilities,
+            project.Tickets.Count);
+
+    public async Task<IReadOnlyList<string?>> ListRepositoryUrlsAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(p => p.OrganizationId == organizationId)
+            .Select(p => p.RepositoryUrl)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Guid>> ListIdsByOrganizationAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(p => p.OrganizationId == organizationId)
+            .Select(p => p.Id)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Guid>> ListIdsDueForScanAsync(ScanFrequency frequency, DateTime threshold,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(p => p.ScanFrequency == frequency && (p.LastScanAt == null || p.LastScanAt < threshold))
+            .Select(p => p.Id)
+            .ToListAsync(cancellationToken);
+
+    public Task<bool> ExistsInOrganizationAsync(Guid projectId, Guid organizationId,
+        CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .AnyAsync(p => p.Id == projectId && p.OrganizationId == organizationId, cancellationToken);
+
+    public async Task<IReadOnlyList<ProjectOptionRow>> ListOptionsByNameAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(p => p.OrganizationId == organizationId)
+            .OrderBy(p => p.Name)
+            .Select(p => new ProjectOptionRow(p.Id, p.Name))
+            .ToListAsync(cancellationToken);
+
+    private const string PyPiSeparatorPattern = "[-_.]+";
 
     public Task<Project?> GetOrDefaultWithHealthDetailsAsync(Guid projectId, QueryTracking tracking,
         CancellationToken cancellationToken) =>
@@ -69,45 +142,6 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
     private static IQueryable<Project> WithPackage(IQueryable<Project> query, string packageName) =>
         query.Include(p => p.Dependencies.Where(d => d.Name.ToLower() == packageName
             || Regex.Replace(d.Name.ToLower(), PyPiSeparatorPattern, "-") == packageName));
-
-    public Task<ProjectBadgeRow?> GetOrDefaultBadgeByTokenAcrossTenantsAsync(string badgeToken,
-        CancellationToken cancellationToken) =>
-        Context.Projects
-            .IgnoreQueryFilters()
-            .AsNoTracking()
-            .Where(p => p.BadgeToken == badgeToken)
-            .Select(p => new ProjectBadgeRow(p.Name, p.HealthScore, p.HealthGrade))
-            .FirstOrDefaultAsync(cancellationToken);
-
-    public async Task<IReadOnlyList<ProjectSummaryRow>> ListSummariesByHealthRankAsync(Guid organizationId,
-        CancellationToken cancellationToken) =>
-        await SummariesByHealthRank(organizationId).ToListAsync(cancellationToken);
-
-    internal IQueryable<ProjectSummaryRow> SummariesByHealthRank(Guid organizationId) =>
-        from project in Query(QueryTracking.NoTracking)
-        where project.OrganizationId == organizationId
-        orderby project.InventoryCounts.CriticalVulnerabilities > 0 descending,
-            project.Coverage == ScanCoverage.Covered ? 0 : 1,
-            project.HealthScore,
-            project.Name
-        select new ProjectSummaryRow(
-            project.Id,
-            project.Name,
-            project.RepositoryUrl,
-            project.Branch,
-            project.RootPath,
-            project.RepositoryType,
-            project.LastScanAt,
-            project.LastScanError,
-            project.HealthScore,
-            project.HealthGrade,
-            project.Coverage,
-            project.ScanFrequency,
-            project.InventoryCounts.Dependencies,
-            project.InventoryCounts.CriticalVulnerabilities,
-            project.InventoryCounts.Vulnerabilities,
-            project.InventoryCounts.KnownExploitedVulnerabilities,
-            project.Tickets.Count);
 
     public async Task<IReadOnlyList<Project>> ListWithHealthDetailsByNameAsync(Guid organizationId, int take,
         CancellationToken cancellationToken) =>
@@ -175,31 +209,9 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
             })
             .ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<string?>> ListRepositoryUrlsAsync(Guid organizationId,
-        CancellationToken cancellationToken) =>
-        await Query(QueryTracking.NoTracking)
-            .Where(p => p.OrganizationId == organizationId)
-            .Select(p => p.RepositoryUrl)
-            .ToListAsync(cancellationToken);
-
-    public async Task<IReadOnlyList<Guid>> ListIdsByOrganizationAsync(Guid organizationId,
-        CancellationToken cancellationToken) =>
-        await Query(QueryTracking.NoTracking)
-            .Where(p => p.OrganizationId == organizationId)
-            .Select(p => p.Id)
-            .ToListAsync(cancellationToken);
-
-    public async Task<IReadOnlyList<Guid>> ListIdsDueForScanAsync(ScanFrequency frequency, DateTime threshold,
-        CancellationToken cancellationToken) =>
-        await Query(QueryTracking.NoTracking)
-            .Where(p => p.ScanFrequency == frequency && (p.LastScanAt == null || p.LastScanAt < threshold))
-            .Select(p => p.Id)
-            .ToListAsync(cancellationToken);
-
-    public Task<bool> ExistsInOrganizationAsync(Guid projectId, Guid organizationId,
-        CancellationToken cancellationToken) =>
-        Query(QueryTracking.NoTracking)
-            .AnyAsync(p => p.Id == projectId && p.OrganizationId == organizationId, cancellationToken);
+    private static IQueryable<Project> WithHealthDetails(IQueryable<Project> query) => query
+        .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
+        .Include(p => p.Runtimes);
 
     public Task<int> MarkScanFailedAsync(Guid projectId, string errorCode, DateTime scannedAt,
         CancellationToken cancellationToken) =>
@@ -236,16 +248,4 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
             .ExecuteUpdateAsync(setters => setters
                 .SetProperty(p => p.HealthScore, healthScore)
                 .SetProperty(p => p.HealthGrade, healthGrade), cancellationToken);
-
-    public async Task<IReadOnlyList<ProjectOptionRow>> ListOptionsByNameAsync(Guid organizationId,
-        CancellationToken cancellationToken) =>
-        await Query(QueryTracking.NoTracking)
-            .Where(p => p.OrganizationId == organizationId)
-            .OrderBy(p => p.Name)
-            .Select(p => new ProjectOptionRow(p.Id, p.Name))
-            .ToListAsync(cancellationToken);
-
-    private static IQueryable<Project> WithHealthDetails(IQueryable<Project> query) => query
-        .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
-        .Include(p => p.Runtimes);
 }

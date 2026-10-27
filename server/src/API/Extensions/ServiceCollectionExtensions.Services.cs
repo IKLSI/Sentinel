@@ -4,20 +4,21 @@ using Sentinel.API.Services;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.ApiKeys;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Auth;
 using Sentinel.Application.Auth.AccountState;
 using Sentinel.Application.Auth.Login;
+using Sentinel.Application.Auth;
+using Sentinel.Application.Compliance;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Exports;
 using Sentinel.Application.Jobs;
+using Sentinel.Application.Projects;
+using Sentinel.Application.PublicScan;
+using Sentinel.Application.Sbom;
+using Sentinel.Application.Scanning;
 using Sentinel.Application.Security;
-using Sentinel.Application.Tickets;
-using Sentinel.Application.TechHealth;
-using Sentinel.Application.TechHealth.ComplianceReport;
-using Sentinel.Application.TechHealth.ExportSbom;
-using Sentinel.Application.TechHealth.PublicScan;
-using Sentinel.Application.TechHealth.Suppressions;
+using Sentinel.Application.Suppressions;
 using Sentinel.Application.TechHealth.Scan;
+using Sentinel.Application.Tickets;
 using Sentinel.Application.Users;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
@@ -46,77 +47,6 @@ public static partial class ServiceCollectionExtensions
     public static IServiceCollection AddHealthCheckServices(this IServiceCollection services)
     {
         services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
-
-        return services;
-    }
-
-    public static IServiceCollection AddHttpRegistryClients(this IServiceCollection services)
-    {
-        services.AddSingleton<HostConcurrencyLimiter>();
-        services.AddSingleton<InFlightRequestCoalescer>();
-        services.AddTransient<HostConcurrencyHandler>();
-
-        services.AddResilientHttpClient(HttpClientNames.Osv, 90, client =>
-        {
-            client.BaseAddress = new Uri("https://api.osv.dev");
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
-        });
-
-        services.AddResilientHttpClient(HttpClientNames.Registry, 90, client =>
-            client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0"));
-
-        services.AddResilientHttpClient(HttpClientNames.GitLab, 90, client =>
-            client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0"), publicNetworkOnly: true);
-
-        services.AddResilientHttpClient(HttpClientNames.EolDate, 45, client =>
-            client.DefaultRequestHeaders.Add("Accept", "application/json"));
-
-        services.AddResilientHttpClient(HttpClientNames.Epss, 45, client =>
-        {
-            client.BaseAddress = new Uri("https://api.first.org");
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
-        });
-
-        services.AddResilientHttpClient(HttpClientNames.Kev, 60, client =>
-            client.DefaultRequestHeaders.Add("Accept", "application/json"));
-
-        services.AddHttpClient(HttpClientNames.RemediationRunner, client =>
-        {
-            client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Remediation/1.0");
-            client.Timeout = TimeSpan.FromSeconds(30);
-        });
-
-        return services;
-    }
-
-    private const string HttpRetryPipelineName = "retry";
-    private const long MaxBufferedResponseBytes = 16 * 1024 * 1024;
-
-    private static IServiceCollection AddResilientHttpClient(
-        this IServiceCollection services,
-        string name,
-        int timeoutSeconds,
-        Action<HttpClient> configure,
-        bool publicNetworkOnly = false)
-    {
-        IHttpClientBuilder httpClient = services.AddHttpClient(name, client =>
-        {
-            configure(client);
-            client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
-            client.MaxResponseContentBufferSize = MaxBufferedResponseBytes;
-        })
-        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
-        {
-            AutomaticDecompression = DecompressionMethods.All,
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
-            AllowAutoRedirect = !publicNetworkOnly,
-            ConnectCallback = publicNetworkOnly ? PublicNetworkConnector.ConnectAsync : null
-        })
-        .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
-
-        httpClient.AddResilienceHandler(HttpRetryPipelineName, (pipeline, context) => HttpRetryPolicy.Configure(pipeline,
-            context.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(HttpRetryPolicy))));
-        httpClient.AddHttpMessageHandler<HostConcurrencyHandler>();
 
         return services;
     }
@@ -209,6 +139,77 @@ public static partial class ServiceCollectionExtensions
         {
             services.AddScoped(useCaseType);
         }
+
+        return services;
+    }
+
+    public static IServiceCollection AddHttpRegistryClients(this IServiceCollection services)
+    {
+        services.AddSingleton<HostConcurrencyLimiter>();
+        services.AddSingleton<InFlightRequestCoalescer>();
+        services.AddTransient<HostConcurrencyHandler>();
+
+        services.AddResilientHttpClient(HttpClientNames.Osv, 90, client =>
+        {
+            client.BaseAddress = new Uri("https://api.osv.dev");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
+
+        services.AddResilientHttpClient(HttpClientNames.Registry, 90, client =>
+            client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0"));
+
+        services.AddResilientHttpClient(HttpClientNames.GitLab, 90, client =>
+            client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0"), publicNetworkOnly: true);
+
+        services.AddResilientHttpClient(HttpClientNames.EolDate, 45, client =>
+            client.DefaultRequestHeaders.Add("Accept", "application/json"));
+
+        services.AddResilientHttpClient(HttpClientNames.Epss, 45, client =>
+        {
+            client.BaseAddress = new Uri("https://api.first.org");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
+
+        services.AddResilientHttpClient(HttpClientNames.Kev, 60, client =>
+            client.DefaultRequestHeaders.Add("Accept", "application/json"));
+
+        services.AddHttpClient(HttpClientNames.RemediationRunner, client =>
+        {
+            client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Remediation/1.0");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
+        return services;
+    }
+
+    private const string HttpRetryPipelineName = "retry";
+    private const long MaxBufferedResponseBytes = 16 * 1024 * 1024;
+
+    private static IServiceCollection AddResilientHttpClient(
+        this IServiceCollection services,
+        string name,
+        int timeoutSeconds,
+        Action<HttpClient> configure,
+        bool publicNetworkOnly = false)
+    {
+        IHttpClientBuilder httpClient = services.AddHttpClient(name, client =>
+        {
+            configure(client);
+            client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+            client.MaxResponseContentBufferSize = MaxBufferedResponseBytes;
+        })
+        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+        {
+            AutomaticDecompression = DecompressionMethods.All,
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            AllowAutoRedirect = !publicNetworkOnly,
+            ConnectCallback = publicNetworkOnly ? PublicNetworkConnector.ConnectAsync : null
+        })
+        .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+
+        httpClient.AddResilienceHandler(HttpRetryPipelineName, (pipeline, context) => HttpRetryPolicy.Configure(pipeline,
+            context.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(HttpRetryPolicy))));
+        httpClient.AddHttpMessageHandler<HostConcurrencyHandler>();
 
         return services;
     }

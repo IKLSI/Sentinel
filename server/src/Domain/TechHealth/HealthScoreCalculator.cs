@@ -79,6 +79,11 @@ public static class HealthScoreCalculator
             : (null, null);
     }
 
+    public static string ToGrade(int score) =>
+        GradeThresholds.FirstOrDefault(threshold => score >= threshold.MinScore)?.Grade ?? GradeThresholds[^1].Grade;
+
+    private static int ToScore(double penalty) => (int)Math.Round(MaxScore * Math.Exp(-penalty / ScoreDecayConstant));
+
     private static List<PenaltyCharge> Charges(Project project, Func<Vulnerability, bool> isResolved, DateTime now)
     {
         List<PenaltyCharge> charges = [];
@@ -100,9 +105,6 @@ public static class HealthScoreCalculator
 
         return charges;
     }
-
-    public static string ToGrade(int score) =>
-        GradeThresholds.FirstOrDefault(threshold => score >= threshold.MinScore)?.Grade ?? GradeThresholds[^1].Grade;
 
     private static List<Vulnerability> OpenVulnerabilities(Dependency dependency,
         Func<Vulnerability, bool> isResolved) =>
@@ -163,32 +165,6 @@ public static class HealthScoreCalculator
     private static List<string> DependencyModifiers(Dependency dependency) =>
         dependency.Type == DependencyType.Dev ? [ScorePenaltyModifiers.DevDependency] : [];
 
-    private static List<ScorePenaltyLine> ToLines(List<PenaltyCharge> charges) => charges
-        .GroupBy(charge => charge.GroupKey)
-        .Select(group =>
-        {
-            PenaltyCharge first = group.First();
-
-            return new ScorePenaltyLine(
-                first.Kind,
-                first.Modifiers,
-                first.Multiplier == 1 ? null : first.Multiplier,
-                group.Count(),
-                group.Sum(charge => charge.Points),
-                DistinctValues(group.Select(charge => charge.Identifier)),
-                DistinctValues(group.Select(charge => charge.Package)),
-                first.Runtime,
-                first.Outdated,
-                first.TotalDirect);
-        })
-        .OrderByDescending(line => line.Points)
-        .ToList();
-
-    private static List<string> DistinctValues(IEnumerable<string?> values) => values
-        .OfType<string>()
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .ToList();
-
     private static string SeverityKind(VulnerabilitySeverity severity) => severity switch
     {
         VulnerabilitySeverity.Critical => ScorePenaltyKinds.CriticalVulnerability,
@@ -196,8 +172,6 @@ public static class HealthScoreCalculator
         VulnerabilitySeverity.Medium => ScorePenaltyKinds.MediumVulnerability,
         _ => ScorePenaltyKinds.LowVulnerability
     };
-
-    private static int ToScore(double penalty) => (int)Math.Round(MaxScore * Math.Exp(-penalty / ScoreDecayConstant));
 
     private static int SeverityPenalty(VulnerabilitySeverity severity) => severity switch
     {
@@ -250,4 +224,30 @@ public static class HealthScoreCalculator
 
         public string GroupKey => $"{Kind}|{string.Join(',', Modifiers)}|{Runtime?.Name}";
     }
+
+    private static List<ScorePenaltyLine> ToLines(List<PenaltyCharge> charges) => charges
+        .GroupBy(charge => charge.GroupKey)
+        .Select(group =>
+        {
+            PenaltyCharge first = group.First();
+
+            return new ScorePenaltyLine(
+                first.Kind,
+                first.Modifiers,
+                first.Multiplier == 1 ? null : first.Multiplier,
+                group.Count(),
+                group.Sum(charge => charge.Points),
+                DistinctValues(group.Select(charge => charge.Identifier)),
+                DistinctValues(group.Select(charge => charge.Package)),
+                first.Runtime,
+                first.Outdated,
+                first.TotalDirect);
+        })
+        .OrderByDescending(line => line.Points)
+        .ToList();
+
+    private static List<string> DistinctValues(IEnumerable<string?> values) => values
+        .OfType<string>()
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
 }

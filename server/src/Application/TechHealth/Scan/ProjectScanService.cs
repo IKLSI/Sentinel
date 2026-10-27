@@ -1,6 +1,7 @@
 using Hangfire;
 using Microsoft.Extensions.Logging;
-using Sentinel.Application.TechHealth.Suppressions;
+using Sentinel.Application.Scanning;
+using Sentinel.Application.Suppressions;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -82,8 +83,7 @@ public class ProjectScanService(
         progress.Report(ScanStage.Repository);
 
         DateTime? alertBaseline = project.LastReliableScanAt;
-        (int? scoreBefore, string? gradeBefore, ScanCoverage coverageBefore, string? errorBefore) =
-            (project.HealthScore, project.HealthGrade, project.Coverage, project.LastScanError);
+        ScanOutcomeSnapshot outcomeBefore = ScanOutcomeSnapshot.Of(project);
 
         Dictionary<string, DateTime> previousDetections =
             await vulnerabilityRepository.GetFirstDetectionsByProjectAsync(projectId, cancellationToken);
@@ -107,19 +107,7 @@ public class ProjectScanService(
         HashSet<Guid> suppressedIds =
             await healthRecalculator.SuppressedVulnerabilityIdsAsync(project, cancellationToken);
 
-        project.Coverage = ScanCoverageResolver.Resolve(project, acquisition.ScanRan, acquisition.ScanError,
-            acquisition.ManifestsRead);
-        project.HealthScore = project.Coverage == ScanCoverage.Covered
-            ? HealthScoreCalculator.Calculate(project, vulnerability => suppressedIds.Contains(vulnerability.Id))
-            : null;
-        project.HealthGrade = project.HealthScore is { } score ? HealthScoreCalculator.ToGrade(score) : null;
-
-        DateTime scannedAt = DateTime.UtcNow;
-        project.LastScanAt = scannedAt;
-        project.LastScanError = acquisition.ScanError
-            ?? acquisition.Gap?.Code
-            ?? (vulnerabilityDataComplete ? null : ErrorCodes.ScanVulnerabilityDataIncomplete);
-        project.LastScanErrorDetail = acquisition.ScanError == null ? acquisition.Gap?.Detail : null;
+        DateTime scannedAt = ApplyScanResult(project, acquisition, vulnerabilityDataComplete, suppressedIds);
 
         bool findingsReliable = project.Coverage == ScanCoverage.Covered
             && vulnerabilityDataComplete
@@ -139,18 +127,47 @@ public class ProjectScanService(
 
         await inventoryWriter.SaveAsync(cancellationToken);
 
-        bool projectChanged = !acquisition.RepositoryUnchanged
-            || acquisition.InventoryReplaced
-            || (scoreBefore, gradeBefore, coverageBefore, errorBefore)
-                != (project.HealthScore, project.HealthGrade, project.Coverage, project.LastScanError)
-            || !previousDetections.Keys.ToHashSet().SetEquals(project.Dependencies
-                .SelectMany(dependency => dependency.Vulnerabilities)
-                .Select(VulnerabilityIdentity.Of));
+        bool projectChanged = HasProjectChanged(project, acquisition, outcomeBefore, previousDetections);
 
         await followUps.RunAsync(project,
             new ScanFindingsContext(findingsReliable, alertBaseline, suppressedIds,
                 projectChanged),
             cancellationToken);
+    }
+
+    private static DateTime ApplyScanResult(Project project, InventoryAcquisition acquisition,
+        bool vulnerabilityDataComplete, HashSet<Guid> suppressedIds)
+    {
+        project.Coverage = ScanCoverageResolver.Resolve(project, acquisition.ScanRan, acquisition.ScanError,
+            acquisition.ManifestsRead);
+        project.HealthScore = project.Coverage == ScanCoverage.Covered
+            ? HealthScoreCalculator.Calculate(project, vulnerability => suppressedIds.Contains(vulnerability.Id))
+            : null;
+        project.HealthGrade = project.HealthScore is { } score ? HealthScoreCalculator.ToGrade(score) : null;
+
+        DateTime scannedAt = DateTime.UtcNow;
+        project.LastScanAt = scannedAt;
+        project.LastScanError = acquisition.ScanError
+            ?? acquisition.Gap?.Code
+            ?? (vulnerabilityDataComplete ? null : ErrorCodes.ScanVulnerabilityDataIncomplete);
+        project.LastScanErrorDetail = acquisition.ScanError == null ? acquisition.Gap?.Detail : null;
+
+        return scannedAt;
+    }
+
+    private static bool HasProjectChanged(Project project, InventoryAcquisition acquisition,
+        ScanOutcomeSnapshot outcomeBefore, Dictionary<string, DateTime> previousDetections) =>
+        !acquisition.RepositoryUnchanged
+        || acquisition.InventoryReplaced
+        || outcomeBefore != ScanOutcomeSnapshot.Of(project)
+        || !previousDetections.Keys.ToHashSet().SetEquals(project.Dependencies
+            .SelectMany(dependency => dependency.Vulnerabilities)
+            .Select(VulnerabilityIdentity.Of));
+
+    private sealed record ScanOutcomeSnapshot(int? Score, string? Grade, ScanCoverage Coverage, string? Error)
+    {
+        public static ScanOutcomeSnapshot Of(Project project) =>
+            new(project.HealthScore, project.HealthGrade, project.Coverage, project.LastScanError);
     }
 
     private async Task MarkScanFailedAsync(Guid projectId)

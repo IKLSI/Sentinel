@@ -1,4 +1,4 @@
-using Sentinel.Application.TechHealth.Suppressions;
+using Sentinel.Application.Suppressions;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;

@@ -1,8 +1,8 @@
 using System.IO.Compression;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
@@ -71,59 +71,11 @@ public class UserExportDataService(
         return new UserDataExportDto
         {
             ExportedAt = DateTime.UtcNow,
-            Profile = new UserExportProfileDto
-            {
-                Id = user.Id,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Role = user.Role.ToString(),
-                CreatedAt = user.CreatedAt,
-                LastLoginAt = user.LastLoginAt,
-                Language = user.Language
-            },
-            Tickets = tickets.Select(row => new UserExportTicketDto
-            {
-                Id = row.Id,
-                Number = row.Number,
-                Title = row.Title,
-                Description = row.Description,
-                Status = row.Status.ToString(),
-                Priority = row.Priority.ToString(),
-                Type = row.Type.ToString(),
-                ProjectName = row.ProjectName,
-                IsCreator = row.IsCreator,
-                IsAssignee = row.IsAssignee,
-                CreatedAt = row.CreatedAt,
-                UpdatedAt = row.UpdatedAt
-            }).ToList(),
-            Comments = comments.Select(row => new UserExportCommentDto
-            {
-                Id = row.Id,
-                TicketId = row.TicketId,
-                TicketNumber = row.TicketNumber,
-                Content = row.Content,
-                CreatedAt = row.CreatedAt,
-                UpdatedAt = row.UpdatedAt
-            }).ToList(),
-            Attachments = attachments.Select(row => new UserExportAttachmentDto
-            {
-                Id = row.Id,
-                TicketId = row.TicketId,
-                TicketNumber = row.TicketNumber,
-                FileName = row.FileName,
-                ContentType = row.ContentType,
-                SizeBytes = row.ContentLength,
-                CreatedAt = row.CreatedAt
-            }).ToList(),
-            AuditLogs = auditLogs.Select(row => new UserExportAuditLogDto
-            {
-                Id = row.Id,
-                Action = row.Action,
-                EntityType = row.EntityType,
-                EntityId = row.EntityId,
-                CreatedAt = row.CreatedAt
-            }).ToList(),
+            Profile = ToProfileDto(user),
+            Tickets = tickets.Select(ToTicketDto).ToList(),
+            Comments = comments.Select(ToCommentDto).ToList(),
+            Attachments = attachments.Select(ToAttachmentDto).ToList(),
+            AuditLogs = auditLogs.Select(ToAuditLogDto).ToList(),
             Truncated = new UserExportTruncationDto
             {
                 MaxRowsPerCollection = ExportLimits.MaxUserExportRows,
@@ -214,4 +166,62 @@ public class UserExportDataService(
     }
 
     private sealed record AttachmentPlan(IReadOnlyList<UserExportAttachmentDto> Included, bool SkippedOverBudget);
+
+    private static UserExportProfileDto ToProfileDto(User user) => new()
+    {
+        Id = user.Id,
+        Email = user.Email,
+        FirstName = user.FirstName,
+        LastName = user.LastName,
+        Role = user.Role.ToString(),
+        CreatedAt = user.CreatedAt,
+        LastLoginAt = user.LastLoginAt,
+        Language = user.Language
+    };
+
+    private static UserExportTicketDto ToTicketDto(UserExportTicketRow row) => new()
+    {
+        Id = row.Id,
+        Number = row.Number,
+        Title = row.Title,
+        Description = row.Description,
+        Status = row.Status.ToString(),
+        Priority = row.Priority.ToString(),
+        Type = row.Type.ToString(),
+        ProjectName = row.ProjectName,
+        IsCreator = row.IsCreator,
+        IsAssignee = row.IsAssignee,
+        CreatedAt = row.CreatedAt,
+        UpdatedAt = row.UpdatedAt
+    };
+
+    private static UserExportCommentDto ToCommentDto(UserExportTicketCommentRow row) => new()
+    {
+        Id = row.Id,
+        TicketId = row.TicketId,
+        TicketNumber = row.TicketNumber,
+        Content = row.Content,
+        CreatedAt = row.CreatedAt,
+        UpdatedAt = row.UpdatedAt
+    };
+
+    private static UserExportAttachmentDto ToAttachmentDto(UserExportTicketAttachmentRow row) => new()
+    {
+        Id = row.Id,
+        TicketId = row.TicketId,
+        TicketNumber = row.TicketNumber,
+        FileName = row.FileName,
+        ContentType = row.ContentType,
+        SizeBytes = row.ContentLength,
+        CreatedAt = row.CreatedAt
+    };
+
+    private static UserExportAuditLogDto ToAuditLogDto(UserExportAuditLogRow row) => new()
+    {
+        Id = row.Id,
+        Action = row.Action,
+        EntityType = row.EntityType,
+        EntityId = row.EntityId,
+        CreatedAt = row.CreatedAt
+    };
 }

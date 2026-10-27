@@ -1,7 +1,8 @@
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Entities;
 
 namespace Sentinel.Application.Exports;
-internal sealed class ExportLabels
+internal sealed class ExportLabels(ILocalizer localizer)
 {
     public required string Culture { get; init; }
     public required string DateFormat { get; init; }
@@ -49,7 +50,7 @@ internal sealed class ExportLabels
     {
         string Text(string key) => localizer.Get(culture, key);
 
-        return new ExportLabels
+        return new ExportLabels(localizer)
         {
             Culture = culture,
             DateFormat = Text("exports.date_format"),
@@ -132,4 +133,59 @@ internal sealed class ExportLabels
             RuntimeUnknown = Text("exports.runtime.unknown")
         };
     }
+
+    public string Translate(TicketPriority priority) => priority switch
+    {
+        TicketPriority.Low => Text("exports.ticket_priority.low"),
+        TicketPriority.Medium => Text("exports.ticket_priority.medium"),
+        TicketPriority.High => Text("exports.ticket_priority.high"),
+        TicketPriority.Critical => Text("exports.ticket_priority.critical"),
+        _ => priority.ToString(),
+    };
+
+    public string Translate(TicketStatus status) => status switch
+    {
+        TicketStatus.New => Text("exports.ticket_status.new"),
+        TicketStatus.InProgress => Text("exports.ticket_status.in_progress"),
+        TicketStatus.Testing => Text("exports.ticket_status.testing"),
+        TicketStatus.Resolved => Text("exports.ticket_status.resolved"),
+        TicketStatus.Closed => Text("exports.ticket_status.closed"),
+        _ => status.ToString(),
+    };
+
+    public string Translate(TicketType type) => type switch
+    {
+        TicketType.Feature => Text("exports.ticket_type.feature"),
+        TicketType.Security => Text("exports.ticket_type.security"),
+        TicketType.Bug => Text("exports.ticket_type.bug"),
+        _ => type.ToString(),
+    };
+
+    public string Translate(DependencyStatus status) => status switch
+    {
+        DependencyStatus.UpToDate => Text("exports.dependency_status.up_to_date"),
+        DependencyStatus.MinorUpdate => Text("exports.dependency_status.minor_update"),
+        DependencyStatus.MajorUpdate => Text("exports.dependency_status.major_update"),
+        DependencyStatus.EOL => Text("exports.dependency_status.eol"),
+        DependencyStatus.Vulnerable => Text("exports.dependency_status.vulnerable"),
+        _ => status.ToString(),
+    };
+
+    public string Translate(VulnerabilitySeverity severity) => severity switch
+    {
+        VulnerabilitySeverity.Critical => Text("exports.severity.critical"),
+        VulnerabilitySeverity.High => Text("exports.severity.high"),
+        VulnerabilitySeverity.Medium => Text("exports.severity.medium"),
+        VulnerabilitySeverity.Low => Text("exports.severity.low"),
+        _ => severity.ToString(),
+    };
+
+    public string Translate(DependencyType type) => type switch
+    {
+        DependencyType.Prod => Text("exports.dependency_type.prod"),
+        DependencyType.Dev => Text("exports.dependency_type.dev"),
+        _ => type.ToString(),
+    };
+
+    private string Text(string key) => localizer.Get(Culture, key);
 }

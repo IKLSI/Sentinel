@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Sentinel.Application.TechHealth;
+using Sentinel.Application.Projects;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 using Sentinel.Domain.TechHealth;
