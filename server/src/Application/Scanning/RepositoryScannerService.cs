@@ -171,12 +171,8 @@ public class RepositoryScannerService(
 
             foreach (Dependency dependency in outcome.Dependencies) dependency.ManifestPath = file.Path;
 
-            LockGraph? graph = ManifestParserService.HasLockGraph(file.Name)
-                ? parser.ParseLockGraph(file.Name, content)
-                : null;
-
             return new ParsedManifest(file.Name, RepositoryScanPaths.DirectoryOf(file.Path),
-                ManifestParserService.IsLockFile(file.Name), outcome.Dependencies, outcome.Runtimes, graph);
+                ManifestParserService.IsLockFile(file.Name), outcome.Dependencies, outcome.Runtimes, outcome.Graph);
         }
         catch (Exception ex)
         {

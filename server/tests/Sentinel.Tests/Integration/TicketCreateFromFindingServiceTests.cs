@@ -1,8 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Common;
-using Sentinel.Application.Dashboard;
 using Sentinel.Application.Tickets;
 using Sentinel.Application.Tickets.CreateFromFinding;
 using Sentinel.Domain.Entities;
@@ -91,7 +89,6 @@ public class TicketCreateFromFindingServiceTests
             scope.Tickets,
             scope.Organizations,
             scope.CommitScopeFactory,
-            new DashboardCache(new MemoryCache(new MemoryCacheOptions())),
             new FakeAuditLogService(),
             scope.Tenant),
         new NoopRealtimeNotifier(),

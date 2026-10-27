@@ -28,16 +28,6 @@ internal sealed partial class NodeLockGraphParser : IManifestFileParser
         CommentHandling = JsonCommentHandling.Skip
     };
 
-    public static bool HasLockGraph(string fileName) => FileNames.Contains(fileName);
-
-    public static LockGraph? ReadLockGraph(string fileName, string content)
-    {
-        if (IsYarnLock(fileName)) return ReadYarnLockGraph(content);
-        if (IsBunLock(fileName)) return ReadBunLockGraph(content);
-
-        return null;
-    }
-
     public bool CanParse(string fileName) => FileNames.Contains(fileName);
 
     public void Parse(ManifestDocument manifest, ManifestParseResult result)
@@ -46,14 +36,11 @@ internal sealed partial class NodeLockGraphParser : IManifestFileParser
         else ParseBunLock(manifest, result);
     }
 
-    private static bool IsYarnLock(string fileName) => fileName.Equals(YarnLock, StringComparison.OrdinalIgnoreCase);
-
-    private static bool IsBunLock(string fileName) => fileName.Equals(BunLock, StringComparison.OrdinalIgnoreCase);
-
     private static void ParseYarnLock(ManifestDocument manifest, ManifestParseResult result)
     {
+        string[] lines = manifest.Content.Split('\n');
         string? currentName = null;
-        foreach (string raw in manifest.Content.Split('\n'))
+        foreach (string raw in lines)
         {
             string line = raw.TrimEnd();
 
@@ -78,9 +65,11 @@ internal sealed partial class NodeLockGraphParser : IManifestFileParser
                 DependencyEcosystem.Npm));
             currentName = null;
         }
+
+        result.Graph = ReadYarnLockGraph(lines);
     }
 
-    private static LockGraph ReadYarnLockGraph(string content)
+    private static LockGraph ReadYarnLockGraph(string[] lines)
     {
         Dictionary<string, string> nodeByEntry = new(StringComparer.Ordinal);
         List<(string Node, List<string> Children)> rawEdges = new();
@@ -99,7 +88,7 @@ internal sealed partial class NodeLockGraphParser : IManifestFileParser
             inEdgeSection = false;
         }
 
-        foreach (string raw in content.Split('\n'))
+        foreach (string raw in lines)
         {
             string line = raw.TrimEnd();
 
@@ -205,16 +194,13 @@ internal sealed partial class NodeLockGraphParser : IManifestFileParser
 
             result.Dependencies.Add(NewDependency(manifest.ProjectId, name, version, DependencyEcosystem.Npm));
         }
+
+        result.Graph = ReadBunLockGraph(packages);
     }
 
-    private static LockGraph ReadBunLockGraph(string content)
+    private static LockGraph ReadBunLockGraph(JsonElement packages)
     {
-        using JsonDocument doc = JsonDocument.Parse(content, BunJsonOptions);
-
         Dictionary<string, List<string>> edges = new(StringComparer.Ordinal);
-
-        if (!doc.RootElement.TryGetProperty("packages", out JsonElement packages)) return new LockGraph(edges);
-
         Dictionary<string, string> nodeByKey = IndexBunNodes(packages);
 
         foreach (JsonProperty package in packages.EnumerateObject())

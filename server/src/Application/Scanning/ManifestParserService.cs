@@ -6,7 +6,7 @@ using static Sentinel.Application.Scanning.Parsers.ManifestEntries;
 namespace Sentinel.Application.Scanning;
 
 public sealed record ManifestParseOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes,
-    Exception? Failure);
+    Exception? Failure, LockGraph? Graph = null);
 
 public sealed record LockGraph(Dictionary<string, List<string>> Edges)
 {
@@ -74,8 +74,6 @@ public class ManifestParserService
 
     public static bool IsWorkflowFile(string url) => GitHubWorkflowParser.IsWorkflowFile(url);
 
-    public static bool HasLockGraph(string fileName) => NodeLockGraphParser.HasLockGraph(fileName);
-
     public (List<Dependency>, List<Runtime>) Parse(Guid projectId, string fileName, string content)
     {
         ManifestParseOutcome outcome = ParseReportingFailure(projectId, fileName, content);
@@ -100,19 +98,7 @@ public class ManifestParserService
 
         if (!IsLockFile(fileName)) AddDependencyDerivedRuntimes(projectId, result);
 
-        return new ManifestParseOutcome(result.Dependencies, result.Runtimes, failure);
-    }
-
-    public LockGraph? ParseLockGraph(string fileName, string content)
-    {
-        try
-        {
-            return NodeLockGraphParser.ReadLockGraph(fileName, content);
-        }
-        catch (Exception)
-        {
-            return null;
-        }
+        return new ManifestParseOutcome(result.Dependencies, result.Runtimes, failure, result.Graph);
     }
 
     private static void AddDependencyDerivedRuntimes(Guid projectId, ManifestParseResult result)

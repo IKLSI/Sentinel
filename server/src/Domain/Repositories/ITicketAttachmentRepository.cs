@@ -5,7 +5,7 @@ namespace Sentinel.Domain.Repositories;
 
 public interface ITicketAttachmentRepository : ICrudEntityWithIdRepository<TicketAttachment>
 {
-    Task<TicketAttachment?> GetOrDefaultInTicketWithTicketAsync(Guid attachmentId, Guid ticketId,
+    Task<TicketAttachment?> GetOrDefaultInTicketAsync(Guid attachmentId, Guid ticketId,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<UserExportTicketAttachmentRow>> ListForUserDataExportAsync(Guid userId, int take,

@@ -10,10 +10,9 @@ public class TicketAttachmentRepository : CrudEntityWithIdRepository<TicketAttac
 {
     public TicketAttachmentRepository(SentinelContext context) : base(context) { }
 
-    public Task<TicketAttachment?> GetOrDefaultInTicketWithTicketAsync(Guid attachmentId, Guid ticketId,
+    public Task<TicketAttachment?> GetOrDefaultInTicketAsync(Guid attachmentId, Guid ticketId,
         CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
-            .Include(a => a.Ticket)
             .FirstOrDefaultAsync(a => a.Id == attachmentId && a.TicketId == ticketId, cancellationToken);
 
     public async Task<IReadOnlyList<UserExportAttachmentContentRow>> ListContentsForUserAsync(

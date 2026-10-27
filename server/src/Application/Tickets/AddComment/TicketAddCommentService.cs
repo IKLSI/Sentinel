@@ -1,6 +1,5 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Application.Dashboard;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
@@ -18,7 +17,6 @@ public class TicketAddCommentService(
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
-    DashboardCache dashboardCache,
     ITenantContext tenant,
     TicketAddCommentValidator validator) : IService
 {
@@ -31,7 +29,7 @@ public class TicketAddCommentService(
         Ticket? ticket = await ticketRepository.GetOrDefaultAsync(ticketId,
             QueryTracking.Tracked, cancellationToken);
 
-        if (ticket == null || ticket.OrganizationId != organizationId)
+        if (ticket == null)
             return Result<TicketCommentDto>.NotFound(ErrorCodes.TicketNotFound);
 
         Result validationResult = await validator.ValidateAsync(model, cancellationToken);
@@ -56,8 +54,6 @@ public class TicketAddCommentService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        dashboardCache.Invalidate(organizationId);
-
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
             new RealtimeEvent(RealtimeResources.TicketActivity, ticketId));
 
@@ -69,14 +65,13 @@ public class TicketAddCommentService(
             entityId: comment.Id,
             jti: tenant.Jti);
 
-        User? author = await userRepository.GetOrDefaultAsync(userId,
-            QueryTracking.NoTracking, cancellationToken);
+        string? authorName = await userRepository.GetFullNameOrDefaultAsync(userId, cancellationToken);
 
         return new TicketCommentDto
         {
             Id = comment.Id,
             AuthorId = comment.AuthorId,
-            AuthorName = author?.FullName ?? string.Empty,
+            AuthorName = authorName ?? string.Empty,
             Content = comment.Content,
             CreatedAt = comment.CreatedAt
         };

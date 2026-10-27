@@ -1,40 +1,33 @@
-using Sentinel.API.Constants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Sentinel.API.Attributes;
+using Sentinel.API.Constants;
 using Sentinel.Application.Common;
-using Sentinel.Application.Projects.AvailableRepos;
 using Sentinel.Application.Compliance;
+using Sentinel.Application.Projects;
+using Sentinel.Application.Projects.AvailableRepos;
+using Sentinel.Application.Projects.Badge;
 using Sentinel.Application.Projects.Create;
-using Sentinel.Application.Projects.Import;
 using Sentinel.Application.Projects.Delete;
 using Sentinel.Application.Projects.ExportExcel;
-using Sentinel.Application.Sbom;
-using Sentinel.Application.Projects.GetById;
-using Sentinel.Application.Projects.Options;
-using Sentinel.Application.Projects.Search;
-using Sentinel.Application.Scanning.GetProgress;
-using Sentinel.Application.Projects.Badge;
 using Sentinel.Application.Projects.GetAll;
-using Sentinel.Application.Remediation;
-using Sentinel.Application.Remediation.Start;
-using Sentinel.Application.Projects.RepositoryOptions;
-using Sentinel.Application.Suppressions;
-using Sentinel.Application.Suppressions.Remove;
-using Sentinel.Application.Suppressions.Suppress;
-using Sentinel.Application.Scanning.Trigger;
-using Sentinel.Application.Projects.Update;
+using Sentinel.Application.Projects.GetById;
 using Sentinel.Application.Projects.GetOverview;
+using Sentinel.Application.Projects.Import;
 using Sentinel.Application.Projects.ListDependencies;
+using Sentinel.Application.Projects.Options;
+using Sentinel.Application.Projects.RepositoryOptions;
+using Sentinel.Application.Projects.Search;
+using Sentinel.Application.Projects.Update;
+using Sentinel.Application.Sbom;
 using Sentinel.Domain.Entities;
-using Sentinel.Application.Projects;
 
 namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/tech-health")]
 [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
-public class TechHealthController : BaseController
+public class ProjectsController : BaseController
 {
     [SkipConnectionScope]
     [HttpGet("projects/available-repos")]
@@ -74,14 +67,6 @@ public class TechHealthController : BaseController
     [AllowApiKey]
     public async Task<ActionResult<List<ProjectSummaryDto>>> GetProjects(
         [FromServices] ProjectListService service,
-        CancellationToken cancellationToken) =>
-        ToActionResult(await service.ExecuteAsync(cancellationToken));
-
-    [HttpGet("projects/scan-progress")]
-    [SkipConnectionScope]
-    [AllowApiKey]
-    public async Task<ActionResult<List<ScanProgressDto>>> GetScanProgress(
-        [FromServices] ScanProgressListService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(cancellationToken));
 
@@ -166,41 +151,6 @@ public class TechHealthController : BaseController
     public async Task<IActionResult> DeleteProject(
         Guid id,
         [FromServices] ProjectDeleteService service,
-        CancellationToken cancellationToken) =>
-        ToActionResult(await service.ExecuteAsync(id, cancellationToken));
-
-    [HttpPost("projects/{id:guid}/scan")]
-    [AllowApiKey]
-    [EnableRateLimiting(RateLimitPolicies.Scan)]
-    public async Task<IActionResult> TriggerScan(
-        Guid id,
-        [FromServices] ProjectScanTriggerService service,
-        CancellationToken cancellationToken) =>
-        ToActionResult(await service.ExecuteAsync(id, cancellationToken));
-
-    [HttpPost("projects/{id:guid}/suppressions")]
-    [AuthorizeRoles(UserRole.Admin)]
-    public async Task<ActionResult<SuppressionDto>> SuppressVulnerability(
-        Guid id,
-        [FromBody] SuppressVulnerabilityDto dto,
-        [FromServices] SuppressVulnerabilityService service,
-        CancellationToken cancellationToken) =>
-        ToActionResult(await service.ExecuteAsync(id, dto, cancellationToken));
-
-    [HttpDelete("projects/{id:guid}/suppressions/{suppressionId:guid}")]
-    [AuthorizeRoles(UserRole.Admin)]
-    public async Task<IActionResult> RemoveSuppression(
-        Guid id,
-        Guid suppressionId,
-        [FromServices] RemoveSuppressionService service,
-        CancellationToken cancellationToken) =>
-        ToActionResult(await service.ExecuteAsync(id, suppressionId, cancellationToken));
-
-    [SkipConnectionScope]
-    [HttpPost("projects/{id:guid}/remediations")]
-    public async Task<ActionResult<RemediationDto>> StartRemediation(
-        Guid id,
-        [FromServices] StartRemediationService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 

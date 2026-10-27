@@ -2,10 +2,8 @@ using System.Linq.Expressions;
 using FluentAssertions;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Sentinel.Application.Dashboard;
 using Sentinel.Application.Options;
 using Sentinel.Application.Scanning;
 using Sentinel.Application.Security;
@@ -167,8 +165,7 @@ public class ProjectScanServiceTests
                 inventoryWriter,
                 new ProjectHealthHistoryWriter(new ProjectHealthSnapshotRepository(scope.Context),
                     new VulnerabilityResolutionRepository(scope.Context)),
-                new ProjectHealthRecalculator(scope.Projects, new VulnerabilitySuppressionRepository(scope.Context),
-                    new DashboardCache(new MemoryCache(new MemoryCacheOptions()))),
+                new ProjectHealthRecalculator(scope.Projects, new VulnerabilitySuppressionRepository(scope.Context)),
                 new ScanFollowUpService(
                     new FindingTicketSyncService(scope.Tickets, new TicketHistoryRepository(scope.Context),
                         scope.CommitScopeFactory, new FakeAuditLogService(),
@@ -179,7 +176,6 @@ public class ProjectScanServiceTests
                     new VulnerabilityAlertService(scope.Organizations, scope.Users, new NoopJobScheduler(),
                         Options.Create(new FrontendSettings()), NullLogger<VulnerabilityAlertService>.Instance),
                     new FakeAuditLogService(),
-                    new DashboardCache(new MemoryCache(new MemoryCacheOptions())),
                     new NoopNotifier()),
                 new NoopNotifier(),
                 scope.SystemScope,

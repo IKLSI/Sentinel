@@ -1,6 +1,5 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Application.Dashboard;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
@@ -16,7 +15,6 @@ public class TicketUpdateService(
     ITicketHistoryRepository ticketHistoryRepository,
     TicketLinkChecker linkChecker,
     ICommitScopeFactory commitScopeFactory,
-    DashboardCache dashboardCache,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
@@ -36,7 +34,7 @@ public class TicketUpdateService(
         Ticket? ticket = await ticketRepository.GetOrDefaultAsync(ticketId,
             QueryTracking.Tracked, cancellationToken);
 
-        if (ticket == null || ticket.OrganizationId != organizationId)
+        if (ticket == null)
             return Result<TicketDto>.NotFound(ErrorCodes.TicketNotFound);
 
         if (await linkChecker.FindMissingAsync(model.ProjectId, model.AssignedToId, organizationId,
@@ -66,8 +64,6 @@ public class TicketUpdateService(
 
             await commitScope.CommitAsync(cancellationToken);
         }
-
-        dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
             new RealtimeEvent(RealtimeResources.Ticket, ticketId,

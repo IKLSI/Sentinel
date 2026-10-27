@@ -1,5 +1,4 @@
 using Sentinel.Application.Audit;
-using Sentinel.Application.Dashboard;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
@@ -18,7 +17,6 @@ public class ScanFollowUpService(
     CriticalVulnerabilityTicketService criticalVulnerabilityTickets,
     VulnerabilityAlertService vulnerabilityAlerts,
     IAuditLogService auditLog,
-    DashboardCache dashboardCache,
     IRealtimeNotifier realtimeNotifier)
 {
     public async Task RunAsync(Project project, ScanFindingsContext findings, CancellationToken cancellationToken)
@@ -39,9 +37,6 @@ public class ScanFollowUpService(
             organizationId: project.OrganizationId,
             userId: null,
             entityId: project.Id);
-
-        if (findings.ProjectChanged || ticketsChanged)
-            dashboardCache.Invalidate(project.OrganizationId);
 
         if (ticketsChanged)
             await realtimeNotifier.NotifyOrganizationAsync(project.OrganizationId,

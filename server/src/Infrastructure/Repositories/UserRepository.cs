@@ -136,6 +136,12 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .Select(u => u.Language)
             .FirstOrDefaultAsync(cancellationToken);
 
+    public Task<string?> GetFullNameOrDefaultAsync(Guid userId, CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Where(u => u.Id == userId)
+            .Select(u => PersonName.Format(u.FirstName, u.LastName))
+            .FirstOrDefaultAsync(cancellationToken);
+
     public Task<string?> GetLanguageByEmailOrDefaultAsync(string email, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
             .IgnoreQueryFilters()

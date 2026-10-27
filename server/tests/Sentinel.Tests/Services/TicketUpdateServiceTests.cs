@@ -1,7 +1,5 @@
 using FluentAssertions;
-using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Common;
-using Sentinel.Application.Dashboard;
 using Sentinel.Application.Tickets;
 using Sentinel.Application.Tickets.Update;
 using Sentinel.Domain.Entities;
@@ -82,7 +80,6 @@ public class TicketUpdateServiceTests
         new TicketHistoryRepository(scope.Context),
         new TicketLinkChecker(scope.Projects, scope.Users),
         scope.CommitScopeFactory,
-        new DashboardCache(new MemoryCache(new MemoryCacheOptions())),
         new FakeAuditLogService(),
         new NoopRealtimeNotifier(),
         scope.Tenant,

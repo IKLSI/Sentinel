@@ -1,6 +1,5 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Application.Dashboard;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
@@ -16,7 +15,6 @@ public class TicketDeleteCommentService(
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
-    DashboardCache dashboardCache,
     ITenantContext tenant) : IService
 {
     public async Task<Result> ExecuteAsync(Guid ticketId, Guid commentId, CancellationToken cancellationToken)
@@ -41,8 +39,6 @@ public class TicketDeleteCommentService(
 
         if (tenant.OrganizationId is Guid organizationId)
         {
-            dashboardCache.Invalidate(organizationId);
-
             await realtimeNotifier.NotifyOrganizationAsync(organizationId,
                 new RealtimeEvent(RealtimeResources.TicketActivity, ticketId));
         }

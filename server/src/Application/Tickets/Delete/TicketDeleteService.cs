@@ -1,6 +1,5 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Application.Dashboard;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
@@ -13,7 +12,6 @@ namespace Sentinel.Application.Tickets.Delete;
 
 public class TicketDeleteService(
     ITicketRepository ticketRepository,
-    DashboardCache dashboardCache,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant) : IService
@@ -30,8 +28,6 @@ public class TicketDeleteService(
 
         if (deleted == 0)
             return Result.NotFound(ErrorCodes.TicketNotFound);
-
-        dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
             new RealtimeEvent(RealtimeResources.Ticket, ticketId,

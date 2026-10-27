@@ -19,4 +19,6 @@ internal sealed class ManifestParseResult
     public List<Dependency> Dependencies { get; } = new();
 
     public List<Runtime> Runtimes { get; } = new();
+
+    public LockGraph? Graph { get; set; }
 }

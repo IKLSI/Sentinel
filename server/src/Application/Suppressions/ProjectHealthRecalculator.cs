@@ -1,4 +1,3 @@
-using Sentinel.Application.Dashboard;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
@@ -8,8 +7,7 @@ namespace Sentinel.Application.Suppressions;
 
 public class ProjectHealthRecalculator(
     IProjectRepository projectRepository,
-    IVulnerabilitySuppressionRepository suppressionRepository,
-    DashboardCache dashboardCache)
+    IVulnerabilitySuppressionRepository suppressionRepository)
 {
     public async Task<HashSet<Guid>> SuppressedVulnerabilityIdsAsync(Project project,
         CancellationToken cancellationToken)
@@ -33,7 +31,5 @@ public class ProjectHealthRecalculator(
 
         await projectRepository.UpdateHealthAsync(projectId, healthScore, HealthScoreCalculator.ToGrade(healthScore),
             cancellationToken);
-
-        dashboardCache.Invalidate(project.OrganizationId);
     }
 }

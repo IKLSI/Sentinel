@@ -1,7 +1,6 @@
 using Sentinel.Application.Security;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Application.Dashboard;
 using Sentinel.Application.Audit;
 using Sentinel.Application.Jobs;
 using Sentinel.Domain.Abstractions;
@@ -21,7 +20,6 @@ public class UserUpdateService(
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
-    DashboardCache dashboardCache,
     IJobScheduler jobs,
     UserSessionCache userSessionCache,
     ITenantContext tenant,
@@ -126,8 +124,6 @@ public class UserUpdateService(
         if (suspensionTransition)
             jobs.Enqueue<SendAccountSuspendedEmailJob>(JobQueues.Emails, j => j.ExecuteAsync(userId,
                 CancellationToken.None));
-
-        dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
             new RealtimeEvent(RealtimeResources.Users));

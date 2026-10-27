@@ -33,6 +33,8 @@ public interface IUserRepository : ICrudEntityWithIdRepository<User>
 
     Task<string?> GetLanguageOrDefaultAsync(Guid userId, CancellationToken cancellationToken);
 
+    Task<string?> GetFullNameOrDefaultAsync(Guid userId, CancellationToken cancellationToken);
+
     Task<string?> GetLanguageByEmailOrDefaultAsync(string email, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<EmailRecipient>> ListAdminRecipientsAsync(Guid organizationId, CancellationToken cancellationToken);

@@ -1,6 +1,5 @@
 using Sentinel.Application.Audit;
 using Sentinel.Application.Common;
-using Sentinel.Application.Dashboard;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -14,7 +13,6 @@ public class TicketCreator(
     ITicketRepository ticketRepository,
     IOrganizationRepository organizationRepository,
     ICommitScopeFactory commitScopeFactory,
-    DashboardCache dashboardCache,
     IAuditLogService auditLog,
     ITenantContext tenant)
 {
@@ -28,8 +26,6 @@ public class TicketCreator(
             ticket.Number = await organizationRepository.AllocateTicketNumbersAsync(ticket.OrganizationId, 1, token);
             await ticketRepository.AddAsync(ticket, token);
         }, cancellationToken);
-
-        dashboardCache.Invalidate(ticket.OrganizationId);
     }
 
     public async Task<Result<TicketDto>> AuditAndLoadAsync(Ticket ticket, CancellationToken cancellationToken)

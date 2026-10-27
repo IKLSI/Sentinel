@@ -15,13 +15,13 @@ public class TicketDownloadAttachmentService(
     public async Task<Result<FileDownload>> ExecuteAsync(Guid ticketId, Guid attachmentId,
         CancellationToken cancellationToken)
     {
-        if (tenant.OrganizationId is not Guid organizationId)
+        if (tenant.OrganizationId is null)
             return Result<FileDownload>.Unauthorized();
 
         TicketAttachment? attachment = await attachmentRepository
-            .GetOrDefaultInTicketWithTicketAsync(attachmentId, ticketId, cancellationToken);
+            .GetOrDefaultInTicketAsync(attachmentId, ticketId, cancellationToken);
 
-        if (attachment == null || attachment.Ticket.OrganizationId != organizationId)
+        if (attachment == null)
             return Result<FileDownload>.NotFound(ErrorCodes.TicketAttachmentNotFound);
 
         Stream? content = await storage.OpenReadAsync(attachment, cancellationToken);

@@ -1,7 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Audit;
 using Sentinel.Application.Common;
-using Sentinel.Application.Dashboard;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -16,7 +15,6 @@ public class ProjectDeleteService(
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
-    DashboardCache dashboardCache,
     ITenantContext tenant) : IService
 {
     public async Task<Result> ExecuteAsync(Guid projectId, CancellationToken cancellationToken)
@@ -35,8 +33,6 @@ public class ProjectDeleteService(
             projectRepository.Remove(project);
             await commitScope.CommitAsync(cancellationToken);
         }
-
-        dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
             new RealtimeEvent(RealtimeResources.Projects));
