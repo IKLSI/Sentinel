@@ -90,6 +90,21 @@ export const FLOW_SERIES = [
   { key: "resolved", color: "var(--green)" },
 ] as const;
 
+export const DASHBOARD_ROW_TITLE_SX = {
+  fontSize: "12px",
+  fontWeight: 600,
+  lineHeight: 1.4,
+  letterSpacing: "-0.01em",
+  color: "var(--text)",
+} as const;
+
+export const DASHBOARD_ROW_SUBTITLE_SX = {
+  mt: "2px",
+  fontSize: "10px",
+  lineHeight: 1.4,
+  color: "var(--muted2)",
+} as const;
+
 export const DASHBOARD_ROW_SX = {
   width: "100%",
   minHeight: 48,

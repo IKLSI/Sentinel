@@ -13,7 +13,9 @@ import type { ActivityItem } from "@/domains/dashboard/types";
 import { DashboardCard } from "@/features/dashboard/pages/DashboardPage/components/DashboardCard";
 import {
   DASHBOARD_ACTIVITY_LIMIT,
+  DASHBOARD_ROW_SUBTITLE_SX,
   DASHBOARD_ROW_SX,
+  DASHBOARD_ROW_TITLE_SX,
 } from "@/features/dashboard/pages/DashboardPage/constants";
 import {
   activityDetail,
@@ -47,10 +49,7 @@ export const RecentActivityCard: React.FC<Props> = ({ activity }) => {
   const navigate = useNavigate();
 
   return (
-    <DashboardCard
-      title={t("dashboard.activity.title")}
-      subtitle={t("dashboard.activity.realtime")}
-    >
+    <DashboardCard title={t("dashboard.activity.title")}>
       {activity.length === 0 ? (
         <EmptyState
           icon={HistoryOutlined}
@@ -82,30 +81,13 @@ export const RecentActivityCard: React.FC<Props> = ({ activity }) => {
               >
                 <Icon sx={{ fontSize: 16, color, flexShrink: 0 }} />
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Box
-                    sx={{
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      lineHeight: 1.4,
-                      letterSpacing: "-0.01em",
-                      color: "var(--text)",
-                      ...TEXT_ELLIPSIS_SX,
-                    }}
-                  >
-                    <Box component="span" sx={{ fontWeight: 700 }}>
-                      {activityEmphasis(t, item)}
-                    </Box>
+                  <Box sx={{ ...DASHBOARD_ROW_TITLE_SX, ...TEXT_ELLIPSIS_SX }}>
+                    {activityEmphasis(t, item)}
                     {activitySuffix(t, item)}
                   </Box>
                   {detail && (
                     <Box
-                      sx={{
-                        mt: "2px",
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "9.5px",
-                        color: "var(--muted2)",
-                        ...TEXT_ELLIPSIS_SX,
-                      }}
+                      sx={{ ...DASHBOARD_ROW_SUBTITLE_SX, ...TEXT_ELLIPSIS_SX }}
                     >
                       {detail}
                     </Box>

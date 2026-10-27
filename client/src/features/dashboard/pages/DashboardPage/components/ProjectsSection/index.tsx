@@ -12,7 +12,9 @@ import { CardLink } from "@/features/dashboard/pages/DashboardPage/components/Ca
 import { DashboardCard } from "@/features/dashboard/pages/DashboardPage/components/DashboardCard";
 import { BreakdownBars } from "@/features/dashboard/pages/DashboardPage/components/ProjectsSection/components/BreakdownBars";
 import {
+  DASHBOARD_ROW_SUBTITLE_SX,
   DASHBOARD_ROW_SX,
+  DASHBOARD_ROW_TITLE_SX,
   RING_SIZE,
   RING_THICKNESS,
 } from "@/features/dashboard/pages/DashboardPage/constants";
@@ -87,26 +89,16 @@ export const ProjectsSection: React.FC<Props> = ({ projects }) => {
                   {project.grade ?? "–"}
                 </GradeRing>
                 <Box sx={{ minWidth: 0 }}>
-                  <Box
-                    sx={{
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      lineHeight: 1.4,
-                      letterSpacing: "-0.01em",
-                      color: "var(--text)",
-                      ...TEXT_ELLIPSIS_SX,
-                    }}
-                  >
+                  <Box sx={{ ...DASHBOARD_ROW_TITLE_SX, ...TEXT_ELLIPSIS_SX }}>
                     {project.name}
                   </Box>
                   <Box
                     title={actionLabel}
                     sx={{
-                      fontSize: "10px",
+                      ...DASHBOARD_ROW_SUBTITLE_SX,
                       color: project.hasScanError
                         ? "var(--yellow)"
                         : "var(--muted2)",
-                      mt: "2px",
                       ...TEXT_ELLIPSIS_SX,
                     }}
                   >

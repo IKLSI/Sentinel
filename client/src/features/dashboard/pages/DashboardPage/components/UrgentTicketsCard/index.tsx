@@ -15,8 +15,11 @@ import { useI18n } from "@/contexts/I18nContext";
 import type { UrgentTicket } from "@/domains/dashboard/types";
 import { CardLink } from "@/features/dashboard/pages/DashboardPage/components/CardLink";
 import { DashboardCard } from "@/features/dashboard/pages/DashboardPage/components/DashboardCard";
-import { DASHBOARD_ROW_SX } from "@/features/dashboard/pages/DashboardPage/constants";
-import { typeLabelKeys } from "@/features/tickets/pages/TicketDetailPage/constants";
+import {
+  DASHBOARD_ROW_SUBTITLE_SX,
+  DASHBOARD_ROW_SX,
+  DASHBOARD_ROW_TITLE_SX,
+} from "@/features/dashboard/pages/DashboardPage/constants";
 
 interface Props {
   tickets: UrgentTicket[];
@@ -52,25 +55,9 @@ export const UrgentTicketsCard: React.FC<Props> = ({ tickets }) => {
   const { t } = useI18n();
   const navigate = useNavigate();
 
-  const summary = [
-    ...tickets
-      .reduce(
-        (counts, ticket) =>
-          counts.set(ticket.type, (counts.get(ticket.type) ?? 0) + 1),
-        new Map<string, number>(),
-      )
-      .entries(),
-  ]
-    .map(([type, count]) => {
-      const labelKey = typeLabelKeys[type];
-      return `${count} ${labelKey ? t(labelKey) : type}`;
-    })
-    .join(" · ");
-
   return (
     <DashboardCard
       title={t("dashboard.tickets.title")}
-      subtitle={summary || undefined}
       action={
         <CardLink
           label={t("dashboard.tickets.see_all")}
@@ -86,7 +73,7 @@ export const UrgentTicketsCard: React.FC<Props> = ({ tickets }) => {
           sx={{ flex: 1 }}
         />
       ) : (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {tickets.map((ticket) => {
             const { Icon, color: iconColor } =
               TYPE_ICONS[ticket.type as keyof typeof TYPE_ICONS] ??
@@ -110,6 +97,7 @@ export const UrgentTicketsCard: React.FC<Props> = ({ tickets }) => {
                 <Box sx={{ minWidth: 0, overflow: "hidden" }}>
                   <Box
                     sx={{
+                      ...DASHBOARD_ROW_TITLE_SX,
                       display: "flex",
                       alignItems: "center",
                       gap: "6px",
@@ -118,22 +106,14 @@ export const UrgentTicketsCard: React.FC<Props> = ({ tickets }) => {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    <Box
-                      component="span"
-                      sx={{
-                        flexShrink: 0,
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        color: "var(--text)",
-                      }}
-                    >
+                    <Box component="span" sx={{ flexShrink: 0 }}>
                       {ticket.reference}
                     </Box>
                     <Box
                       component="span"
                       sx={{
                         flexShrink: 0,
-                        typography: "label",
+                        textTransform: "uppercase",
                         color: PRIORITY_TONES[ticket.priority],
                       }}
                     >
@@ -142,9 +122,7 @@ export const UrgentTicketsCard: React.FC<Props> = ({ tickets }) => {
                   </Box>
                   <Box
                     sx={{
-                      mt: "2px",
-                      fontSize: "10px",
-                      color: "var(--text-secondary)",
+                      ...DASHBOARD_ROW_SUBTITLE_SX,
                       ...TEXT_ELLIPSIS_SX,
                     }}
                     title={ticket.title}

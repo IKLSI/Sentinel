@@ -138,7 +138,6 @@
   "dashboard.activity.bold_resolved_plural": "{count} tickets resolved",
   "dashboard.activity.empty_subtitle": "Events will appear here in real time.",
   "dashboard.activity.empty_title": "No recent activity",
-  "dashboard.activity.realtime": "Real-time update",
   "dashboard.activity.suffix_created": " — {reference}",
   "dashboard.activity.suffix_resolved": " — {reference}",
   "dashboard.activity.suffix_vuln": " detected",

@@ -3,7 +3,6 @@ import Box from "@mui/material/Box";
 
 interface Props {
   title: string;
-  subtitle?: string;
   action?: React.ReactNode;
   scrollable?: boolean;
   children: React.ReactNode;
@@ -11,7 +10,6 @@ interface Props {
 
 export const DashboardCard: React.FC<Props> = ({
   title,
-  subtitle,
   action,
   scrollable = true,
   children,
@@ -36,7 +34,7 @@ export const DashboardCard: React.FC<Props> = ({
       sx={{
         display: "flex",
         justifyContent: "space-between",
-        alignItems: subtitle ? "center" : "baseline",
+        alignItems: "baseline",
         gap: "12px",
         mx: "-20px",
         px: "20px",
@@ -46,22 +44,16 @@ export const DashboardCard: React.FC<Props> = ({
         flexShrink: 0,
       }}
     >
-      <Box sx={{ minWidth: 0 }}>
-        <Box
-          component="h2"
-          sx={{
-            m: 0,
-            typography: "cardTitle",
-            color: "var(--text)",
-          }}
-        >
-          {title}
-        </Box>
-        {subtitle && (
-          <Box sx={{ mt: "3px", color: "var(--muted2)", fontSize: "11px" }}>
-            {subtitle}
-          </Box>
-        )}
+      <Box
+        component="h2"
+        sx={{
+          m: 0,
+          minWidth: 0,
+          typography: "cardTitle",
+          color: "var(--text)",
+        }}
+      >
+        {title}
       </Box>
       {action}
     </Box>
