@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import { useI18n } from "@/contexts/I18nContext";
 import { useDashboard } from "@/domains/dashboard/queries";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
-import { LoadErrorState } from "@/components/ui/common/LoadErrorState";
+import { LoadErrorState } from "@/components/ui/common/feedback/LoadErrorState";
 import { ChartCardSkeleton } from "@/features/dashboard/pages/DashboardPage/components/ChartCardSkeleton";
 import { DashboardSkeleton } from "@/features/dashboard/pages/DashboardPage/components/DashboardSkeleton";
 import { ParkHero } from "@/features/dashboard/pages/DashboardPage/components/ParkHero";

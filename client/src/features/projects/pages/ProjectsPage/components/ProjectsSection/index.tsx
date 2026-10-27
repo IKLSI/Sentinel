@@ -2,30 +2,32 @@ import type React from "react";
 import { useMemo } from "react";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import CircularProgress from "@mui/material/CircularProgress";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
+import { GradeRing } from "@/components/ui/common/GradeRing";
+import { SortableTh } from "@/components/ui/common/table/SortableTh";
+import {
+  OVERFLOWING_ATTRIBUTE,
+  STICKY_ACTIONS_COLUMN_SX,
+} from "@/components/ui/common/table/stickyActionsColumn";
 import { useT } from "@/contexts/I18nContext";
 import type {
   ProjectSearchMatch,
   ProjectSummary,
   ScanProgress,
 } from "@/domains/projects/types";
-import { SortableTh } from "@/components/ui/common/SortableTh";
 import {
   GRADE_VISUAL,
   type SectionKey,
   UNTRACKED_SECTION,
+  averageScore,
   sortProjects,
 } from "@/features/projects/pages/ProjectsPage/helpers";
-import { ProjectRow } from "@/features/projects/pages/ProjectsPage/components/ProjectRow";
 import { PROJECT_COLUMNS } from "@/features/projects/pages/ProjectsPage/constants";
+import { ProjectRow } from "@/features/projects/pages/ProjectsPage/components/ProjectsSection/components/ProjectRow";
 import { useSortState } from "@/hooks/useSortState";
-import { SortDirection } from "@/enums";
 import { useHorizontalScrollSync } from "@/hooks/useHorizontalScrollSync";
-import {
-  OVERFLOWING_ATTRIBUTE,
-  STICKY_ACTIONS_COLUMN_SX,
-} from "@/components/ui/common/stickyActionsColumn";
+import { SortDirection } from "@/enums";
+import { PANEL_SX } from "@/helpers/cardSx";
 
 interface Props {
   grade: SectionKey;
@@ -61,19 +63,11 @@ export const ProjectsSection: React.FC<Props> = ({
   const sortedItems = useMemo(() => sortProjects(items, sort), [items, sort]);
   const cfg = GRADE_VISUAL[grade];
   const isUntrackedSection = grade === UNTRACKED_SECTION;
-  const scoredItems = items.filter((p) => p.healthScore !== null);
-  const avgScore =
-    !isUntrackedSection && scoredItems.length
-      ? scoredItems.reduce((sum, p) => sum + (p.healthScore ?? 0), 0) /
-        scoredItems.length
-      : 0;
 
   return (
     <Box
       sx={{
-        background: "var(--s1)",
-        border: "1px solid var(--border)",
-        borderRadius: "var(--r)",
+        ...PANEL_SX,
         overflow: "hidden",
       }}
     >
@@ -115,52 +109,19 @@ export const ProjectsSection: React.FC<Props> = ({
             minWidth: 0,
           }}
         >
-          <Box
-            sx={{
-              position: "relative",
-              width: "34px",
-              height: "34px",
-              flexShrink: 0,
+          <GradeRing
+            size={34}
+            value={isUntrackedSection ? null : averageScore(items)}
+            showTrack={!isUntrackedSection}
+            color={cfg.iconColor}
+            labelSx={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "14px",
+              fontWeight: 700,
             }}
           >
-            {!isUntrackedSection && (
-              <>
-                <CircularProgress
-                  variant="determinate"
-                  value={100}
-                  size={34}
-                  thickness={2.5}
-                  sx={{
-                    position: "absolute",
-                    inset: 0,
-                    color: "var(--border)",
-                  }}
-                />
-                <CircularProgress
-                  variant="determinate"
-                  value={avgScore}
-                  size={34}
-                  thickness={2.5}
-                  sx={{ position: "absolute", inset: 0, color: cfg.iconColor }}
-                />
-              </>
-            )}
-            <Box
-              sx={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: cfg.iconColor,
-                fontFamily: "var(--font-mono)",
-                fontSize: "14px",
-                fontWeight: 700,
-              }}
-            >
-              {isUntrackedSection ? <cfg.Icon sx={{ fontSize: 18 }} /> : grade}
-            </Box>
-          </Box>
+            {isUntrackedSection ? <cfg.Icon sx={{ fontSize: 18 }} /> : grade}
+          </GradeRing>
           <Box sx={{ minWidth: 0 }}>
             <Box
               sx={{
@@ -205,7 +166,6 @@ export const ProjectsSection: React.FC<Props> = ({
           />
         </Box>
       </ButtonBase>
-
       {!collapsed && (
         <Box
           ref={bodyRef}

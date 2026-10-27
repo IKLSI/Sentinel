@@ -7,7 +7,7 @@ import {
   DETAIL_PALETTE,
   PRIORITY_CONFIG,
   typeLabelKeys,
-} from "@/features/tickets/pages/TicketDetailPage/helpers";
+} from "@/features/tickets/pages/TicketDetailPage/constants";
 import { statusLabel } from "@/features/tickets/constants";
 
 const findingKindLabelKeys: Record<string, string> = {
@@ -20,67 +20,58 @@ interface Props {
   ticket: Ticket;
 }
 
+interface PropertyRow {
+  key: string;
+  label: string;
+  value: string | null | undefined;
+}
+
+const valueSx = {
+  color: DETAIL_PALETTE.fieldValue,
+  fontWeight: 400,
+  fontSize: "12px",
+};
+
+const emptyValueSx = { ...valueSx, color: DETAIL_PALETTE.muted };
+
 export const PropertiesCard: React.FC<Props> = ({ ticket }) => {
   const t = useT();
   const priority = PRIORITY_CONFIG[ticket.priority] ?? PRIORITY_CONFIG.medium;
 
-  const valueSx = {
-    color: DETAIL_PALETTE.fieldValue,
-    fontWeight: 400,
-    fontSize: "12px",
-  };
-  const emptyValueSx = { ...valueSx, color: DETAIL_PALETTE.muted };
-
-  const rows = [
+  const rows: PropertyRow[] = [
     {
       key: "status",
       label: t("tickets.detail.field_status"),
-      value: <Box sx={valueSx}>{statusLabel(t, ticket.status)}</Box>,
+      value: statusLabel(t, ticket.status),
     },
     {
       key: "priority",
       label: t("tickets.detail.field_priority"),
-      value: <Box sx={valueSx}>{t(priority.labelKey)}</Box>,
+      value: t(priority.labelKey),
     },
     {
       key: "type",
       label: t("tickets.detail.field_type"),
-      value: (
-        <Box sx={valueSx}>
-          {typeLabelKeys[ticket.type]
-            ? t(typeLabelKeys[ticket.type])
-            : ticket.type}
-        </Box>
-      ),
+      value: typeLabelKeys[ticket.type]
+        ? t(typeLabelKeys[ticket.type])
+        : ticket.type,
     },
     {
       key: "assignee",
       label: t("tickets.detail.field_assignee"),
-      value: ticket.assignedToName ? (
-        <Box sx={valueSx}>{ticket.assignedToName}</Box>
-      ) : (
-        <Box sx={emptyValueSx}>{t("tickets.detail.unassigned")}</Box>
-      ),
+      value: ticket.assignedToName,
     },
     {
       key: "project",
       label: t("tickets.detail.field_project"),
-      value: ticket.projectName ? (
-        <Box sx={valueSx}>{ticket.projectName}</Box>
-      ) : (
-        <Box sx={emptyValueSx}>{t("tickets.detail.unassigned")}</Box>
-      ),
+      value: ticket.projectName,
     },
     ...(ticket.findingKind && findingKindLabelKeys[ticket.findingKind]
       ? [
           {
             key: "finding",
             label: t("tickets.detail.field_finding"),
-            value: (
-              <Box sx={valueSx}>
-                {t(findingKindLabelKeys[ticket.findingKind])}
-              </Box>
-            ),
+            value: t(findingKindLabelKeys[ticket.findingKind]),
           },
         ]
       : []),
@@ -143,7 +134,9 @@ export const PropertiesCard: React.FC<Props> = ({ ticket }) => {
                 fontSize: "12px",
               }}
             >
-              {row.value}
+              <Box sx={row.value ? valueSx : emptyValueSx}>
+                {row.value || t("tickets.detail.unassigned")}
+              </Box>
             </Box>
           </Box>
           {idx < arr.length - 1 && (

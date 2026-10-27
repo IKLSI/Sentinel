@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import apiClient from "@/configs/apiClient";
-import { ProductDemo } from "@/features/landing/pages/LandingPage/components/ProductDemo";
+import { ProductDemo } from "@/features/landing/pages/LandingPage/components/DemoLauncher/components/ProductDemo";
 import { DEMO_PROJECT_NAMES } from "@/features/landing/demo/fixtures/ids";
 import { render, screen, waitFor, within } from "@/tests/test-utils";
 

@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import { useT } from "@/contexts/I18nContext";
 import { ITEM_SX } from "@/components/layout/Sidebar/constants";
 import type { NavSection } from "@/components/layout/Sidebar/types";
+import { TEXT_ELLIPSIS_SX } from "@/constants/display";
 
 interface Props {
   section: NavSection;
@@ -45,9 +46,7 @@ export const SectionLink: React.FC<Props> = ({ section }) => {
               fontWeight: 700,
               letterSpacing: "0.07em",
               textTransform: "uppercase",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              ...TEXT_ELLIPSIS_SX,
               color: isActive ? "var(--accent)" : "var(--muted2)",
               transition: "color 0.15s",
             }}

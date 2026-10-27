@@ -11,3 +11,9 @@ export const LEGAL_DOCUMENTS = [
 
 export const LEGAL_HEADER_HEIGHT = 56;
 export const LEGAL_SCROLL_OFFSET = 76;
+
+export const LEGAL_CONTENT_SX = {
+  maxWidth: 1140,
+  mx: "auto",
+  px: { xs: "18px", md: "28px" },
+} as const;

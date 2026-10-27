@@ -1,153 +1,40 @@
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
-import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
-import { LoadingRegion } from "@/components/ui/common/LoadingRegion";
 import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 import ForumOutlined from "@mui/icons-material/ForumOutlined";
-import { DeleteModal } from "@/components/ui/common/DeleteModal";
+import { DeleteModal } from "@/components/ui/common/modal/DeleteModal";
+import { ListSkeleton } from "@/components/ui/common/feedback/ListSkeleton";
+import { LoadingRegion } from "@/components/ui/common/feedback/LoadingRegion";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { useToast } from "@/hooks/useToast";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/contexts/I18nContext";
-import {
-  useAddCommentMutation,
-  useDeleteCommentMutation,
-  useUpdateCommentMutation,
-} from "@/domains/tickets/mutations";
 import { useTicketQuery } from "@/domains/tickets/queries";
-import type { CommentAttachment } from "@/components/ui/common/AttachmentChip";
-import {
-  DETAIL_PALETTE,
-  parseCommentContent,
-} from "@/features/tickets/pages/TicketDetailPage/helpers";
-import { TicketHeader } from "@/features/tickets/pages/TicketDetailPage/components/TicketHeader";
+import { DETAIL_PALETTE } from "@/features/tickets/pages/TicketDetailPage/constants";
+import { useTicketComments } from "@/features/tickets/pages/TicketDetailPage/hooks";
 import { SectionDivider } from "@/features/tickets/pages/TicketDetailPage/components/SectionDivider";
-import { CommentThread } from "@/features/tickets/pages/TicketDetailPage/components/CommentThread";
+import { CommentItem } from "@/features/tickets/pages/TicketDetailPage/components/CommentItem";
 import { CommentComposer } from "@/features/tickets/pages/TicketDetailPage/components/CommentComposer";
 import { PropertiesCard } from "@/features/tickets/pages/TicketDetailPage/components/PropertiesCard";
 import { HistoryCard } from "@/features/tickets/pages/TicketDetailPage/components/HistoryCard";
-import { useApiErrorToast } from "@/hooks/useApiErrorToast";
-import { commentContentSchema } from "@/features/tickets/pages/TicketDetailPage/schemas";
 
 const routeApi = getRouteApi("/_authenticated/tickets/$id");
 
 export const TicketDetailPage: React.FC = () => {
   const t = useT();
-  const onAddCommentError = useApiErrorToast(
-    "tickets.detail.add_comment_error",
-  );
-  const onUpdateCommentError = useApiErrorToast("tickets.detail.update_error");
-  const onDeleteCommentError = useApiErrorToast("tickets.detail.delete_error");
   const { id } = routeApi.useParams();
-  const { showToast } = useToast();
   const { user } = useAuth();
 
   const ticketQuery = useTicketQuery(id);
   const ticket = ticketQuery.data ?? null;
-  const loading = ticketQuery.isLoading;
   const notFound = ticketQuery.isError;
-  const addCommentMutation = useAddCommentMutation(id ?? "");
-  const updateCommentMutation = useUpdateCommentMutation(id ?? "");
-  const deleteCommentMutation = useDeleteCommentMutation(id ?? "");
-
-  const [composerValue, setComposerValue] = useState("");
-  const [composerAttachments, setComposerAttachments] = useState<
-    CommentAttachment[]
-  >([]);
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  const draftRef = useRef<{
-    value: string;
-    attachments: CommentAttachment[];
-  } | null>(null);
-  const composerRef = useRef({
-    value: composerValue,
-    attachments: composerAttachments,
-  });
-
-  useEffect(() => {
-    composerRef.current = {
-      value: composerValue,
-      attachments: composerAttachments,
-    };
-  }, [composerValue, composerAttachments]);
-  const submitting = editingCommentId
-    ? updateCommentMutation.isPending
-    : addCommentMutation.isPending;
-
-  const [deleteCommentTarget, setDeleteCommentTarget] = useState<string | null>(
-    null,
-  );
-  const deleteCommentLoading = deleteCommentMutation.isPending;
+  const comments = useTicketComments(id ?? "", ticket);
 
   useQueryErrorToast(notFound, "tickets.detail.not_found_toast");
 
-  const startEditComment = useCallback((commentId: string, content: string) => {
-    const { text, attachments } = parseCommentContent(content);
-    setEditingCommentId((current) => {
-      if (!current) draftRef.current = composerRef.current;
-      return commentId;
-    });
-    setComposerValue(text);
-    setComposerAttachments(attachments);
-  }, []);
-
-  const cancelEditComment = useCallback(() => {
-    setEditingCommentId(null);
-    setComposerValue(draftRef.current?.value ?? "");
-    setComposerAttachments(draftRef.current?.attachments ?? []);
-    draftRef.current = null;
-  }, []);
-
-  const handleSubmitComment = (content: string) => {
-    if (!ticket || !commentContentSchema.safeParse(content).success) return;
-
-    if (editingCommentId) {
-      updateCommentMutation.mutate(
-        { id: ticket.id, commentId: editingCommentId, data: { content } },
-        {
-          onSuccess: () => {
-            cancelEditComment();
-            showToast(t("tickets.detail.comment_updated"), "success");
-          },
-          onError: onUpdateCommentError,
-        },
-      );
-      return;
-    }
-
-    addCommentMutation.mutate(
-      { id: ticket.id, data: { content } },
-      {
-        onSuccess: () => {
-          setComposerValue("");
-          setComposerAttachments([]);
-          showToast(t("tickets.detail.reply_sent"), "success");
-        },
-        onError: onAddCommentError,
-      },
-    );
-  };
-
-  const handleDeleteComment = () => {
-    if (!ticket || !deleteCommentTarget) return;
-    deleteCommentMutation.mutate(
-      { id: ticket.id, commentId: deleteCommentTarget },
-      {
-        onSuccess: () => {
-          if (editingCommentId === deleteCommentTarget) cancelEditComment();
-          setDeleteCommentTarget(null);
-          showToast(t("tickets.detail.comment_deleted"), "success");
-        },
-        onError: onDeleteCommentError,
-      },
-    );
-  };
-
-  if (loading) {
+  if (ticketQuery.isLoading) {
     return (
       <LoadingRegion
         label={t("tickets.detail.loading")}
@@ -196,6 +83,8 @@ export const TicketDetailPage: React.FC = () => {
     );
   }
 
+  const ticketComments = ticket.comments ?? [];
+
   return (
     <>
       <PageContainer
@@ -222,7 +111,35 @@ export const TicketDetailPage: React.FC = () => {
             boxShadow: DETAIL_PALETTE.panelShadow,
           }}
         >
-          <TicketHeader title={ticket.title} />
+          <Box
+            sx={{
+              px: { xs: "24px", md: "40px" },
+              pt: { xs: "24px", md: "36px" },
+              pb: 0,
+            }}
+          >
+            <Box
+              component="h1"
+              sx={{
+                m: 0,
+                mt: "4px",
+                mb: "0px",
+                fontSize: { xs: "18px", md: "24px" },
+                lineHeight: 1.2,
+                letterSpacing: "-0.02em",
+                color: DETAIL_PALETTE.title,
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                gap: "12px",
+                flexWrap: "wrap",
+              }}
+            >
+              {ticket.title}
+            </Box>
+          </Box>
 
           <Box
             sx={{
@@ -259,24 +176,53 @@ export const TicketDetailPage: React.FC = () => {
               my="28px"
             />
 
-            <CommentThread
-              comments={ticket.comments ?? []}
-              currentUserId={user?.id}
-              editingCommentId={editingCommentId}
-              onEdit={startEditComment}
-              onDelete={setDeleteCommentTarget}
-            />
+            <Box sx={{ position: "relative" }}>
+              {ticketComments.map((c, idx) => (
+                <CommentItem
+                  key={c.id}
+                  comment={c}
+                  isLast={idx === ticketComments.length - 1}
+                  isOwn={user?.id === c.authorId}
+                  isEditing={comments.editingCommentId === c.id}
+                  onEdit={comments.startEditComment}
+                  onDelete={comments.setDeleteCommentTarget}
+                />
+              ))}
+
+              {ticketComments.length === 0 && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "8px",
+                    py: "32px",
+                    color: DETAIL_PALETTE.emptyFg,
+                  }}
+                >
+                  <ForumOutlined sx={{ fontSize: 28, opacity: 0.4 }} />
+                  <Box sx={{ fontSize: "13px", fontWeight: 500 }}>
+                    {t("tickets.detail.no_comments_title")}
+                  </Box>
+                  <Box
+                    sx={{ fontSize: "12px", color: DETAIL_PALETTE.emptySub }}
+                  >
+                    {t("tickets.detail.no_comments_subtitle")}
+                  </Box>
+                </Box>
+              )}
+            </Box>
 
             <CommentComposer
               ticketId={id ?? ""}
-              value={composerValue}
-              onValueChange={setComposerValue}
-              attachments={composerAttachments}
-              onAttachmentsChange={setComposerAttachments}
-              submitting={submitting}
-              onSubmit={handleSubmitComment}
-              editingCommentId={editingCommentId}
-              onCancelEdit={cancelEditComment}
+              value={comments.composerValue}
+              onValueChange={comments.setComposerValue}
+              attachments={comments.composerAttachments}
+              onAttachmentsChange={comments.setComposerAttachments}
+              submitting={comments.submitting}
+              onSubmit={comments.handleSubmitComment}
+              editingCommentId={comments.editingCommentId}
+              onCancelEdit={comments.cancelEditComment}
             />
           </Box>
         </Box>
@@ -298,10 +244,10 @@ export const TicketDetailPage: React.FC = () => {
       </PageContainer>
 
       <DeleteModal
-        open={!!deleteCommentTarget}
-        onClose={() => setDeleteCommentTarget(null)}
-        onConfirm={handleDeleteComment}
-        loading={deleteCommentLoading}
+        open={!!comments.deleteCommentTarget}
+        onClose={() => comments.setDeleteCommentTarget(null)}
+        onConfirm={comments.handleDeleteComment}
+        loading={comments.deleting}
         title={t("tickets.detail.delete_comment_title")}
         irreversible
       >

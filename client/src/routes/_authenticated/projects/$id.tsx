@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { queryClient } from "@/configs/queryClient";
 import { projectOverviewQueryOptions } from "@/domains/projects/queries";
-import { ProjectDetailPage } from "@/features/techHealth/pages/ProjectDetailPage";
+import { ProjectDetailPage } from "@/features/projects/pages/ProjectDetailPage";
 
 export const Route = createFileRoute("/_authenticated/projects/$id")({
   loader: ({ context, params }) => {

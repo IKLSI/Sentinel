@@ -8,7 +8,7 @@ import type { RouterContext } from "@/routerContext";
 import { ErrorPage } from "@/pages/ErrorPage";
 import { useI18n } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
-import { FullScreenLoader } from "@/components/ui/common/FullScreenLoader";
+import { FullScreenLoader } from "@/components/ui/common/feedback/FullScreenLoader";
 
 const ReactQueryDevtools = import.meta.env.DEV
   ? lazy(() =>

@@ -1,23 +1,137 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import { useT } from "@/contexts/I18nContext";
-import { LANDING_SECTION_IDS } from "@/features/landing/constants";
+import { TEXT_ELLIPSIS_SX } from "@/constants/display";
+import {
+  LANDING_SECTION_IDS,
+  SHOWCASE,
+  STEP_CHIP_SX,
+  STEP_SOURCES,
+} from "@/features/landing/constants";
+import { REPOSITORY_HOST_LOGOS } from "@/features/landing/ecosystemLogos";
 import { LandingSection } from "@/features/landing/pages/LandingPage/components/LandingSection";
 import { SectionIntro } from "@/features/landing/pages/LandingPage/components/SectionIntro";
-import { StepRepositories } from "@/features/landing/pages/LandingPage/components/StepRepositories";
-import { StepResult } from "@/features/landing/pages/LandingPage/components/StepResult";
-import { StepSources } from "@/features/landing/pages/LandingPage/components/StepSources";
+import { StepResult } from "@/features/landing/pages/LandingPage/components/HowItWorks/components/StepResult";
 
 const TITLE_ID = "landing-how-it-works-title";
 
-const STEPS = [
-  { id: "connect", Visual: StepRepositories },
-  { id: "cross", Visual: StepSources },
-  { id: "result", Visual: StepResult },
+const STEP_IDS = ["connect", "cross", "result"] as const;
+
+type StepId = (typeof STEP_IDS)[number];
+
+const CONNECTED_REPOSITORIES = [
+  { logo: REPOSITORY_HOST_LOGOS.github, name: SHOWCASE.onlineStoreRepository },
+  {
+    logo: REPOSITORY_HOST_LOGOS.gitlab,
+    name: SHOWCASE.customerPortalRepository,
+  },
 ] as const;
 
 export const HowItWorks: React.FC = () => {
   const t = useT();
+  const stepVisuals: Record<StepId, React.ReactNode> = {
+    connect: (
+      <>
+        {CONNECTED_REPOSITORIES.map(({ logo, name }) => (
+          <Box
+            key={name}
+            sx={{
+              ...STEP_CHIP_SX,
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: "9px",
+              borderRadius: "12px",
+              p: "10px 12px",
+              fontSize: "13px",
+              textAlign: "left",
+              boxSizing: "border-box",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+              <path d={logo} fill="var(--ink)" opacity={0.8} />
+            </svg>
+            <Box
+              component="span"
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                ...TEXT_ELLIPSIS_SX,
+                color: "var(--ink)",
+              }}
+            >
+              {name}
+            </Box>
+            <Box
+              component="span"
+              sx={{
+                fontSize: "11.5px",
+                fontWeight: 600,
+                color: "var(--success)",
+                background: "var(--success-soft)",
+                px: "8px",
+                py: "2px",
+                borderRadius: "999px",
+              }}
+            >
+              {t("landing.steps.connected")}
+            </Box>
+          </Box>
+        ))}
+      </>
+    ),
+    cross: (
+      <>
+        <Box
+          sx={{
+            background: "var(--ink)",
+            color: "var(--indigo-100)",
+            font: "400 12.5px var(--font-code)",
+            px: "14px",
+            py: "8px",
+            borderRadius: "10px",
+          }}
+        >
+          {SHOWCASE.manifest}
+        </Box>
+        <Box
+          aria-hidden
+          sx={{
+            width: "70%",
+            height: 18,
+            border: "1.5px dashed var(--indigo-300)",
+            borderBottom: 0,
+            borderRadius: "10px 10px 0 0",
+            boxSizing: "border-box",
+          }}
+        />
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "6px",
+            width: "100%",
+          }}
+        >
+          {STEP_SOURCES.map((source) => (
+            <Box
+              key={source}
+              sx={{
+                ...STEP_CHIP_SX,
+                borderRadius: "10px",
+                p: "7px 8px",
+                fontSize: "12.5px",
+                fontWeight: 500,
+              }}
+            >
+              {source}
+            </Box>
+          ))}
+        </Box>
+      </>
+    ),
+    result: <StepResult />,
+  };
 
   return (
     <LandingSection id={LANDING_SECTION_IDS.howItWorks} labelledBy={TITLE_ID}>
@@ -44,7 +158,7 @@ export const HowItWorks: React.FC = () => {
           },
         }}
       >
-        {STEPS.map(({ id, Visual }, index) => (
+        {STEP_IDS.map((id, index) => (
           <Box
             component="li"
             key={id}
@@ -130,7 +244,7 @@ export const HowItWorks: React.FC = () => {
                 p: "18px",
               }}
             >
-              <Visual />
+              {stepVisuals[id]}
             </Box>
           </Box>
         ))}

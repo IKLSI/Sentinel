@@ -8,12 +8,14 @@ import { useUpdateMyProfileMutation } from "@/domains/users/mutations";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useT } from "@/contexts/I18nContext";
 import { FormTextField } from "@/components/ui/forms/FormTextField";
-import type { UserRole } from "@/enums";
-import {
-  CARD_SX,
-  ROLE_LABEL_KEYS,
-} from "@/features/users/pages/ProfilePage/constants";
+import { UserRole } from "@/enums";
+import { CARD_SX } from "@/features/users/pages/ProfilePage/constants";
 import { CardHeader } from "@/components/ui/common/CardHeader";
+
+const ROLE_LABEL_KEYS: Record<UserRole, string> = {
+  [UserRole.Admin]: "profile.role.admin",
+  [UserRole.Developer]: "profile.role.developer",
+};
 
 export const InfoCard: React.FC = () => {
   const { user, setUser } = useAuth();

@@ -1,7 +1,7 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import { AppModal } from "@/components/ui/common/AppModal";
-import { ModalActions } from "@/components/ui/common/ModalActions";
+import { AppModal } from "@/components/ui/common/modal/AppModal";
+import { ModalActions } from "@/components/ui/common/modal/ModalActions";
 import { useT } from "@/contexts/I18nContext";
 import type { User } from "@/domains/users/types";
 

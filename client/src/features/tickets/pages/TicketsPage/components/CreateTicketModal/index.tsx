@@ -2,16 +2,16 @@ import type React from "react";
 import { useId } from "react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
-import CircularProgress from "@mui/material/CircularProgress";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import { AppModal } from "@/components/ui/common/AppModal";
+import { AppModal } from "@/components/ui/common/modal/AppModal";
+import { ModalActions } from "@/components/ui/common/modal/ModalActions";
 import { FormSelectField } from "@/components/ui/forms/FormSelectField";
 import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { useT } from "@/contexts/I18nContext";
 import type { ProjectOption } from "@/domains/projects/types";
 import type { UserOption } from "@/domains/users/types";
+import { TicketAssignmentFields } from "@/features/tickets/pages/TicketsPage/components/TicketAssignmentFields";
 import type { CreateTicketFormValues } from "@/features/tickets/pages/TicketsPage/schemas";
 
 interface Props {
@@ -70,26 +70,12 @@ export const CreateTicketModal: React.FC<Props> = ({
               />
             }
           />
-          <Button
-            variant="contained"
-            size="small"
-            color="inherit"
-            onClick={onClose}
-          >
-            {t("common.cancel")}
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            onClick={onSubmit}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
-            ) : (
-              t("tickets.list.create_submit")
-            )}
-          </Button>
+          <ModalActions
+            onCancel={onClose}
+            onConfirm={onSubmit}
+            pending={submitting}
+            confirmLabel={t("tickets.list.create_submit")}
+          />
         </>
       }
     >
@@ -136,34 +122,14 @@ export const CreateTicketModal: React.FC<Props> = ({
             <option value="Question">{t("tickets.list.type_question")}</option>
           </FormSelectField>
         </Box>
-        <Box
-          sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-        >
-          <FormSelectField
-            id={`${fieldId}-projectId`}
-            label={t("tickets.list.field_project")}
-            registration={register("projectId")}
-          >
-            <option value="">{t("tickets.list.no_project")}</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </FormSelectField>
-          <FormSelectField
-            id={`${fieldId}-assignedToId`}
-            label={t("tickets.list.field_assignee")}
-            registration={register("assignedToId")}
-          >
-            <option value="">{t("tickets.list.unassigned")}</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name}
-              </option>
-            ))}
-          </FormSelectField>
-        </Box>
+        <TicketAssignmentFields
+          fieldId={fieldId}
+          projectRegistration={register("projectId")}
+          assigneeRegistration={register("assignedToId")}
+          projects={projects}
+          users={users}
+          noProjectLabel={t("tickets.list.no_project")}
+        />
         <FormTextField
           id={`${fieldId}-description`}
           label={t("tickets.list.field_description")}

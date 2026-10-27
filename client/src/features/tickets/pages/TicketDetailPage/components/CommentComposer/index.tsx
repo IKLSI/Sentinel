@@ -6,9 +6,11 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { useT } from "@/contexts/I18nContext";
 import { CommentEditor } from "@/components/ui/forms/CommentEditor";
 import type { CommentAttachment } from "@/components/ui/common/AttachmentChip";
-import { AttachmentButton } from "@/features/tickets/pages/TicketDetailPage/components/AttachmentButton";
-import { buildCommentContent } from "@/features/tickets/pages/TicketDetailPage/helpers";
-import { commentContentSchema } from "@/features/tickets/pages/TicketDetailPage/schemas";
+import { AttachmentButton } from "@/features/tickets/pages/TicketDetailPage/components/CommentComposer/components/AttachmentButton";
+import {
+  buildCommentContent,
+  commentContentSchema,
+} from "@/features/tickets/pages/TicketDetailPage/helpers";
 
 interface Props {
   ticketId: string;

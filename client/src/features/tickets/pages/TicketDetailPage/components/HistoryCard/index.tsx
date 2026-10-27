@@ -2,8 +2,8 @@ import type React from "react";
 import Box from "@mui/material/Box";
 import { useI18n } from "@/contexts/I18nContext";
 import type { Ticket } from "@/domains/tickets/types";
+import { DETAIL_PALETTE } from "@/features/tickets/pages/TicketDetailPage/constants";
 import {
-  DETAIL_PALETTE,
   getRelativeShort,
   historyPresentation,
 } from "@/features/tickets/pages/TicketDetailPage/helpers";

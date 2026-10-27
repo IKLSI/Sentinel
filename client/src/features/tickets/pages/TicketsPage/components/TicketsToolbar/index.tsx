@@ -13,7 +13,7 @@ import type { UserOption } from "@/domains/users/types";
 import {
   buildTicketFilterFields,
   buildTicketFilterLabels,
-} from "@/features/tickets/pages/TicketsPage/filters";
+} from "@/features/tickets/pages/TicketsPage/components/TicketsToolbar/filters";
 
 interface Props {
   search: string;

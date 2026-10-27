@@ -4,7 +4,7 @@ import type {
   FilterCriterion,
   FilterFieldDefinition,
 } from "@/components/ui/forms/FilterBuilder/types";
-import type { VirtualTableSort } from "@/components/ui/common/VirtualTable";
+import type { VirtualTableSort } from "@/components/ui/common/table/VirtualTable";
 
 export interface GridFilterField<T> extends FilterFieldDefinition {
   valueOf: (row: T) => string;

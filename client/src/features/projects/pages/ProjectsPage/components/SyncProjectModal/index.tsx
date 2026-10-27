@@ -1,25 +1,32 @@
 import type React from "react";
-import {
-  useCallback,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
+import Link from "@mui/material/Link";
 import { useT } from "@/contexts/I18nContext";
-import { useImportProjectsMutation } from "@/domains/projects/mutations";
 import { useAvailableReposQuery } from "@/domains/projects/queries";
 import { ScanFrequency } from "@/enums";
-import { useApiErrorToast } from "@/hooks/useApiErrorToast";
-import { useToast } from "@/hooks/useToast";
 import { SearchInput } from "@/components/ui/forms/SearchInput";
-import { RepoListHeader } from "@/features/projects/pages/ProjectsPage/components/RepoListHeader";
-import { RepoList } from "@/features/projects/pages/ProjectsPage/components/RepoList";
-import { ImportFrequencyBar } from "@/features/projects/pages/ProjectsPage/components/ImportFrequencyBar";
-import { ImportModalActions } from "@/features/projects/pages/ProjectsPage/components/ImportModalActions";
+import { ScanFrequencyPicker } from "@/components/ui/forms/ScanFrequencyPicker";
+import { RepoList } from "@/features/projects/pages/ProjectsPage/components/SyncProjectModal/components/RepoList";
+import {
+  useImportRepos,
+  useRepoSelection,
+} from "@/features/projects/pages/ProjectsPage/components/SyncProjectModal/hooks";
+import {
+  emptyRepoListSubtitle,
+  emptyRepoListTitle,
+  importButtonLabel,
+} from "@/features/projects/pages/ProjectsPage/components/SyncProjectModal/helpers";
+
+const sectionLabelSx = {
+  fontSize: "11px",
+  fontWeight: 700,
+  color: "var(--text)",
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
+} as const;
 
 interface Props {
   open: boolean;
@@ -28,8 +35,6 @@ interface Props {
 
 export const SyncProjectModal: React.FC<Props> = ({ open, onClose }) => {
   const t = useT();
-  const { showToast } = useToast();
-  const onImportError = useApiErrorToast("projects.toast.import_error");
   const availableReposQuery = useAvailableReposQuery(open);
   const repos = useMemo(
     () => availableReposQuery.data?.repos ?? [],
@@ -41,94 +46,38 @@ export const SyncProjectModal: React.FC<Props> = ({ open, onClose }) => {
     availableReposQuery.data?.fetchFailedStatusCode ?? null;
   const loading = availableReposQuery.isLoading;
   const error = availableReposQuery.isError;
-  const importProjectsMutation = useImportProjectsMutation();
-  const importing = importProjectsMutation.isPending;
+  const { importRepos, importing } = useImportRepos(onClose);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [scanFrequency, setScanFrequency] = useState<ScanFrequency>(
     ScanFrequency.Weekly,
   );
   const inputRef = useRef<HTMLInputElement>(null);
   const deferredSearch = useDeferredValue(search);
 
-  useEffect(() => {
-    if (!open) return;
-    setSearch("");
-    setSelected(new Set());
-    setScanFrequency(ScanFrequency.Weekly);
-    setTimeout(() => inputRef.current?.focus(), 80);
-  }, [open]);
-
   const visible = useMemo(() => {
     const needle = deferredSearch.toLowerCase();
     return repos.filter((r) => r.name.toLowerCase().includes(needle));
   }, [repos, deferredSearch]);
 
-  const toggle = useCallback(
-    (url: string) =>
-      setSelected((prev) => {
-        const next = new Set(prev);
-        if (next.has(url)) next.delete(url);
-        else next.add(url);
-        return next;
-      }),
-    [],
+  const { selected, toggle, selectAll, clear } = useRepoSelection(
+    visible.map((r) => r.url),
   );
 
-  const selectAll = () => {
-    const urls = visible.map((r) => r.url);
-    const allSel = urls.every((u) => selected.has(u));
-    setSelected((prev) =>
-      allSel
-        ? new Set([...prev].filter((u) => !urls.includes(u)))
-        : new Set([...prev, ...urls]),
+  useEffect(() => {
+    if (!open) return;
+    setSearch("");
+    clear();
+    setScanFrequency(ScanFrequency.Weekly);
+    setTimeout(() => inputRef.current?.focus(), 80);
+  }, [open, clear]);
+
+  const handleImport = () => {
+    if (selected.size === 0) return;
+    importRepos(
+      repos.filter((r) => selected.has(r.url)),
+      scanFrequency,
     );
   };
-
-  const handleImport = async () => {
-    if (selected.size === 0) return;
-    const toImport = repos.filter((r) => selected.has(r.url));
-    try {
-      await importProjectsMutation.mutateAsync({
-        data: {
-          projects: toImport.map((r) => ({
-            name: r.name,
-            repositoryUrl: r.url,
-            repositoryType: r.platform,
-            scanFrequency,
-          })),
-        },
-      });
-      showToast(
-        t("projects.toast.import_success", { count: toImport.length }),
-        "success",
-      );
-      onClose();
-    } catch (err) {
-      onImportError(err);
-    }
-  };
-
-  const importLabel = importing
-    ? t("projects.import_modal.importing")
-    : selected.size > 0
-      ? t("projects.import_modal.import_count", { count: selected.size })
-      : t("projects.import_modal.import");
-
-  const emptyTitle = !hasToken
-    ? t("projects.import_modal.no_token")
-    : fetchFailed
-      ? t("projects.import_modal.fetch_failed_title")
-      : t("projects.import_modal.empty");
-
-  const emptySubtitle =
-    hasToken && fetchFailed
-      ? fetchFailedStatusCode != null
-        ? t("projects.import_modal.fetch_failed_subtitle", {
-            status: fetchFailedStatusCode,
-          })
-        : t("projects.import_modal.fetch_failed_subtitle_generic")
-      : undefined;
 
   return (
     <Dialog
@@ -178,10 +127,36 @@ export const SyncProjectModal: React.FC<Props> = ({ open, onClose }) => {
         />
       </Box>
 
-      <RepoListHeader
-        showSelectAll={!loading && !error && repos.length > 0}
-        onSelectAll={selectAll}
-      />
+      <Box
+        sx={{
+          px: "20px",
+          pt: "14px",
+          pb: "6px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexShrink: 0,
+        }}
+      >
+        <Box sx={sectionLabelSx}>{t("projects.sync_modal.projects_label")}</Box>
+        {!loading && !error && repos.length > 0 && (
+          <Link
+            component="button"
+            type="button"
+            underline="none"
+            onClick={selectAll}
+            sx={{
+              color: "var(--accent)",
+              fontSize: "12px",
+              fontWeight: 600,
+              transition: "color 0.12s",
+              "&:hover": { color: "var(--accent2)" },
+            }}
+          >
+            {t("projects.import_modal.select_all")}
+          </Link>
+        )}
+      </Box>
 
       <RepoList
         loading={loading}
@@ -190,25 +165,67 @@ export const SyncProjectModal: React.FC<Props> = ({ open, onClose }) => {
         visible={visible}
         selected={selected}
         onToggle={toggle}
-        emptyTitle={emptyTitle}
-        emptySubtitle={emptySubtitle}
+        emptyTitle={emptyRepoListTitle(t, hasToken, fetchFailed)}
+        emptySubtitle={emptyRepoListSubtitle(
+          t,
+          hasToken,
+          fetchFailed,
+          fetchFailedStatusCode,
+        )}
       />
 
       {selected.size > 0 && (
-        <ImportFrequencyBar
-          value={scanFrequency}
-          onChange={setScanFrequency}
-          disabled={importing}
-        />
+        <Box
+          sx={{
+            px: "20px",
+            py: "12px",
+            borderTop: "1px solid var(--border)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px",
+            flexShrink: 0,
+          }}
+        >
+          <Box sx={sectionLabelSx}>{t("projects.modal.frequency_label")}</Box>
+          <ScanFrequencyPicker
+            value={scanFrequency}
+            onChange={setScanFrequency}
+            disabled={importing}
+          />
+        </Box>
       )}
 
-      <ImportModalActions
-        importLabel={importLabel}
-        importing={importing}
-        importDisabled={selected.size === 0 || importing}
-        onCancel={onClose}
-        onImport={handleImport}
-      />
+      <Box
+        sx={{
+          p: "14px 20px",
+          borderTop: "1px solid var(--border)",
+          background: "var(--s2)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          flexShrink: 0,
+          gap: "8px",
+        }}
+      >
+        <Button
+          variant="contained"
+          size="small"
+          color="inherit"
+          onClick={onClose}
+          disabled={importing}
+        >
+          {t("projects.import_modal.cancel")}
+        </Button>
+        <Button
+          variant="contained"
+          size="small"
+          disabled={selected.size === 0 || importing}
+          onClick={handleImport}
+        >
+          {importButtonLabel(t, importing, selected.size)}
+        </Button>
+      </Box>
     </Dialog>
   );
 };

@@ -136,7 +136,7 @@ export const describeScoreLine = (
   }
 };
 
-export interface TimelineScale {
+interface TimelineScale {
   from: number;
   to: number;
   years: number[];

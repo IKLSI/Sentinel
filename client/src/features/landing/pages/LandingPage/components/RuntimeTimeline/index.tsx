@@ -8,7 +8,7 @@ import { pluralKey } from "@/helpers/plural";
 import { LANDING_SECTION_IDS } from "@/features/landing/constants";
 import { joinNames } from "@/features/landing/helpers";
 import { LandingSection } from "@/features/landing/pages/LandingPage/components/LandingSection";
-import { RuntimeTimelineChart } from "@/features/landing/pages/LandingPage/components/RuntimeTimelineChart";
+import { RuntimeTimelineChart } from "@/features/landing/pages/LandingPage/components/RuntimeTimeline/components/RuntimeTimelineChart";
 import { SectionIntro } from "@/features/landing/pages/LandingPage/components/SectionIntro";
 
 const TITLE_ID = "landing-timeline-title";

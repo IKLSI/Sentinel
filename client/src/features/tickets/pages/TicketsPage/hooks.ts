@@ -1,28 +1,125 @@
-import { TicketStatus } from "@/enums";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/useToast";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useT } from "@/contexts/I18nContext";
 import {
   useCreateTicketMutation,
   useDeleteTicketMutation,
   useUpdateTicketMutation,
 } from "@/domains/tickets/mutations";
+import { useExportTicketsExcelMutation } from "@/domains/tickets/downloads";
+import { useTicketsQuery } from "@/domains/tickets/queries";
 import type {
   CreateTicket,
   Ticket,
+  TicketFilters,
   UpdateTicket,
 } from "@/domains/tickets/types";
+import { useTicketCreatedToast } from "@/features/tickets/hooks/useTicketCreatedToast";
 import { EMPTY_CREATE_TICKET_FORM } from "@/features/tickets/pages/TicketsPage/helpers";
 import {
   createTicketSchema,
-  type CreateTicketFormValues,
   editTicketSchema,
+  type CreateTicketFormValues,
   type EditTicketFormValues,
 } from "@/features/tickets/pages/TicketsPage/schemas";
-import { useApiErrorToast } from "@/hooks/useApiErrorToast";
-import { useTicketCreatedToast } from "@/features/tickets/hooks/useTicketCreatedToast";
+import type { FilterCriterion } from "@/components/ui/forms/FilterBuilder/types";
+import { queryFromCriterion } from "@/features/tickets/pages/TicketsPage/filterParams";
+import type { SortState } from "@/features/tickets/pages/TicketsPage/components/TicketsTable";
+import { useDeleteDialog } from "@/hooks/useDeleteDialog";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useSortState } from "@/hooks/useSortState";
+import { usePagination } from "@/hooks/usePagination";
+import { SortDirection, TicketSortField, TicketStatus } from "@/enums";
+
+const SEARCH_DEBOUNCE_MS = 300;
+
+export const useTicketsListing = (
+  criterion: FilterCriterion | null,
+  onCriterionChange: (criterion: FilterCriterion | null) => void,
+) => {
+  const t = useT();
+  const { showToast } = useToast();
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
+  const pagination = usePagination();
+  const { page, pageSize, resetPage } = pagination;
+  const [sort, toggleSort] = useSortState<SortState["col"]>({
+    col: TicketSortField.Priority,
+    dir: SortDirection.Desc,
+  });
+  const exportTicketsMutation = useExportTicketsExcelMutation();
+
+  const handleCriterionChange = useCallback(
+    (next: FilterCriterion | null) => {
+      resetPage();
+      onCriterionChange(next);
+    },
+    [onCriterionChange, resetPage],
+  );
+
+  const handleSearchChange = useCallback(
+    (v: string) => {
+      setSearch(v);
+      resetPage();
+    },
+    [resetPage],
+  );
+
+  const handleExport = () => {
+    exportTicketsMutation.mutate(
+      {
+        ...queryFromCriterion(criterion),
+        search: debouncedSearch || undefined,
+      },
+      {
+        onError: () => showToast(t("tickets.list.export_error"), "error"),
+      },
+    );
+  };
+
+  const ticketsFilters: TicketFilters = {
+    page,
+    pageSize,
+    sortBy: sort.col,
+    sortDirection: sort.dir,
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    ...queryFromCriterion(criterion),
+  };
+  const ticketsQuery = useTicketsQuery(ticketsFilters);
+
+  return {
+    search,
+    handleSearchChange,
+    handleCriterionChange,
+    pagination,
+    sort,
+    toggleSort,
+    handleExport,
+    exporting: exportTicketsMutation.isPending,
+    ticketsQuery,
+    hasFiltersApplied: !!debouncedSearch || !!criterion,
+  };
+};
+
+export const useDeleteTicketDialog = () => {
+  const t = useT();
+  const dialog = useDeleteDialog<{ id: string; reference: string }>(
+    useDeleteTicketMutation(),
+    "tickets.list.delete_error",
+    ({ reference }) => t("tickets.list.delete_success", { reference }),
+  );
+  const { setTarget } = dialog;
+
+  const openDialog = useCallback(
+    (id: string, reference: string) => setTarget({ id, reference }),
+    [setTarget],
+  );
+
+  return { ...dialog, openDialog };
+};
 
 export const useCreateTicketDialog = () => {
   const showTicketCreatedToast = useTicketCreatedToast();
@@ -155,45 +252,5 @@ export const useEditTicketDialog = () => {
     errors,
     submit,
     saving: updateTicketMutation.isPending,
-  };
-};
-
-export const useDeleteTicketDialog = () => {
-  const t = useT();
-  const { showToast } = useToast();
-  const onDeleteError = useApiErrorToast("tickets.list.delete_error");
-  const deleteTicketMutation = useDeleteTicketMutation();
-  const [target, setTarget] = useState<{
-    id: string;
-    reference: string;
-  } | null>(null);
-
-  const openDialog = useCallback((id: string, reference: string) => {
-    setTarget({ id, reference });
-  }, []);
-
-  const closeDialog = useCallback(() => setTarget(null), []);
-
-  const confirm = () => {
-    if (!target) return;
-    const reference = target.reference;
-    deleteTicketMutation.mutate(
-      { id: target.id },
-      {
-        onSuccess: () => {
-          setTarget(null);
-          showToast(t("tickets.list.delete_success", { reference }), "success");
-        },
-        onError: onDeleteError,
-      },
-    );
-  };
-
-  return {
-    target,
-    openDialog,
-    closeDialog,
-    confirm,
-    deleting: deleteTicketMutation.isPending,
   };
 };

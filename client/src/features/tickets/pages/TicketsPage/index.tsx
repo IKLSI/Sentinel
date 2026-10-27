@@ -1,43 +1,32 @@
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
-import { LoadErrorState } from "@/components/ui/common/LoadErrorState";
-import { DeleteModal } from "@/components/ui/common/DeleteModal";
+import { LoadErrorState } from "@/components/ui/common/feedback/LoadErrorState";
+import { DeleteModal } from "@/components/ui/common/modal/DeleteModal";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { useToast } from "@/hooks/useToast";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useT } from "@/contexts/I18nContext";
 import { useProjectOptionsQuery } from "@/domains/projects/queries";
-import { useExportTicketsExcelMutation } from "@/domains/tickets/downloads";
-import { useTicketsQuery } from "@/domains/tickets/queries";
-import type { TicketFilters } from "@/domains/tickets/types";
 import { useUserOptionsQuery } from "@/domains/users/queries";
 import type { FilterCriterion } from "@/components/ui/forms/FilterBuilder/types";
 import {
   criterionFromSearch,
-  queryFromCriterion,
   searchFromCriterion,
 } from "@/features/tickets/pages/TicketsPage/filterParams";
 import {
   useCreateTicketDialog,
   useDeleteTicketDialog,
   useEditTicketDialog,
+  useTicketsListing,
 } from "@/features/tickets/pages/TicketsPage/hooks";
 import { TicketsToolbar } from "@/features/tickets/pages/TicketsPage/components/TicketsToolbar";
-import {
-  TicketsTable,
-  type SortState,
-} from "@/features/tickets/pages/TicketsPage/components/TicketsTable";
-import { Pagination } from "@/components/ui/common/Pagination";
+import { TicketsTable } from "@/features/tickets/pages/TicketsPage/components/TicketsTable";
+import { Pagination } from "@/components/ui/common/table/Pagination";
 import { CreateTicketModal } from "@/features/tickets/pages/TicketsPage/components/CreateTicketModal";
 import { EditTicketModal } from "@/features/tickets/pages/TicketsPage/components/EditTicketModal";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { useSortState } from "@/hooks/useSortState";
-import { PAGE_SIZE_OPTIONS, usePagination } from "@/hooks/usePagination";
-import { SortDirection, TicketSortField } from "@/enums";
-
-const SEARCH_DEBOUNCE_MS = 300;
+import { PAGE_SIZE_OPTIONS } from "@/hooks/usePagination";
+import { PANEL_SX } from "@/helpers/cardSx";
 
 const routeApi = getRouteApi("/_authenticated/tickets/");
 
@@ -46,73 +35,37 @@ export const TicketsPage: React.FC = () => {
   const navigate = routeApi.useNavigate();
   const searchParams = routeApi.useSearch();
   const { openCreate } = searchParams;
-  const { showToast } = useToast();
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
   const criterion = useMemo(
     () => criterionFromSearch(searchParams),
     [searchParams],
   );
-  const { page, pageSize, setPage, setPageSize, resetPage } = usePagination();
-  const handleCriterionChange = useCallback(
+  const navigateToCriterion = useCallback(
     (next: FilterCriterion | null) => {
-      resetPage();
       navigate({
         search: (previous) => ({ ...previous, ...searchFromCriterion(next) }),
         replace: true,
       });
     },
-    [navigate, resetPage],
+    [navigate],
   );
-  const handleSearchChange = useCallback(
-    (v: string) => {
-      setSearch(v);
-      resetPage();
-    },
-    [resetPage],
-  );
+  const listing = useTicketsListing(criterion, navigateToCriterion);
+  const { pagination, ticketsQuery } = listing;
+
   const { data: projectsData } = useProjectOptionsQuery();
   const projects = useMemo(() => projectsData ?? [], [projectsData]);
   const { data: usersData } = useUserOptionsQuery();
   const users = useMemo(() => usersData ?? [], [usersData]);
-  const [sort, toggleSort] = useSortState<SortState["col"]>({
-    col: TicketSortField.Priority,
-    dir: SortDirection.Desc,
-  });
 
   const createDialog = useCreateTicketDialog();
   const editDialog = useEditTicketDialog();
   const deleteDialog = useDeleteTicketDialog();
-  const exportTicketsMutation = useExportTicketsExcelMutation();
-  const exporting = exportTicketsMutation.isPending;
   const openCreateDialog = createDialog.openDialog;
 
-  const handleExport = () => {
-    exportTicketsMutation.mutate(
-      {
-        ...queryFromCriterion(criterion),
-        search: debouncedSearch || undefined,
-      },
-      {
-        onError: () => showToast(t("tickets.list.export_error"), "error"),
-      },
-    );
-  };
-
-  const ticketsFilters: TicketFilters = {
-    page,
-    pageSize,
-    sortBy: sort.col,
-    sortDirection: sort.dir,
-    ...(debouncedSearch ? { search: debouncedSearch } : {}),
-    ...queryFromCriterion(criterion),
-  };
-
-  const ticketsQuery = useTicketsQuery(ticketsFilters);
   const tickets = ticketsQuery.data ?? null;
   const loading = ticketsQuery.isLoading;
   const initialLoading = loading && !tickets;
   const error = ticketsQuery.error;
+  const totalCount = tickets?.totalCount ?? 0;
 
   useQueryErrorToast(!!error, "tickets.list.load_error");
 
@@ -125,23 +78,19 @@ export const TicketsPage: React.FC = () => {
     });
   }, [openCreate, openCreateDialog, navigate]);
 
-  const filtered = tickets?.items ?? [];
-
-  const hasFiltersApplied = !!debouncedSearch || !!criterion;
-
   return (
     <>
       <PageContainer>
         <TicketsToolbar
-          search={search}
-          onSearchChange={handleSearchChange}
+          search={listing.search}
+          onSearchChange={listing.handleSearchChange}
           criterion={criterion}
-          onCriterionChange={handleCriterionChange}
+          onCriterionChange={listing.handleCriterionChange}
           users={users}
           projects={projects}
           onCreate={openCreateDialog}
-          onExport={handleExport}
-          exporting={exporting}
+          onExport={listing.handleExport}
+          exporting={listing.exporting}
         />
 
         {!initialLoading && error && !tickets ? (
@@ -152,9 +101,7 @@ export const TicketsPage: React.FC = () => {
         ) : (
           <Box
             sx={{
-              background: "var(--s1)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--r)",
+              ...PANEL_SX,
               overflow: "hidden",
               flex: 1,
               display: "flex",
@@ -164,26 +111,26 @@ export const TicketsPage: React.FC = () => {
             }}
           >
             <TicketsTable
-              tickets={filtered}
-              sort={sort}
-              onToggleSort={toggleSort}
+              tickets={tickets?.items ?? []}
+              sort={listing.sort}
+              onToggleSort={listing.toggleSort}
               onEdit={editDialog.openDialog}
               onDelete={deleteDialog.openDialog}
-              hasFiltersApplied={hasFiltersApplied}
+              hasFiltersApplied={listing.hasFiltersApplied}
               loading={initialLoading}
             />
 
             {!initialLoading && (
               <Pagination
-                page={page}
+                page={pagination.page}
                 totalPages={tickets?.totalPages ?? 1}
-                total={tickets?.totalCount ?? 0}
-                onChange={setPage}
-                pageSize={pageSize}
+                total={totalCount}
+                onChange={pagination.setPage}
+                pageSize={pagination.pageSize}
                 pageSizeOptions={PAGE_SIZE_OPTIONS}
-                onPageSizeChange={setPageSize}
+                onPageSizeChange={pagination.setPageSize}
                 countLabel={
-                  (tickets?.totalCount ?? 0) > 1
+                  totalCount > 1
                     ? t("tickets.list.count_plural")
                     : t("tickets.list.count_singular")
                 }

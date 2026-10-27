@@ -6,10 +6,10 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 import { DEMO_PATHS } from "@/features/landing/demo/constants";
-import { DemoShell } from "@/features/landing/pages/LandingPage/components/DemoShell";
-import { DemoDashboard } from "@/features/landing/pages/LandingPage/components/DemoDashboard";
-import { DemoProject } from "@/features/landing/pages/LandingPage/components/DemoProject";
-import { DemoTickets } from "@/features/landing/pages/LandingPage/components/DemoTickets";
+import { DemoShell } from "@/features/landing/demo/components/DemoShell";
+import { DemoDashboard } from "@/features/landing/demo/components/DemoDashboard";
+import { DemoProject } from "@/features/landing/demo/components/DemoProject";
+import { DemoTickets } from "@/features/landing/demo/components/DemoTickets";
 
 const rootRoute = createRootRoute({ component: DemoShell });
 

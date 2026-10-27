@@ -9,6 +9,7 @@ import type {
   FilterCriterion,
   FilterFieldDefinition,
 } from "@/components/ui/forms/FilterBuilder/types";
+import { TEXT_ELLIPSIS_SX } from "@/constants/display";
 
 interface Props {
   field: FilterFieldDefinition | null;
@@ -125,14 +126,7 @@ export const FilterControl: React.FC<Props> = ({
           fontWeight: 600,
         }}
       >
-        <Box
-          component="span"
-          sx={{
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
+        <Box component="span" sx={TEXT_ELLIPSIS_SX}>
           {summaryOf(field, criterion)}
         </Box>
         <KeyboardArrowDownOutlined

@@ -4,7 +4,7 @@ import { useT } from "@/contexts/I18nContext";
 import { StatusChip } from "@/components/ui/common/StatusChip";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
 import { SubLabel } from "@/features/styleGuide/pages/StyleGuidePage/components/SubLabel";
-import { OutlineBadge } from "@/features/styleGuide/pages/StyleGuidePage/components/OutlineBadge";
+import { OutlineBadge } from "@/features/styleGuide/pages/StyleGuidePage/components/ChipsSection/components/OutlineBadge";
 
 export const ChipsSection: React.FC = () => {
   const t = useT();

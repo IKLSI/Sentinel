@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
+import { ListSkeleton } from "@/components/ui/common/feedback/ListSkeleton";
 import { render } from "@/tests/test-utils";
 
 const SHAPES_PER_ROW = 4;

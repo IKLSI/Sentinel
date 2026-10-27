@@ -2,51 +2,40 @@ import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import { useExportProjectsExcelMutation } from "@/domains/projects/downloads";
-import { useDeleteProjectMutation } from "@/domains/projects/mutations";
 import {
-  useProjectSearchQuery,
   useProjectsQuery,
   useScanProgressQuery,
 } from "@/domains/projects/queries";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
-import { DeleteModal } from "@/components/ui/common/DeleteModal";
-import { EmptyState } from "@/components/ui/common/EmptyState";
+import CloudDownloadOutlined from "@mui/icons-material/CloudDownloadOutlined";
+import { DeleteModal } from "@/components/ui/common/modal/DeleteModal";
+import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
+import { ExportButton } from "@/components/ui/common/ExportButton";
+import { SearchInput } from "@/components/ui/forms/SearchInput";
+import { PANEL_SX } from "@/helpers/cardSx";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
-import type {
-  ProjectSearchMatch,
-  ProjectSummary,
-  ScanProgress,
-} from "@/domains/projects/types";
-import { useApiError } from "@/hooks/useApiError";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import {
-  SECTION_ORDER,
-  type SectionKey,
-  UNTRACKED_SECTION,
-  getGrade,
-  isUntracked,
-} from "@/features/projects/pages/ProjectsPage/helpers";
-import { ProjectsToolbar } from "@/features/projects/pages/ProjectsPage/components/ProjectsToolbar";
+import type { ProjectSummary, ScanProgress } from "@/domains/projects/types";
 import { ProjectsSection } from "@/features/projects/pages/ProjectsPage/components/ProjectsSection";
 import { ProjectsSkeleton } from "@/features/projects/pages/ProjectsPage/components/ProjectsSkeleton";
 import { ProjectSettingsModal } from "@/features/projects/pages/ProjectsPage/components/ProjectSettingsModal";
 import { SyncProjectModal } from "@/features/projects/pages/ProjectsPage/components/SyncProjectModal";
-import { LoadErrorState } from "@/components/ui/common/LoadErrorState";
-import { useApiErrorToast } from "@/hooks/useApiErrorToast";
-import { useScanFeedback } from "@/features/projects/pages/ProjectsPage/hooks";
+import { LoadErrorState } from "@/components/ui/common/feedback/LoadErrorState";
+import {
+  useDeleteProjectDialog,
+  useProjectSearch,
+  useProjectSections,
+  useScanFeedback,
+} from "@/features/projects/pages/ProjectsPage/hooks";
 
 const routeApi = getRouteApi("/_authenticated/projects/");
-
-const SEARCH_DEBOUNCE_MS = 250;
 
 export const ProjectsPage: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
-  const apiError = useApiError();
-  const onDeleteError = useApiErrorToast("projects.toast.delete_error");
   const { openImport } = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const {
@@ -56,13 +45,9 @@ export const ProjectsPage: React.FC = () => {
     isFetching: refetching,
     refetch,
   } = useProjectsQuery();
-  const deleteProjectMutation = useDeleteProjectMutation();
   const exportProjectsMutation = useExportProjectsExcelMutation();
   const { scanningIds, startScan: handleScan } = useScanFeedback(projects);
-  const deleting = deleteProjectMutation.isPending;
-  const exporting = exportProjectsMutation.isPending;
-  const [search, setSearch] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null);
+  const deleteDialog = useDeleteProjectDialog();
   const [editTarget, setEditTarget] = useState<ProjectSummary | null>(null);
   const [showSyncModal, setShowSyncModal] = useState(() => !!openImport);
 
@@ -73,17 +58,6 @@ export const ProjectsPage: React.FC = () => {
         replace: true,
       });
   }, [openImport, navigate]);
-  const [collapsedSections, setCollapsedSections] = useState<
-    Record<SectionKey, boolean>
-  >({
-    F: false,
-    E: false,
-    D: false,
-    C: false,
-    B: false,
-    A: false,
-    [UNTRACKED_SECTION]: true,
-  });
 
   const handleExport = () => {
     exportProjectsMutation.mutate(undefined, {
@@ -91,30 +65,10 @@ export const ProjectsPage: React.FC = () => {
     });
   };
 
-  const handleDelete = () => {
-    if (!deleteTarget) return;
-    const projectName = deleteTarget.name;
-    deleteProjectMutation.mutate(
-      { id: deleteTarget.id },
-      {
-        onSuccess: () => {
-          setDeleteTarget(null);
-          showToast(
-            t("projects.toast.delete_success", { name: projectName }),
-            "success",
-          );
-        },
-        onError: onDeleteError,
-      },
-    );
-  };
-
-  const searchQuery = useDebouncedValue(search.trim(), SEARCH_DEBOUNCE_MS);
-  const { data: searchMatches, error: searchFailure } =
-    useProjectSearchQuery(searchQuery);
-  const searchError = searchFailure
-    ? apiError(searchFailure, t("projects.search.error"))
-    : null;
+  const { search, setSearch, searchError, filtered, matchesById } =
+    useProjectSearch(projects);
+  const { grouped, visibleSections, collapsedSections, toggleSection } =
+    useProjectSections(filtered, loading);
 
   const { data: scanProgress } = useScanProgressQuery();
   const progressById = useMemo(
@@ -125,145 +79,117 @@ export const ProjectsPage: React.FC = () => {
     [scanProgress],
   );
 
-  const matchesById = useMemo(
-    () =>
-      new Map<string, ProjectSearchMatch>(
-        (searchMatches ?? []).map((match) => [match.projectId, match]),
-      ),
-    [searchMatches],
-  );
+  const emptySubtitle =
+    projects.length > 0
+      ? t("projects.empty.adjust_search")
+      : t("projects.empty.create_first");
 
-  const filtered = useMemo(() => {
-    if (!searchQuery) return projects;
-    if (searchFailure) return [];
-    return searchMatches
-      ? projects.filter((project) => matchesById.has(project.id))
-      : projects;
-  }, [projects, searchQuery, searchMatches, searchFailure, matchesById]);
-
-  const grouped = useMemo(() => {
-    const map: Record<SectionKey, ProjectSummary[]> = {
-      F: [],
-      E: [],
-      D: [],
-      C: [],
-      B: [],
-      A: [],
-      [UNTRACKED_SECTION]: [],
-    };
-    filtered.forEach((project) => {
-      const section = isUntracked(project)
-        ? UNTRACKED_SECTION
-        : getGrade(project.healthGrade);
-      map[section].push(project);
-    });
-    return map;
-  }, [filtered]);
-
-  const visibleSections = useMemo(
-    () => SECTION_ORDER.filter((grade) => grouped[grade].length > 0),
-    [grouped],
-  );
-
-  const onlyUntracked =
-    filtered.length > 0 &&
-    grouped[UNTRACKED_SECTION].length === filtered.length;
-
-  useEffect(() => {
-    if (loading || !onlyUntracked) return;
-    setCollapsedSections((prev) => ({
-      ...prev,
-      [UNTRACKED_SECTION]: false,
-    }));
-  }, [loading, onlyUntracked]);
+  const renderContent = () => {
+    if (loading) return <ProjectsSkeleton />;
+    if (loadFailed && projects.length === 0)
+      return (
+        <LoadErrorState onRetry={() => void refetch()} retrying={refetching} />
+      );
+    return (
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+          pr: "4px",
+          pb: "2px",
+        }}
+      >
+        {filtered.length === 0 ? (
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              ...PANEL_SX,
+            }}
+          >
+            <EmptyState
+              icon={AccountTreeOutlined}
+              title={t("projects.empty.title")}
+              subtitle={searchError ?? emptySubtitle}
+              iconSize={40}
+            />
+          </Box>
+        ) : (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {visibleSections.map((grade) => (
+              <ProjectsSection
+                key={grade}
+                grade={grade}
+                items={grouped[grade]}
+                collapsed={collapsedSections[grade]}
+                onToggleCollapsed={() => toggleSection(grade)}
+                scanningIds={scanningIds}
+                matchesById={matchesById}
+                progressById={progressById}
+                onEdit={setEditTarget}
+                onDelete={deleteDialog.setTarget}
+                onScan={handleScan}
+              />
+            ))}
+          </Box>
+        )}
+      </Box>
+    );
+  };
 
   return (
     <>
       <PageContainer
         sx={{ maxHeight: "100vh", boxSizing: "border-box", minHeight: 0 }}
       >
-        <ProjectsToolbar
-          search={search}
-          onSearchChange={setSearch}
-          onImport={() => setShowSyncModal(true)}
-          onExport={handleExport}
-          exporting={exporting}
-        />
-
-        {loading ? (
-          <ProjectsSkeleton />
-        ) : loadFailed && projects.length === 0 ? (
-          <LoadErrorState
-            onRetry={() => void refetch()}
-            retrying={refetching}
-          />
-        ) : (
-          <Box
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              overflowY: "auto",
-              overflowX: "hidden",
-              pr: "4px",
-              pb: "2px",
-            }}
-          >
-            {filtered.length === 0 ? (
-              <Box
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "var(--s1)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r)",
-                }}
-              >
-                <EmptyState
-                  icon={AccountTreeOutlined}
-                  title={t("projects.empty.title")}
-                  subtitle={
-                    searchError ??
-                    (projects.length === 0
-                      ? t("projects.empty.create_first")
-                      : t("projects.empty.adjust_search"))
-                  }
-                  iconSize={40}
-                />
-              </Box>
-            ) : (
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
-                {visibleSections.map((grade) => (
-                  <ProjectsSection
-                    key={grade}
-                    grade={grade}
-                    items={grouped[grade]}
-                    collapsed={collapsedSections[grade]}
-                    onToggleCollapsed={() =>
-                      setCollapsedSections((prev) => ({
-                        ...prev,
-                        [grade]: !prev[grade],
-                      }))
-                    }
-                    scanningIds={scanningIds}
-                    matchesById={searchQuery ? matchesById : undefined}
-                    progressById={progressById}
-                    onEdit={setEditTarget}
-                    onDelete={setDeleteTarget}
-                    onScan={handleScan}
-                  />
-                ))}
-              </Box>
-            )}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: "16px",
+            flexShrink: 0,
+            gap: "10px",
+            flexWrap: "wrap",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder={t("projects.search_placeholder")}
+              sx={{ maxWidth: "52vw" }}
+            />
           </Box>
-        )}
+          <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                flexShrink: 0,
+                height: "32px",
+                px: "14px",
+              }}
+              onClick={() => setShowSyncModal(true)}
+            >
+              <CloudDownloadOutlined sx={{ fontSize: 14 }} />
+              {t("projects.import_repos")}
+            </Button>
+            <ExportButton
+              onClick={handleExport}
+              exporting={exportProjectsMutation.isPending}
+              label={t("projects.export")}
+            />
+          </Box>
+        </Box>
+        {renderContent()}
       </PageContainer>
 
       <SyncProjectModal
@@ -280,15 +206,15 @@ export const ProjectsPage: React.FC = () => {
       )}
 
       <DeleteModal
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        loading={deleting}
+        open={!!deleteDialog.target}
+        onClose={deleteDialog.closeDialog}
+        onConfirm={deleteDialog.confirm}
+        loading={deleteDialog.deleting}
         title={t("projects.delete.title")}
         irreversible
       >
         {t("projects.delete.prefix")}
-        <strong>{deleteTarget?.name}</strong>
+        <strong>{deleteDialog.target?.name}</strong>
         {t("projects.delete.suffix")}
       </DeleteModal>
     </>

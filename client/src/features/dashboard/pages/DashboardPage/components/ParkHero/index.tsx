@@ -6,10 +6,17 @@ import type {
   ParkOverview,
   VulnerabilityFlowPoint,
 } from "@/domains/dashboard/types";
-import { DependencyDonut } from "@/features/dashboard/pages/DashboardPage/components/DependencyDonut";
-import { RiskTile } from "@/features/dashboard/pages/DashboardPage/components/RiskTile";
-import { ScoreGauge } from "@/features/dashboard/pages/DashboardPage/components/ScoreGauge";
+import { DependencyDonut } from "@/features/dashboard/pages/DashboardPage/components/ParkHero/components/DependencyDonut";
+import { RiskTile } from "@/features/dashboard/pages/DashboardPage/components/ParkHero/components/RiskTile";
 import {
+  GAUGE_BAND_GAP,
+  GAUGE_BANDS,
+  GAUGE_SIZE,
+  GAUGE_THICKNESS,
+} from "@/features/dashboard/pages/DashboardPage/constants";
+import {
+  arcPath,
+  arcPoint,
   flowSeries,
   formatDelta,
 } from "@/features/dashboard/pages/DashboardPage/helpers";
@@ -20,10 +27,19 @@ interface Props {
   vulnerabilityFlow: VulnerabilityFlowPoint[];
 }
 
+const GAUGE_CENTER = GAUGE_SIZE / 2;
+const GAUGE_RADIUS = (GAUGE_SIZE - GAUGE_THICKNESS) / 2;
+const GAUGE_MARKER_RADIUS = GAUGE_THICKNESS / 2 + 3;
+
 export const ParkHero: React.FC<Props> = ({ overview, vulnerabilityFlow }) => {
   const { t } = useI18n();
   const { vulnerabilities } = overview;
   const delta = formatDelta(t, overview.scoreDelta);
+  const score = overview.averageScore ?? null;
+  const marker =
+    score === null
+      ? null
+      : arcPoint(GAUGE_CENTER, GAUGE_CENTER, GAUGE_RADIUS, score);
 
   const eolHint =
     overview.nextRuntimeEolInDays === null ||
@@ -60,12 +76,60 @@ export const ParkHero: React.FC<Props> = ({ overview, vulnerabilityFlow }) => {
           textAlign: "center",
         }}
       >
-        <ScoreGauge
-          score={overview.averageScore ?? null}
-          label={t("dashboard.hero.gauge_label", {
-            score: overview.averageScore ?? "–",
-          })}
-        />
+        <Box sx={{ position: "relative", width: GAUGE_SIZE, maxWidth: "100%" }}>
+          <svg
+            viewBox={`0 0 ${GAUGE_SIZE} ${GAUGE_CENTER + GAUGE_THICKNESS}`}
+            width="100%"
+            role="img"
+            aria-label={t("dashboard.hero.gauge_label", {
+              score: overview.averageScore ?? "–",
+            })}
+          >
+            {GAUGE_BANDS.map((band) => (
+              <path
+                key={band.from}
+                d={arcPath(
+                  GAUGE_CENTER,
+                  GAUGE_CENTER,
+                  GAUGE_RADIUS,
+                  band.from + GAUGE_BAND_GAP,
+                  band.to - GAUGE_BAND_GAP,
+                )}
+                fill="none"
+                stroke={band.color}
+                strokeWidth={GAUGE_THICKNESS}
+                opacity={score === null ? 0.25 : 1}
+              />
+            ))}
+            {marker && (
+              <circle
+                cx={marker.x}
+                cy={marker.y}
+                r={GAUGE_MARKER_RADIUS}
+                fill="var(--text)"
+                stroke="var(--s1)"
+                strokeWidth={4}
+              />
+            )}
+          </svg>
+          <Box
+            sx={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: "6px",
+              textAlign: "center",
+              fontSize: "48px",
+              fontWeight: 800,
+              letterSpacing: "-0.045em",
+              lineHeight: 1,
+              color: "var(--text)",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {score ?? "–"}
+          </Box>
+        </Box>
         <Box sx={{ fontSize: "13px", color: "var(--muted2)", mt: "8px" }}>
           {overview.grade ? (
             <>

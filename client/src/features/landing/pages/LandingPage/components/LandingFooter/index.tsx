@@ -9,7 +9,7 @@ import {
   LANDING_WRAP_SX,
 } from "@/features/landing/constants";
 import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
-import { FooterColumn } from "@/features/landing/pages/LandingPage/components/FooterColumn";
+import { FooterColumn } from "@/features/landing/pages/LandingPage/components/LandingFooter/components/FooterColumn";
 
 const linkSx = {
   width: "fit-content",

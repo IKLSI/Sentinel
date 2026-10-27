@@ -2,15 +2,15 @@ import type React from "react";
 import { useId } from "react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
-import { AppModal } from "@/components/ui/common/AppModal";
+import { AppModal } from "@/components/ui/common/modal/AppModal";
+import { ModalActions } from "@/components/ui/common/modal/ModalActions";
 import { FormSelectField } from "@/components/ui/forms/FormSelectField";
 import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { useT } from "@/contexts/I18nContext";
 import type { ProjectOption } from "@/domains/projects/types";
 import type { UserOption } from "@/domains/users/types";
 import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
+import { TicketAssignmentFields } from "@/features/tickets/pages/TicketsPage/components/TicketAssignmentFields";
 import type { EditTicketFormValues } from "@/features/tickets/pages/TicketsPage/schemas";
 import {
   priorityLabelKeys,
@@ -47,29 +47,13 @@ export const EditTicketModal: React.FC<Props> = ({
       onClose={() => !saving && onClose()}
       title={t("tickets.list.edit_title")}
       actions={
-        <>
-          <Button
-            variant="contained"
-            size="small"
-            color="inherit"
-            onClick={onClose}
-            disabled={saving}
-          >
-            {t("common.cancel")}
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            onClick={onSubmit}
-            disabled={saving}
-          >
-            {saving ? (
-              <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
-            ) : (
-              t("common.save")
-            )}
-          </Button>
-        </>
+        <ModalActions
+          onCancel={onClose}
+          cancelDisabled={saving}
+          onConfirm={onSubmit}
+          pending={saving}
+          confirmLabel={t("common.save")}
+        />
       }
     >
       <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -123,34 +107,14 @@ export const EditTicketModal: React.FC<Props> = ({
             ))}
           </FormSelectField>
         </Box>
-        <Box
-          sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-        >
-          <FormSelectField
-            id={`${fieldId}-projectId`}
-            label={t("tickets.list.field_project")}
-            registration={register("projectId")}
-          >
-            <option value="">{t("tickets.list.unassigned")}</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </FormSelectField>
-          <FormSelectField
-            id={`${fieldId}-assignedToId`}
-            label={t("tickets.list.field_assignee")}
-            registration={register("assignedToId")}
-          >
-            <option value="">{t("tickets.list.unassigned")}</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name}
-              </option>
-            ))}
-          </FormSelectField>
-        </Box>
+        <TicketAssignmentFields
+          fieldId={fieldId}
+          projectRegistration={register("projectId")}
+          assigneeRegistration={register("assignedToId")}
+          projects={projects}
+          users={users}
+          noProjectLabel={t("tickets.list.unassigned")}
+        />
         <FormTextField
           id={`${fieldId}-description`}
           label={t("tickets.list.field_description")}

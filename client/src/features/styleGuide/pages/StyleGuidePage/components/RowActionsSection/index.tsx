@@ -4,7 +4,7 @@ import BlockOutlined from "@mui/icons-material/BlockOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
-import { RowActions } from "@/components/ui/common/RowActions";
+import { RowActions } from "@/components/ui/common/table/RowActions";
 import { useT } from "@/contexts/I18nContext";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
 import { SubLabel } from "@/features/styleGuide/pages/StyleGuidePage/components/SubLabel";

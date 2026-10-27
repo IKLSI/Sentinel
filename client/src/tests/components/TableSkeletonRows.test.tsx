@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TableSkeletonRows } from "@/components/ui/common/TableSkeletonRows";
+import { TableSkeletonRows } from "@/components/ui/common/table/TableSkeletonRows";
 import { render } from "@/tests/test-utils";
 
 describe("TableSkeletonRows", () => {

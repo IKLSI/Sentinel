@@ -2,12 +2,13 @@ import type React from "react";
 import Box from "@mui/material/Box";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import { useT } from "@/contexts/I18nContext";
-import { EmptyState } from "@/components/ui/common/EmptyState";
-import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
-import { LoadingRegion } from "@/components/ui/common/LoadingRegion";
+import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
+import { ListSkeleton } from "@/components/ui/common/feedback/ListSkeleton";
+import { LoadingRegion } from "@/components/ui/common/feedback/LoadingRegion";
 import { ChartCardSkeleton } from "@/features/dashboard/pages/DashboardPage/components/ChartCardSkeleton";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
 import { SubLabel } from "@/features/styleGuide/pages/StyleGuidePage/components/SubLabel";
+import { PANEL_SX } from "@/helpers/cardSx";
 
 export const SkeletonsSection: React.FC = () => {
   const t = useT();
@@ -21,9 +22,7 @@ export const SkeletonsSection: React.FC = () => {
       <Box
         sx={{
           mb: "24px",
-          background: "var(--s1)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--r)",
+          ...PANEL_SX,
           overflow: "hidden",
         }}
       >

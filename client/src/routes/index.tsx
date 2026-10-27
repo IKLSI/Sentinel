@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
-import { FullScreenLoader } from "@/components/ui/common/FullScreenLoader";
+import { FullScreenLoader } from "@/components/ui/common/feedback/FullScreenLoader";
 import { LandingPage } from "@/features/landing/pages/LandingPage";
 import { ROUTES } from "@/constants/routes";
 

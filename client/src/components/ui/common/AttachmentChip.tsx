@@ -6,6 +6,7 @@ import IconButton from "@mui/material/IconButton";
 import ImageOutlined from "@mui/icons-material/ImageOutlined";
 import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
 import CloseRounded from "@mui/icons-material/CloseRounded";
+import { TEXT_ELLIPSIS_SX } from "@/constants/display";
 
 export interface CommentAttachment {
   fileName: string;
@@ -57,14 +58,7 @@ export const AttachmentChip: React.FC<Props> = ({
       ) : (
         <InsertDriveFileOutlined sx={{ fontSize: 13, flexShrink: 0 }} />
       )}
-      <Box
-        component="span"
-        sx={{
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
+      <Box component="span" sx={TEXT_ELLIPSIS_SX}>
         {attachment.fileName}
       </Box>
       {onRemove && (

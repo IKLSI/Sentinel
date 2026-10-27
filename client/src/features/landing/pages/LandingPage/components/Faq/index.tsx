@@ -5,7 +5,7 @@ import {
   FAQ_ITEM_IDS,
   LANDING_SECTION_IDS,
 } from "@/features/landing/constants";
-import { FaqItem } from "@/features/landing/pages/LandingPage/components/FaqItem";
+import { FaqItem } from "@/features/landing/pages/LandingPage/components/Faq/components/FaqItem";
 import { LandingSection } from "@/features/landing/pages/LandingPage/components/LandingSection";
 import { SectionIntro } from "@/features/landing/pages/LandingPage/components/SectionIntro";
 

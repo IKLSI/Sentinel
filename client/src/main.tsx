@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ToastProvider } from "@/contexts/ToastProvider";
 import { I18nProvider } from "@/contexts/I18nContext";
-import { ErrorBoundary } from "@/components/ui/common/ErrorBoundary";
+import { ErrorBoundary } from "@/components/ui/common/feedback/ErrorBoundary";
 import type { UserRole } from "@/enums";
 import { router } from "@/router";
 import { queryClient } from "@/configs/queryClient";

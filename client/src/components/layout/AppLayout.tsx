@@ -1,11 +1,13 @@
 import type React from "react";
 import { Outlet, useLocation } from "@tanstack/react-router";
+import MenuOutlined from "@mui/icons-material/MenuOutlined";
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import { useT } from "@/contexts/I18nContext";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { PageTransition } from "@/components/layout/PageTransition";
-import { MobileMenuButton } from "@/components/layout/MobileMenuButton";
 import {
   EASE_OUT_EXPO,
   pageProgress,
@@ -29,7 +31,8 @@ const PROGRESS_BAR_SX = {
 } as const;
 
 const AppContent: React.FC = () => {
-  const { isCollapsed, isMobile } = useSidebar();
+  const { isCollapsed, isMobile, isOpen, toggle } = useSidebar();
+  const t = useT();
   const pathname = useLocation({ select: (location) => location.pathname });
   const collapsed = isCollapsed && !isMobile;
   const ml = isMobile ? 0 : (collapsed ? 56 : 200) + SIDEBAR_GAP * 2;
@@ -46,6 +49,25 @@ const AppContent: React.FC = () => {
         transition: "margin-left 0.2s cubic-bezier(0.4,0,0.2,1)",
       }}
     >
+      {isMobile && !isOpen && (
+        <IconButton
+          aria-label={t("sidebar.open_menu")}
+          aria-expanded={isOpen}
+          onClick={toggle}
+          sx={{
+            position: "fixed",
+            top: "10px",
+            left: "10px",
+            zIndex: 150,
+            background: "var(--s1)",
+            border: "1px solid var(--border)",
+            boxShadow: "var(--sh-2)",
+            "&:hover": { background: "var(--s3)" },
+          }}
+        >
+          <MenuOutlined />
+        </IconButton>
+      )}
       <Box key={pathname} sx={PROGRESS_BAR_SX} aria-hidden="true" />
       <PageTransition>
         <Outlet />
@@ -67,7 +89,6 @@ export const AppLayout: React.FC = () => {
         }}
       >
         <Sidebar />
-        <MobileMenuButton />
         <AppContent />
       </Box>
     </SidebarProvider>

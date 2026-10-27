@@ -3,18 +3,16 @@ import Box from "@mui/material/Box";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { useI18n, useT } from "@/contexts/I18nContext";
-import { useDownloadAttachmentMutation } from "@/domains/tickets/downloads";
-import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import type { Ticket } from "@/domains/tickets/types";
+import { RowActions } from "@/components/ui/common/table/RowActions";
 import {
   AttachmentChip,
   type CommentAttachment,
 } from "@/components/ui/common/AttachmentChip";
-import { RowActions } from "@/components/ui/common/RowActions";
-import {
-  DETAIL_PALETTE,
-  parseCommentContent,
-} from "@/features/tickets/pages/TicketDetailPage/helpers";
+import { useDownloadAttachmentMutation } from "@/domains/tickets/downloads";
+import { DETAIL_PALETTE } from "@/features/tickets/pages/TicketDetailPage/constants";
+import { parseCommentContent } from "@/features/tickets/pages/TicketDetailPage/helpers";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { initialsFromName } from "@/formatters/initials";
 import { formatShortDateTime } from "@/formatters/date";
 

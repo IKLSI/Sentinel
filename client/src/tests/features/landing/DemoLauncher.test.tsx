@@ -18,7 +18,9 @@ beforeAll(async () => {
   apiClient.defaults.adapter = (config) =>
     Promise.reject(new Error(`Unmocked HTTP call: ${config.url}`));
   await Promise.all([
-    import("@/features/landing/pages/LandingPage/components/ProductDemo"),
+    import(
+      "@/features/landing/pages/LandingPage/components/DemoLauncher/components/ProductDemo"
+    ),
     import(
       "@/features/dashboard/pages/DashboardPage/components/ScoreTrendCard"
     ),

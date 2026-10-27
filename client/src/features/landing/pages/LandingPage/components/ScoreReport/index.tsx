@@ -1,15 +1,14 @@
 import type React from "react";
-import { useId, useRef, useState } from "react";
+import { useId, useState } from "react";
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
 import Skeleton from "@mui/material/Skeleton";
 import { useT } from "@/contexts/I18nContext";
 import { useScoringModelQuery } from "@/domains/publicScan/queries";
 import { LANDING_SECTION_IDS } from "@/features/landing/constants";
-import { landingGradeColorOf } from "@/features/landing/helpers";
 import { LandingSection } from "@/features/landing/pages/LandingPage/components/LandingSection";
-import { ScoreLines } from "@/features/landing/pages/LandingPage/components/ScoreLines";
-import { ScoreSummary } from "@/features/landing/pages/LandingPage/components/ScoreSummary";
+import { ScoreExampleTabs } from "@/features/landing/pages/LandingPage/components/ScoreReport/components/ScoreExampleTabs";
+import { ScoreLines } from "@/features/landing/pages/LandingPage/components/ScoreReport/components/ScoreLines";
+import { ScoreSummary } from "@/features/landing/pages/LandingPage/components/ScoreReport/components/ScoreSummary";
 import { SectionIntro } from "@/features/landing/pages/LandingPage/components/SectionIntro";
 
 const TITLE_ID = "landing-score-title";
@@ -30,20 +29,9 @@ export const ScoreReport: React.FC = () => {
   const t = useT();
   const { data, isPending, isError } = useScoringModelQuery();
   const [selected, setSelected] = useState(0);
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const panelId = useId();
   const examples = data?.examples ?? [];
   const example = examples[Math.min(selected, examples.length - 1)];
-
-  const onTabKeyDown = (event: React.KeyboardEvent) => {
-    const offsets: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1 };
-    const offset = offsets[event.key];
-    if (!offset) return;
-    event.preventDefault();
-    const next = (selected + offset + examples.length) % examples.length;
-    setSelected(next);
-    tabRefs.current[next]?.focus();
-  };
 
   return (
     <LandingSection id={LANDING_SECTION_IDS.score} labelledBy={TITLE_ID}>
@@ -86,76 +74,13 @@ export const ScoreReport: React.FC = () => {
         )}
         {example && data && (
           <>
-            <Box
-              role="tablist"
-              aria-label={t("landing.score.tabs_label")}
-              sx={{
-                display: "flex",
-                gap: "4px",
-                maxWidth: "100%",
-                overflowX: "auto",
-                scrollbarWidth: "none",
-                p: "4px",
-                borderRadius: "999px",
-                background: "var(--tint)",
-              }}
-            >
-              {examples.map((item, index) => {
-                const isSelected = item === example;
-                return (
-                  <ButtonBase
-                    type="button"
-                    role="tab"
-                    key={item.name}
-                    ref={(element: HTMLButtonElement | null) => {
-                      tabRefs.current[index] = element;
-                    }}
-                    aria-selected={isSelected}
-                    aria-controls={panelId}
-                    tabIndex={isSelected ? 0 : -1}
-                    onClick={() => setSelected(index)}
-                    onKeyDown={onTabKeyDown}
-                    sx={{
-                      flex: "none",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      px: "14px",
-                      py: "8px",
-                      border: 0,
-                      borderRadius: "999px",
-                      cursor: "pointer",
-                      font: "inherit",
-                      textAlign: "inherit",
-                      fontSize: "14px",
-                      fontWeight: isSelected ? 500 : 400,
-                      color: isSelected ? "var(--ink)" : "var(--ink-2)",
-                      background: isSelected ? "var(--page)" : "transparent",
-                      boxShadow: isSelected
-                        ? "0 1px 3px color-mix(in srgb, var(--ink) 8%, transparent)"
-                        : "none",
-                      "&:hover": { color: "var(--ink)" },
-                      "&:focus-visible": {
-                        outline: "2px solid var(--indigo)",
-                        outlineOffset: "-2px",
-                      },
-                    }}
-                  >
-                    <Box
-                      component="span"
-                      aria-hidden
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: landingGradeColorOf(item.grade),
-                      }}
-                    />
-                    {item.name}
-                  </ButtonBase>
-                );
-              })}
-            </Box>
+            <ScoreExampleTabs
+              examples={examples}
+              selected={selected}
+              selectedExample={example}
+              onSelect={setSelected}
+              panelId={panelId}
+            />
             <Box
               id={panelId}
               role="tabpanel"

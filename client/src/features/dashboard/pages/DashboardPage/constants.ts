@@ -1,7 +1,5 @@
 export const DASHBOARD_ACTIVITY_LIMIT = 6;
 
-export const PERCENT = 100;
-
 export const GAUGE_SIZE = 190;
 
 export const GAUGE_THICKNESS = 15;
@@ -14,7 +12,12 @@ export const DONUT_GAP_DEGREES = 3;
 
 export const RING_SIZE = 38;
 
-export const RING_THICKNESS = 4;
+const RING_STROKE_WIDTH = 4;
+
+const CIRCULAR_PROGRESS_VIEWBOX = 44;
+
+export const RING_THICKNESS =
+  (RING_STROKE_WIDTH * CIRCULAR_PROGRESS_VIEWBOX) / RING_SIZE;
 
 const CHART_MIN_HEIGHT = 140;
 
@@ -80,4 +83,22 @@ export const DASHBOARD_BOTTOM_ROW_SX = {
   },
   gap: "14px",
   minHeight: 0,
+} as const;
+
+export const FLOW_SERIES = [
+  { key: "detected", color: "var(--accent)" },
+  { key: "resolved", color: "var(--green)" },
+] as const;
+
+export const DASHBOARD_ROW_SX = {
+  width: "100%",
+  minHeight: 48,
+  px: "10px",
+  textAlign: "left",
+  borderRadius: "var(--r-md)",
+  "&:hover": {
+    background: "var(--accent-subtle)",
+    boxShadow: "inset 0 0 0 1.5px var(--accent-border)",
+  },
+  "&.Mui-focusVisible": { outline: "2px solid var(--accent)" },
 } as const;

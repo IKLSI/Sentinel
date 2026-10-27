@@ -1,6 +1,5 @@
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -9,65 +8,16 @@ import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { ROUTES } from "@/constants/routes";
 import { useT } from "@/contexts/I18nContext";
-import {
-  PUBLIC_SCAN_DEFAULT_ERROR_KEY,
-  PUBLIC_SCAN_ERROR_KEYS,
-} from "@/domains/publicScan/constants";
-import { usePublicScanMutation } from "@/domains/publicScan/mutations";
-import { pluralKey } from "@/helpers/plural";
+import { usePublicScan } from "@/features/publicScan/pages/ScanPage/hooks";
 import { gradeColorOf } from "@/features/landing/helpers";
-import { extractApiErrorCode } from "@/helpers/apiError";
-import { useToast } from "@/hooks/useToast";
+import { PANEL_SX } from "@/helpers/cardSx";
+import { pluralKey } from "@/helpers/plural";
 
 export const ScanPage: React.FC = () => {
   const t = useT();
-  const { showToast } = useToast();
-  const navigate = useNavigate();
-  const { repo } = useSearch({ from: "/scan" });
-  const [repositoryUrl, setRepositoryUrl] = useState(repo ?? "");
-  const scanMutation = usePublicScanMutation();
-  const scannedRepo = useRef<string | null>(null);
-  const scanMutate = scanMutation.mutate;
+  const { repositoryUrl, setRepositoryUrl, onSubmit, scanning, result } =
+    usePublicScan();
 
-  const runScan = useCallback(
-    (url: string) =>
-      scanMutate(
-        { data: { repositoryUrl: url } },
-        {
-          onError: (err) => {
-            const code = extractApiErrorCode(err)?.code;
-            showToast(
-              t(
-                (code && PUBLIC_SCAN_ERROR_KEYS[code]) ||
-                  PUBLIC_SCAN_DEFAULT_ERROR_KEY,
-              ),
-              "error",
-            );
-          },
-        },
-      ),
-    [scanMutate, showToast, t],
-  );
-
-  useEffect(() => {
-    if (!repo || scannedRepo.current === repo) return;
-    scannedRepo.current = repo;
-    setRepositoryUrl(repo);
-    runScan(repo);
-  }, [repo, runScan]);
-
-  const onSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    const trimmed = repositoryUrl.trim();
-    if (trimmed === repo) {
-      runScan(trimmed);
-      return;
-    }
-    navigate({ to: ROUTES.SCAN, search: { repo: trimmed } });
-  };
-
-  const result = scanMutation.data;
-  const gradeColor = gradeColorOf(result?.grade);
   return (
     <Box
       sx={{
@@ -124,9 +74,9 @@ export const ScanPage: React.FC = () => {
           <Button
             type="submit"
             variant="contained"
-            disabled={scanMutation.isPending}
+            disabled={scanning}
             endIcon={
-              scanMutation.isPending ? (
+              scanning ? (
                 <CircularProgress size={16} color="inherit" />
               ) : (
                 <ArrowForwardOutlined sx={{ fontSize: 18 }} />
@@ -141,9 +91,7 @@ export const ScanPage: React.FC = () => {
         {result && (
           <Box
             sx={{
-              background: "var(--s1)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--r)",
+              ...PANEL_SX,
               p: "24px",
               display: "flex",
               flexDirection: "column",
@@ -156,7 +104,7 @@ export const ScanPage: React.FC = () => {
                   width: 72,
                   height: 72,
                   borderRadius: "20px",
-                  background: gradeColor,
+                  background: gradeColorOf(result.grade),
                   color: "#fff",
                   display: "flex",
                   alignItems: "center",

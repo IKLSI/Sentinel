@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { STORAGE_KEYS } from "@/constants/storage";
 import { Language } from "@/enums";
-import { LanguageToggle } from "@/features/landing/pages/LandingPage/components/LanguageToggle";
+import { LanguageToggle } from "@/features/landing/pages/LandingPage/components/LandingNav/components/LanguageToggle";
 import { render, screen } from "@/tests/test-utils";
 
 describe("LanguageToggle", () => {

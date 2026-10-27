@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { Pagination } from "@/components/ui/common/Pagination";
+import { Pagination } from "@/components/ui/common/table/Pagination";
 import { render, screen } from "@/tests/test-utils";
 
 const baseProps = {

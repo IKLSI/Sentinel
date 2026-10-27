@@ -64,6 +64,27 @@ function readCachedTranslations(language: Language): CachedTranslations | null {
   return cachedTranslations.get(language) ?? null;
 }
 
+async function fetchTranslations(
+  language: Language,
+  cached: CachedTranslations | null,
+): Promise<Translations> {
+  const response = await apiClient.get<string>(
+    buildUrl(ROUTES_API.api.locales[":culture"].__path, {
+      culture: language,
+    }),
+    { responseType: "text" },
+  );
+  const fresh =
+    cached?.raw === response.data ? cached : parseTranslations(response.data);
+  if (!fresh) throw new Error();
+  if (fresh !== cached) {
+    writeStorage(translationsStorageKey(language), fresh.raw);
+    cachedTranslations.set(language, fresh);
+  }
+  loadedTranslations.set(language, fresh.translations);
+  return fresh.translations;
+}
+
 function interpolate(
   template: string,
   vars?: Record<string, string | number>,
@@ -112,25 +133,9 @@ export const I18nProvider: React.FC<{
     const cached = readCachedTranslations(language);
     if (cached) setTranslations(cached.translations);
     let cancelled = false;
-    apiClient
-      .get<string>(
-        buildUrl(ROUTES_API.api.locales[":culture"].__path, {
-          culture: language,
-        }),
-        { responseType: "text" },
-      )
-      .then((response) => {
-        const fresh =
-          cached?.raw === response.data
-            ? cached
-            : parseTranslations(response.data);
-        if (!fresh) throw new Error();
-        if (fresh !== cached) {
-          writeStorage(translationsStorageKey(language), fresh.raw);
-          cachedTranslations.set(language, fresh);
-        }
-        loadedTranslations.set(language, fresh.translations);
-        if (!cancelled) setTranslations(fresh.translations);
+    fetchTranslations(language, cached)
+      .then((fresh) => {
+        if (!cancelled) setTranslations(fresh);
       })
       .catch(() => {
         if (!cancelled) setTranslations((previous) => previous ?? {});

@@ -3,8 +3,8 @@ import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
-import { AppModal } from "@/components/ui/common/AppModal";
-import { ModalActions } from "@/components/ui/common/ModalActions";
+import { AppModal } from "@/components/ui/common/modal/AppModal";
+import { ModalActions } from "@/components/ui/common/modal/ModalActions";
 import { FormSelectField } from "@/components/ui/forms/FormSelectField";
 import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { useToast } from "@/hooks/useToast";
@@ -15,7 +15,7 @@ import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import {
   inviteUserSchema,
   type InviteUserFormValues,
-} from "@/features/users/pages/UsersPage/components/InviteModal/schemas";
+} from "@/features/users/schemas";
 
 interface Props {
   open: boolean;

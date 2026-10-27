@@ -1,5 +1,6 @@
 import { NO_GRADE_TONE, gradeToneOf } from "@/constants/grades";
 import type {
+  ActivityItem,
   NextAction,
   VulnerabilityFlowPoint,
 } from "@/domains/dashboard/types";
@@ -69,3 +70,75 @@ export const flowSeries = (
   flow: ReadonlyArray<VulnerabilityFlowPoint>,
   key: "detected" | "resolved",
 ) => flow.map((point) => point[key]);
+
+const CVSS_DECIMALS = 1;
+
+export const activityEmphasis = (t: Translate, item: ActivityItem) => {
+  const count = item.count ?? 0;
+  const isPlural = count > 1;
+  switch (item.type) {
+    case "resolved":
+      return isPlural
+        ? t("dashboard.activity.bold_resolved_plural", { count })
+        : t("dashboard.activity.bold_resolved");
+    case "created":
+      return isPlural
+        ? t("dashboard.activity.bold_created_plural", { count })
+        : t("dashboard.activity.bold_created");
+    case "vuln":
+      return isPlural
+        ? `${count} ${t("dashboard.activity.bold_critical_plural")}`
+        : t("dashboard.activity.bold_critical");
+    default:
+      return "";
+  }
+};
+
+export const activitySuffix = (t: Translate, item: ActivityItem) => {
+  const isPlural = (item.count ?? 0) > 1;
+  const reference = item.reference ?? "";
+  switch (item.type) {
+    case "resolved":
+      return isPlural
+        ? ""
+        : t("dashboard.activity.suffix_resolved", { reference });
+    case "created":
+      return isPlural
+        ? ""
+        : t("dashboard.activity.suffix_created", { reference });
+    case "vuln":
+      return t(
+        isPlural
+          ? "dashboard.activity.suffix_vuln_plural"
+          : "dashboard.activity.suffix_vuln",
+        { project: item.projectName ?? "" },
+      );
+    default:
+      return item.detail ?? "";
+  }
+};
+
+const vulnDetailKey = (otherCount: number) => {
+  if (otherCount > 1) return "dashboard.activity.vuln_detail_more_plural";
+  if (otherCount === 1) return "dashboard.activity.vuln_detail_more";
+  return "dashboard.activity.vuln_detail_single";
+};
+
+export const activityDetail = (t: Translate, item: ActivityItem) => {
+  if (item.type !== "vuln") return item.detail;
+  if (!item.vulnCveId) return null;
+  const otherCount = item.vulnOtherCount ?? 0;
+  return t(vulnDetailKey(otherCount), {
+    project: item.projectName ?? "",
+    count: otherCount,
+    cvss: item.vulnCvssScore?.toFixed(CVSS_DECIMALS) ?? "",
+  });
+};
+
+export const activityTarget = (item: ActivityItem) => {
+  if (item.ticketId)
+    return { to: "/tickets/$id", params: { id: item.ticketId } } as const;
+  if (item.projectId)
+    return { to: "/projects/$id", params: { id: item.projectId } } as const;
+  return null;
+};

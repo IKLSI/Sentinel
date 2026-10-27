@@ -7,6 +7,7 @@ import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { ROUTES } from "@/constants/routes";
 import { useT } from "@/contexts/I18nContext";
 import { useAuth } from "@/hooks/useAuth";
+import { TEXT_ELLIPSIS_SX } from "@/constants/display";
 
 interface Props {
   collapsed: boolean;
@@ -72,9 +73,7 @@ export const ProfileButton: React.FC<Props> = ({ collapsed }) => {
                 color: "var(--text)",
                 letterSpacing: "-0.01em",
                 lineHeight: 1.3,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
+                ...TEXT_ELLIPSIS_SX,
                 transition: "color 0.12s",
               }}
             >
@@ -88,9 +87,7 @@ export const ProfileButton: React.FC<Props> = ({ collapsed }) => {
                 letterSpacing: "0.04em",
                 textTransform: "uppercase",
                 lineHeight: 1.3,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
+                ...TEXT_ELLIPSIS_SX,
                 transition: "color 0.12s",
               }}
             >

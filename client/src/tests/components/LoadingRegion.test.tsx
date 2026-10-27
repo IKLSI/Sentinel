@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LoadingRegion } from "@/components/ui/common/LoadingRegion";
+import { LoadingRegion } from "@/components/ui/common/feedback/LoadingRegion";
 import { render, screen } from "@/tests/test-utils";
 
 describe("LoadingRegion", () => {

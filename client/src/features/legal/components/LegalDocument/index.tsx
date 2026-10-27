@@ -1,18 +1,16 @@
 import type React from "react";
 import { useCallback, useMemo } from "react";
 import Box from "@mui/material/Box";
-import MailOutlineOutlined from "@mui/icons-material/MailOutlineOutlined";
 import { Link } from "@tanstack/react-router";
-import { ROUTES } from "@/constants/routes";
-import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { useT } from "@/contexts/I18nContext";
-import { useAppConfigQuery } from "@/domains/settings/queries";
-import { BackToTopButton } from "@/features/legal/components/BackToTopButton";
-import { LegalSectionCard } from "@/features/legal/components/LegalSectionCard";
-import { LegalSummary } from "@/features/legal/components/LegalSummary";
+import { BackToTopButton } from "@/features/legal/components/LegalDocument/components/BackToTopButton";
+import { LegalContactCard } from "@/features/legal/components/LegalDocument/components/LegalContactCard";
+import { LegalHeader } from "@/features/legal/components/LegalDocument/components/LegalHeader";
+import { LegalSectionCard } from "@/features/legal/components/LegalDocument/components/LegalSectionCard";
+import { LegalSummary } from "@/features/legal/components/LegalDocument/components/LegalSummary";
 import {
+  LEGAL_CONTENT_SX,
   LEGAL_DOCUMENTS,
-  LEGAL_HEADER_HEIGHT,
   LEGAL_SCROLL_OFFSET,
 } from "@/features/legal/constants";
 import type { LegalSection } from "@/features/legal/types";
@@ -25,12 +23,6 @@ interface Props {
   sections: LegalSection[];
 }
 
-const CONTENT_SX = {
-  maxWidth: 1140,
-  mx: "auto",
-  px: { xs: "18px", md: "28px" },
-} as const;
-
 export const LegalDocument: React.FC<Props> = ({
   documentId,
   prefix,
@@ -38,7 +30,6 @@ export const LegalDocument: React.FC<Props> = ({
 }) => {
   const t = useT();
   const { showToast } = useToast();
-  const supportEmail = useAppConfigQuery().data?.supportEmail ?? "";
   const sectionIds = useMemo(
     () => sections.map((section) => section.id),
     [sections],
@@ -76,58 +67,11 @@ export const LegalDocument: React.FC<Props> = ({
         },
       }}
     >
-      <Box
-        component="header"
-        className="legal-no-print"
-        sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 20,
-          borderBottom: "1px solid var(--border)",
-          background: "color-mix(in srgb, var(--bg) 86%, transparent)",
-          backdropFilter: "blur(14px)",
-        }}
-      >
-        <Box
-          sx={{
-            ...CONTENT_SX,
-            height: `${LEGAL_HEADER_HEIGHT}px`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "12px",
-          }}
-        >
-          <Link
-            to={ROUTES.HOME}
-            aria-label={t("legal.shell.back_home")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              color: "var(--text)",
-            }}
-          >
-            <SentinelWordmark height={18} />
-          </Link>
-
-          <Box
-            sx={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "10px",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "var(--muted)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t("legal.shell.eyebrow")}
-          </Box>
-        </Box>
-      </Box>
+      <LegalHeader />
 
       <Box
         sx={{
-          ...CONTENT_SX,
+          ...LEGAL_CONTENT_SX,
           position: "relative",
           pt: { xs: "30px", md: "52px" },
           pb: { xs: "48px", md: "76px" },
@@ -287,68 +231,7 @@ export const LegalDocument: React.FC<Props> = ({
               ))}
             </Box>
 
-            <Box
-              sx={{
-                mt: "20px",
-                p: { xs: "18px", md: "22px 24px" },
-                border: "1px solid var(--border)",
-                borderRadius: "var(--r-md)",
-                background:
-                  "linear-gradient(135deg, var(--s2) 0%, var(--s1) 100%)",
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "14px",
-              }}
-            >
-              <Box>
-                <Box sx={{ fontSize: "13px", fontWeight: 600 }}>
-                  {t("legal.shell.contact_title")}
-                </Box>
-                <Box
-                  sx={{
-                    mt: "5px",
-                    whiteSpace: { md: "nowrap" },
-                    fontSize: "12px",
-                    lineHeight: 1.65,
-                    color: "var(--muted2)",
-                  }}
-                >
-                  {t("legal.shell.contact_body")}
-                </Box>
-              </Box>
-              {supportEmail && (
-                <Box
-                  component="a"
-                  href={`mailto:${supportEmail}`}
-                  sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: "var(--accent)",
-                    textDecoration: "none",
-                    border: "1px solid var(--accent-border)",
-                    background: "var(--accent-subtle)",
-                    borderRadius: "var(--r-sm)",
-                    px: "12px",
-                    py: "8px",
-                    whiteSpace: "nowrap",
-                    transition: "background 0.15s",
-                    "&:hover": {
-                      background:
-                        "color-mix(in srgb, var(--accent) 16%, transparent)",
-                    },
-                  }}
-                >
-                  <MailOutlineOutlined sx={{ fontSize: 14 }} />
-                  {supportEmail}
-                </Box>
-              )}
-            </Box>
+            <LegalContactCard />
 
             <Box
               component="footer"

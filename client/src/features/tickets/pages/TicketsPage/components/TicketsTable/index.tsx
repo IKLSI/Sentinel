@@ -1,32 +1,27 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
-import { EmptyState } from "@/components/ui/common/EmptyState";
+import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
 import { useT } from "@/contexts/I18nContext";
 import type { Ticket } from "@/domains/tickets/types";
-import { TicketRow } from "@/features/tickets/pages/TicketsPage/components/TicketRow";
 import { SortDirection, TicketSortField } from "@/enums";
-import { SortableTh } from "@/components/ui/common/SortableTh";
-import { LoadingStatus } from "@/components/ui/common/LoadingStatus";
+import { SortableTh } from "@/components/ui/common/table/SortableTh";
+import { LoadingStatus } from "@/components/ui/common/feedback/LoadingStatus";
 import {
   type SkeletonCell,
   TableSkeletonRows,
-} from "@/components/ui/common/TableSkeletonRows";
+} from "@/components/ui/common/table/TableSkeletonRows";
 import { DELAYED_REVEAL_SX } from "@/styles/keyframes";
 import { useHorizontalScrollSync } from "@/hooks/useHorizontalScrollSync";
 import {
   OVERFLOWING_ATTRIBUTE,
   STICKY_ACTIONS_COLUMN_SX,
-} from "@/components/ui/common/stickyActionsColumn";
+} from "@/components/ui/common/table/stickyActionsColumn";
+import { TicketRow } from "@/features/tickets/pages/TicketsPage/components/TicketsTable/components/TicketRow";
 
 export interface SortState {
   col: TicketSortField;
   dir: SortDirection;
-}
-
-interface TicketColumn {
-  col: TicketSortField | typeof ACTIONS_COLUMN_KEY;
-  label: string;
 }
 
 interface Props {
@@ -39,15 +34,41 @@ interface Props {
   loading?: boolean;
 }
 
-const COLS = ["auto", "110px", "130px", "170px", "100px", "120px"] as const;
-const COLGROUP = (
+const ACTIONS_COLUMN_KEY = "actions";
+
+interface TicketColumn {
+  col: TicketSortField | typeof ACTIONS_COLUMN_KEY;
+  label: string;
+}
+
+const isSortableColumn = (col: TicketColumn["col"]): col is TicketSortField =>
+  col !== ACTIONS_COLUMN_KEY;
+
+const TICKETS_COLUMN_WIDTHS = [
+  "auto",
+  "110px",
+  "130px",
+  "170px",
+  "100px",
+  "120px",
+] as const;
+
+const TICKETS_TABLE_SX = {
+  width: "100%",
+  minWidth: "820px",
+  borderCollapse: "collapse",
+  tableLayout: "fixed",
+  ...STICKY_ACTIONS_COLUMN_SX,
+} as const;
+
+const COL_GROUP = (
   <Box component="colgroup">
-    {COLS.map((w) => (
+    {TICKETS_COLUMN_WIDTHS.map((w) => (
       <Box key={w} component="col" sx={{ width: w }} />
     ))}
   </Box>
 );
-const ACTIONS_COLUMN_KEY = "actions";
+
 const SKELETON_CELLS: readonly SkeletonCell[] = [
   "title",
   "chip",
@@ -56,17 +77,6 @@ const SKELETON_CELLS: readonly SkeletonCell[] = [
   "count",
   "empty",
 ];
-
-const TABLE_SX = {
-  width: "100%",
-  minWidth: "820px",
-  borderCollapse: "collapse",
-  tableLayout: "fixed",
-  ...STICKY_ACTIONS_COLUMN_SX,
-} as const;
-
-const isSortableColumn = (col: TicketColumn["col"]): col is TicketSortField =>
-  col !== ACTIONS_COLUMN_KEY;
 
 const TicketsTableComponent: React.FC<Props> = ({
   tickets,
@@ -135,8 +145,8 @@ const TicketsTableComponent: React.FC<Props> = ({
           boxShadow: "inset 0 -1px 0 var(--border)",
         }}
       >
-        <Box component="table" sx={TABLE_SX}>
-          {COLGROUP}
+        <Box component="table" sx={TICKETS_TABLE_SX}>
+          {COL_GROUP}
           <Box component="thead">
             <Box component="tr">
               {columns.map(({ col, label }) => {
@@ -171,8 +181,8 @@ const TicketsTableComponent: React.FC<Props> = ({
           scrollbarGutter: "stable",
         }}
       >
-        <Box component="table" sx={TABLE_SX}>
-          {COLGROUP}
+        <Box component="table" sx={TICKETS_TABLE_SX}>
+          {COL_GROUP}
           <Box component="tbody" sx={loading ? DELAYED_REVEAL_SX : undefined}>
             {loading ? (
               <TableSkeletonRows cells={SKELETON_CELLS} />

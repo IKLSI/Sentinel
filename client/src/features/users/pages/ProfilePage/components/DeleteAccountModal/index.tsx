@@ -5,8 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import { useDeleteMyAccountMutation } from "@/domains/users/mutations";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
-import { AppModal } from "@/components/ui/common/AppModal";
-import { ModalActions } from "@/components/ui/common/ModalActions";
+import { AppModal } from "@/components/ui/common/modal/AppModal";
+import { ModalActions } from "@/components/ui/common/modal/ModalActions";
 import { useT } from "@/contexts/I18nContext";
 import { endSession } from "@/configs/session";
 import { ROUTES } from "@/constants/routes";
@@ -14,7 +14,7 @@ import { FormTextField } from "@/components/ui/forms/FormTextField";
 import {
   type DeleteAccountFormValues,
   deleteAccountSchema,
-} from "@/features/users/pages/ProfilePage/components/DeleteAccountModal/schemas";
+} from "@/features/users/schemas";
 
 const EMPTY_FORM: DeleteAccountFormValues = { password: "" };
 

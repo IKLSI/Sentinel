@@ -1,14 +1,15 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
-import { LoadingRegion } from "@/components/ui/common/LoadingRegion";
-import { SortableTh } from "@/components/ui/common/SortableTh";
+import { LoadingRegion } from "@/components/ui/common/feedback/LoadingRegion";
+import { SortableTh } from "@/components/ui/common/table/SortableTh";
 import {
   type SkeletonCell,
   TableSkeletonRows,
-} from "@/components/ui/common/TableSkeletonRows";
+} from "@/components/ui/common/table/TableSkeletonRows";
 import { useT } from "@/contexts/I18nContext";
 import { PROJECT_COLUMNS } from "@/features/projects/pages/ProjectsPage/constants";
+import { PANEL_SX } from "@/helpers/cardSx";
 
 const SKELETON_CELLS: readonly SkeletonCell[] = [
   "title",
@@ -34,9 +35,7 @@ export const ProjectsSkeleton: React.FC = () => {
           <Box
             key={id}
             sx={{
-              background: "var(--s1)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--r)",
+              ...PANEL_SX,
               overflow: "hidden",
             }}
           >

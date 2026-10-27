@@ -1,6 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import { DETAIL_PALETTE } from "@/features/tickets/pages/TicketDetailPage/helpers";
+import { DETAIL_PALETTE } from "@/features/tickets/pages/TicketDetailPage/constants";
 
 interface Props {
   icon: React.ReactNode;

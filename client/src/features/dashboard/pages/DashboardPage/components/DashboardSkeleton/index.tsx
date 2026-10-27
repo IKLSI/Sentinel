@@ -1,8 +1,8 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
-import { LoadingStatus } from "@/components/ui/common/LoadingStatus";
-import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
+import { LoadingStatus } from "@/components/ui/common/feedback/LoadingStatus";
+import { ListSkeleton } from "@/components/ui/common/feedback/ListSkeleton";
 import { useI18n } from "@/contexts/I18nContext";
 import { ChartCardSkeleton } from "@/features/dashboard/pages/DashboardPage/components/ChartCardSkeleton";
 import { DashboardCard } from "@/features/dashboard/pages/DashboardPage/components/DashboardCard";

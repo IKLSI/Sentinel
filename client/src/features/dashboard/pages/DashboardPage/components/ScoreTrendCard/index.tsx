@@ -1,25 +1,23 @@
 import type React from "react";
 import { useMemo } from "react";
-import Box from "@mui/material/Box";
 import ShowChartOutlined from "@mui/icons-material/ShowChartOutlined";
 import {
   Area,
   AreaChart,
   CartesianGrid,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { EmptyState } from "@/components/ui/common/EmptyState";
+import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
 import { useI18n } from "@/contexts/I18nContext";
 import type { ScorePoint } from "@/domains/dashboard/types";
+import { ChartFrame } from "@/features/dashboard/pages/DashboardPage/components/ChartFrame";
 import { ChartTooltip } from "@/features/dashboard/pages/DashboardPage/components/ChartTooltip";
 import { DashboardCard } from "@/features/dashboard/pages/DashboardPage/components/DashboardCard";
 import {
   CHART_GRADIENT_ID,
   SCORE_AXIS_PADDING,
-  RESPONSIVE_CHART_MIN_HEIGHT,
   SCORE_MAX,
   SCORE_MIN,
 } from "@/features/dashboard/pages/DashboardPage/constants";
@@ -74,87 +72,71 @@ export const ScoreTrendCard: React.FC<Props> = ({ history }) => {
           sx={{ flex: 1 }}
         />
       ) : (
-        <Box
-          sx={{
-            flex: 1,
-            minHeight: RESPONSIVE_CHART_MIN_HEIGHT,
-            position: "relative",
-          }}
-        >
-          <Box sx={{ position: "absolute", inset: 0 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data} margin={CHART_MARGIN}>
-                <defs>
-                  <linearGradient
-                    id={CHART_GRADIENT_ID}
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="0%"
-                      stopColor="var(--accent)"
-                      stopOpacity={0.22}
-                    />
-                    <stop
-                      offset="100%"
-                      stopColor="var(--accent)"
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  vertical={false}
-                  stroke="var(--border)"
-                  strokeDasharray="3 4"
+        <ChartFrame>
+          <AreaChart data={data} margin={CHART_MARGIN}>
+            <defs>
+              <linearGradient
+                id={CHART_GRADIENT_ID}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="0%"
+                  stopColor="var(--accent)"
+                  stopOpacity={0.22}
                 />
-                <XAxis
-                  dataKey="label"
-                  axisLine={false}
-                  tickLine={false}
-                  interval="preserveStartEnd"
-                  minTickGap={40}
-                  tick={AXIS_TICK}
-                  tickMargin={8}
+                <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              vertical={false}
+              stroke="var(--border)"
+              strokeDasharray="3 4"
+            />
+            <XAxis
+              dataKey="label"
+              axisLine={false}
+              tickLine={false}
+              interval="preserveStartEnd"
+              minTickGap={40}
+              tick={AXIS_TICK}
+              tickMargin={8}
+            />
+            <YAxis
+              width={Y_AXIS_WIDTH}
+              domain={domain}
+              axisLine={false}
+              tickLine={false}
+              allowDecimals={false}
+              tick={AXIS_TICK}
+            />
+            <Tooltip
+              content={
+                <ChartTooltip
+                  labels={{ score: t("dashboard.trend.tooltip_label") }}
                 />
-                <YAxis
-                  width={Y_AXIS_WIDTH}
-                  domain={domain}
-                  axisLine={false}
-                  tickLine={false}
-                  allowDecimals={false}
-                  tick={AXIS_TICK}
-                />
-                <Tooltip
-                  content={
-                    <ChartTooltip
-                      labels={{ score: t("dashboard.trend.tooltip_label") }}
-                    />
-                  }
-                  cursor={{ stroke: "var(--border2)" }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="score"
-                  connectNulls
-                  stroke="var(--accent)"
-                  strokeWidth={2.2}
-                  fill={`url(#${CHART_GRADIENT_ID})`}
-                  dot={
-                    known.length === MINIMUM_POINTS ? SINGLE_POINT_DOT : false
-                  }
-                  activeDot={{
-                    r: 4,
-                    fill: "var(--accent)",
-                    stroke: "var(--s1)",
-                    strokeWidth: 2,
-                  }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Box>
-        </Box>
+              }
+              cursor={{ stroke: "var(--border2)" }}
+            />
+            <Area
+              type="monotone"
+              dataKey="score"
+              connectNulls
+              stroke="var(--accent)"
+              strokeWidth={2.2}
+              fill={`url(#${CHART_GRADIENT_ID})`}
+              dot={known.length === MINIMUM_POINTS ? SINGLE_POINT_DOT : false}
+              activeDot={{
+                r: 4,
+                fill: "var(--accent)",
+                stroke: "var(--s1)",
+                strokeWidth: 2,
+              }}
+            />
+          </AreaChart>
+        </ChartFrame>
       )}
     </DashboardCard>
   );

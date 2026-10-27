@@ -2,6 +2,7 @@ import type React from "react";
 import type { ReactNode } from "react";
 import Box from "@mui/material/Box";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
+import { TEXT_ELLIPSIS_SX } from "@/constants/display";
 
 interface Props {
   label: string;
@@ -64,9 +65,7 @@ export const OptionRow: React.FC<Props> = ({
       component="span"
       sx={{
         flex: 1,
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
+        ...TEXT_ELLIPSIS_SX,
       }}
     >
       {label}

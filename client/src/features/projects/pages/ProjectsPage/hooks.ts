@@ -1,9 +1,25 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useScanProjectMutation } from "@/domains/projects/mutations";
-import type { ProjectSummary } from "@/domains/projects/types";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useDeleteProjectMutation,
+  useScanProjectMutation,
+} from "@/domains/projects/mutations";
+import { useProjectSearchQuery } from "@/domains/projects/queries";
+import type {
+  ProjectSearchMatch,
+  ProjectSummary,
+} from "@/domains/projects/types";
 import { useT } from "@/contexts/I18nContext";
+import { useApiError } from "@/hooks/useApiError";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useDeleteDialog } from "@/hooks/useDeleteDialog";
 import { useToast } from "@/hooks/useToast";
+import {
+  SECTION_ORDER,
+  type SectionKey,
+  UNTRACKED_SECTION,
+  groupProjectsBySection,
+} from "@/features/projects/pages/ProjectsPage/helpers";
 
 export function useScanFeedback(projects: ProjectSummary[]) {
   const { showToast } = useToast();
@@ -69,4 +85,94 @@ export function useScanFeedback(projects: ProjectSummary[]) {
   }, [projects, stopTracking, showToast, t]);
 
   return { scanningIds, startScan };
+}
+
+const SEARCH_DEBOUNCE_MS = 250;
+
+const INITIAL_COLLAPSED_SECTIONS: Record<SectionKey, boolean> = {
+  F: false,
+  E: false,
+  D: false,
+  C: false,
+  B: false,
+  A: false,
+  [UNTRACKED_SECTION]: true,
+};
+
+export function useProjectSearch(projects: ProjectSummary[]) {
+  const t = useT();
+  const apiError = useApiError();
+  const [search, setSearch] = useState("");
+  const searchQuery = useDebouncedValue(search.trim(), SEARCH_DEBOUNCE_MS);
+  const { data: searchMatches, error: searchFailure } =
+    useProjectSearchQuery(searchQuery);
+  const searchError = searchFailure
+    ? apiError(searchFailure, t("projects.search.error"))
+    : null;
+
+  const matchesById = useMemo(
+    () =>
+      new Map<string, ProjectSearchMatch>(
+        (searchMatches ?? []).map((match) => [match.projectId, match]),
+      ),
+    [searchMatches],
+  );
+
+  const filtered = useMemo(() => {
+    if (!searchQuery) return projects;
+    if (searchFailure) return [];
+    return searchMatches
+      ? projects.filter((project) => matchesById.has(project.id))
+      : projects;
+  }, [projects, searchQuery, searchMatches, searchFailure, matchesById]);
+
+  return {
+    search,
+    setSearch,
+    searchError,
+    filtered,
+    matchesById: searchQuery ? matchesById : undefined,
+  };
+}
+
+export function useProjectSections(
+  filtered: ProjectSummary[],
+  loading: boolean,
+) {
+  const [collapsedSections, setCollapsedSections] = useState(
+    INITIAL_COLLAPSED_SECTIONS,
+  );
+
+  const grouped = useMemo(() => groupProjectsBySection(filtered), [filtered]);
+
+  const visibleSections = useMemo(
+    () => SECTION_ORDER.filter((grade) => grouped[grade].length > 0),
+    [grouped],
+  );
+
+  const onlyUntracked =
+    filtered.length > 0 &&
+    grouped[UNTRACKED_SECTION].length === filtered.length;
+
+  useEffect(() => {
+    if (loading || !onlyUntracked) return;
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [UNTRACKED_SECTION]: false,
+    }));
+  }, [loading, onlyUntracked]);
+
+  const toggleSection = (grade: SectionKey) =>
+    setCollapsedSections((prev) => ({ ...prev, [grade]: !prev[grade] }));
+
+  return { grouped, visibleSections, collapsedSections, toggleSection };
+}
+
+export function useDeleteProjectDialog() {
+  const t = useT();
+  return useDeleteDialog<ProjectSummary>(
+    useDeleteProjectMutation(),
+    "projects.toast.delete_error",
+    ({ name }) => t("projects.toast.delete_success", { name }),
+  );
 }

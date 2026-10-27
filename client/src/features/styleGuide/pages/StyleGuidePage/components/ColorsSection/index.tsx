@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import { useT } from "@/contexts/I18nContext";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
 import { SubLabel } from "@/features/styleGuide/pages/StyleGuidePage/components/SubLabel";
-import { Swatch } from "@/features/styleGuide/pages/StyleGuidePage/components/Swatch";
+import { Swatch } from "@/features/styleGuide/pages/StyleGuidePage/components/ColorsSection/components/Swatch";
 import {
   SEMANTIC_TOKENS,
   SURFACE_TOKENS,

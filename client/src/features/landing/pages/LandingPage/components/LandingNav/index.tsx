@@ -1,16 +1,20 @@
 import type React from "react";
-import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import { ROUTES } from "@/constants/routes";
 import { useT } from "@/contexts/I18nContext";
-import { NAV_LINKS } from "@/features/landing/constants";
 import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
-import { LanguageToggle } from "@/features/landing/pages/LandingPage/components/LanguageToggle";
+import { NAV_LINKS } from "@/features/landing/constants";
+import { LanguageToggle } from "@/features/landing/pages/LandingPage/components/LandingNav/components/LanguageToggle";
+import {
+  useActiveSection,
+  useScrolled,
+} from "@/features/landing/pages/LandingPage/components/LandingNav/hooks";
 
-const SCROLL_THRESHOLD = 8;
 const LINKS_BREAKPOINT = "@media (min-width:1060px)";
+
 const WIDE_BREAKPOINT = "@media (min-width:1280px)";
+
 const FOCUS_RING = {
   outline: "2px solid var(--ink)",
   outlineOffset: "2px",
@@ -40,34 +44,8 @@ const pillSx = (scrolled: boolean) =>
 
 export const LandingNav: React.FC = () => {
   const t = useT();
-  const [scrolled, setScrolled] = useState(false);
-  const [activeId, setActiveId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > SCROLL_THRESHOLD);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const id = entry.target.id;
-          if (entry.isIntersecting) setActiveId(id);
-          else setActiveId((current) => (current === id ? null : current));
-        }
-      },
-      { rootMargin: "-45% 0px -50% 0px" },
-    );
-    for (const { id } of NAV_LINKS) {
-      const section = document.getElementById(id);
-      if (section) observer.observe(section);
-    }
-    return () => observer.disconnect();
-  }, []);
+  const scrolled = useScrolled();
+  const activeId = useActiveSection();
 
   return (
     <Box

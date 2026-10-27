@@ -2,6 +2,7 @@ import type React from "react";
 import Box from "@mui/material/Box";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useIsTextTruncated } from "@/hooks/useIsTextTruncated";
+import { TEXT_ELLIPSIS_SX } from "@/constants/display";
 
 interface Props {
   text: string;
@@ -29,9 +30,7 @@ export const TruncatedText: React.FC<Props> = ({
           fontSize: fontSize ?? (mono ? "11px" : "12px"),
           fontWeight: strong ? 600 : 400,
           color: "inherit",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
+          ...TEXT_ELLIPSIS_SX,
         }}
       >
         {text}

@@ -4,8 +4,8 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { useT } from "@/contexts/I18nContext";
-import { AppModal } from "@/components/ui/common/AppModal";
-import { DeleteModal } from "@/components/ui/common/DeleteModal";
+import { AppModal } from "@/components/ui/common/modal/AppModal";
+import { DeleteModal } from "@/components/ui/common/modal/DeleteModal";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
 
 export const ModalsSection: React.FC = () => {

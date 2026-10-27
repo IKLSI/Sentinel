@@ -8,7 +8,7 @@ import NotificationsNoneOutlined from "@mui/icons-material/NotificationsNoneOutl
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import { useT } from "@/contexts/I18nContext";
-import { EmptyState } from "@/components/ui/common/EmptyState";
+import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
 import { SubLabel } from "@/features/styleGuide/pages/StyleGuidePage/components/SubLabel";
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Sparkline } from "@/features/dashboard/pages/DashboardPage/components/Sparkline";
+import { Sparkline } from "@/features/dashboard/pages/DashboardPage/components/ParkHero/components/RiskTile/components/Sparkline";
 import { render } from "@/tests/test-utils";
 
 describe("Sparkline", () => {

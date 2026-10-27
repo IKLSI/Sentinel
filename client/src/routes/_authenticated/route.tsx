@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate, redirect } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { evaluateAuthGuard } from "@/features/auth/routeGuards";
-import { FullScreenLoader } from "@/components/ui/common/FullScreenLoader";
+import { FullScreenLoader } from "@/components/ui/common/feedback/FullScreenLoader";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useRealtimeSync } from "@/domains/realtime/hooks";
 

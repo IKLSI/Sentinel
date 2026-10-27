@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ScanProgressBar } from "@/components/ui/common/ScanProgressBar";
+import { ScanProgressBar } from "@/components/ui/common/feedback/ScanProgressBar";
 import { render, screen } from "@/tests/test-utils";
 
 describe("ScanProgressBar", () => {

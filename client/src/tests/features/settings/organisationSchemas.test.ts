@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   gitlabIntegrationSchema,
   organizationSchema,
-} from "@/features/settings/pages/SettingsPage/components/OrganisationTab/schemas";
+} from "@/features/settings/pages/OrganisationPage/schemas";
 
 describe("organizationSchema", () => {
   it("rejects a blank organization name", () => {

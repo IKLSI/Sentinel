@@ -1,4 +1,4 @@
-import type { CellAlign } from "@/components/ui/common/VirtualTable/TableCells";
+import type { CellAlign } from "@/components/ui/common/table/VirtualTable/TableCells";
 
 interface ProjectColumn {
   id: string;
