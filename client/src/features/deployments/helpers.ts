@@ -1,25 +1,26 @@
+import { pluralKey } from "@/helpers/plural";
 import type { Translate } from "@/contexts/I18nContext";
-import type { ReleaseItemSeverity } from "@/enums";
+import { ReleaseItemSeverity } from "@/enums";
 import type {
   DependencyChange,
   ConfigurationChange,
   MigrationChange,
   ReleaseComparison,
+  RuntimeChange,
 } from "@/domains/deployments/types";
 import {
-  DEPENDENCY_SECTIONS,
-  DependencySectionKey,
+  DependencyChangeKind,
   NOTE_CATEGORIES,
   NOTE_CATEGORY_GITMOJI,
-  CHECK_KINDS,
+  CHECK_STEPS,
   type CheckKind,
 } from "@/features/deployments/constants";
 import type {
-  DependencySection,
+  DependencyGroup,
   VersionRow,
   NoteGroup,
   ReleaseCheckBlock,
-  ReleaseCheckGroup,
+  ReleaseCheckStep,
 } from "@/features/deployments/types";
 
 const MIGRATION_TIMESTAMP = /^\d{8,}_/;
@@ -86,23 +87,37 @@ const blocksOf = (
   };
 };
 
-export const releaseCheckGroups = (
+const checkCount = (kind: CheckKind, blocks: ReleaseCheckBlock[]) =>
+  kind.endsWith("Configuration")
+    ? blocks.reduce((total, block) => total + block.entries.length, 0)
+    : blocks.length;
+
+export const releaseCheckSteps = (
   comparison: ReleaseComparison,
   t: Translate,
-): ReleaseCheckGroup[] =>
-  CHECK_KINDS.flatMap((kind) => {
-    const { severity, blocks } = blocksOf(comparison, kind, t);
-    if (!severity) return [];
+): ReleaseCheckStep[] =>
+  CHECK_STEPS.flatMap((step) => {
+    const found = step.kinds
+      .map((kind) => ({ kind, ...blocksOf(comparison, kind, t) }))
+      .filter((entry) => entry.severity);
+    if (found.length === 0) return [];
 
     return {
-      kind,
-      severity,
-      blocks,
-      count: kind.endsWith("Configuration")
-        ? blocks.reduce((total, block) => total + block.entries.length, 0)
-        : blocks.length,
+      id: step.id,
+      severity: found.some(
+        (entry) => entry.severity === ReleaseItemSeverity.Blocking,
+      )
+        ? ReleaseItemSeverity.Blocking
+        : ReleaseItemSeverity.Warning,
+      summary: found
+        .map((entry) => {
+          const count = checkCount(entry.kind, entry.blocks);
+          return `${count} ${t(pluralKey(`deployments.checks.kind.${entry.kind}`, count))}`;
+        })
+        .join(" · "),
+      blocks: found.flatMap((entry) => entry.blocks),
     };
-  });
+  }).map((step, index) => ({ ...step, index: index + 1 }));
 
 const DATA_GAPS = [
   "inventoryIncomplete",
@@ -125,28 +140,77 @@ const dependencyRow = (change: DependencyChange): VersionRow => ({
   vulnerabilities: change.introducedVulnerabilities,
 });
 
-const isVulnerable = (change: DependencyChange) =>
-  change.introducedVulnerabilities.length > 0;
+const runtimeChange = (runtime: RuntimeChange) => {
+  if (!runtime.baseVersion) return DependencyChangeKind.Added;
+  if (!runtime.headVersion) return DependencyChangeKind.Removed;
+  return DependencyChangeKind.Upgraded;
+};
 
-const sectionRows = (
-  comparison: ReleaseComparison,
-  key: DependencySectionKey,
-): VersionRow[] =>
-  comparison.dependencies
-    .filter((change) =>
-      key === DependencySectionKey.Vulnerable
-        ? isVulnerable(change)
-        : !isVulnerable(change) && change.change === key,
-    )
-    .map(dependencyRow);
+const runtimeRows = (comparison: ReleaseComparison): VersionRow[] =>
+  comparison.runtimes.map((runtime) => ({
+    id: `runtime:${runtime.name}`,
+    name: runtime.name,
+    change: runtimeChange(runtime),
+    baseVersion: runtime.baseVersion,
+    headVersion: runtime.headVersion,
+    isMajor: false,
+    vulnerabilities: [],
+  }));
 
-export const dependencySections = (
+const isHiddenMinorUpdate = (change: DependencyChange) =>
+  change.change === DependencyChangeKind.Upgraded &&
+  !change.isMajor &&
+  change.introducedVulnerabilities.length === 0;
+
+const CHANGE_ORDER: readonly string[] = Object.values(DependencyChangeKind);
+
+const byImportance = (first: VersionRow, second: VersionRow) =>
+  second.vulnerabilities.length - first.vulnerabilities.length ||
+  CHANGE_ORDER.indexOf(first.change) - CHANGE_ORDER.indexOf(second.change) ||
+  Number(second.isMajor) - Number(first.isMajor) ||
+  first.name.localeCompare(second.name);
+
+export const dependencyGroups = (
   comparison: ReleaseComparison,
-): DependencySection[] =>
-  DEPENDENCY_SECTIONS.map((key) => ({
-    key,
-    rows: sectionRows(comparison, key),
-  })).filter((section) => section.rows.length > 0);
+): DependencyGroup[] => {
+  const runtimes = runtimeRows(comparison).sort(byImportance);
+  const shown = comparison.dependencies.filter(
+    (change) => !isHiddenMinorUpdate(change),
+  );
+  const ecosystems = [...new Set(shown.map((change) => change.ecosystem))].sort(
+    (first, second) => first.localeCompare(second),
+  );
+
+  return [
+    ...(runtimes.length > 0
+      ? [
+          {
+            key: "runtimes",
+            ecosystem: null,
+            rows: runtimes,
+            vulnerabilityCount: 0,
+          },
+        ]
+      : []),
+    ...ecosystems.map((ecosystem) => {
+      const rows = shown
+        .filter((change) => change.ecosystem === ecosystem)
+        .map(dependencyRow)
+        .sort(byImportance);
+      const vulnerabilityCount = rows.reduce(
+        (total, row) => total + row.vulnerabilities.length,
+        0,
+      );
+
+      return {
+        key: `ecosystem:${ecosystem}`,
+        ecosystem,
+        rows,
+        vulnerabilityCount,
+      };
+    }),
+  ];
+};
 
 export const notesByCategory = (comparison: ReleaseComparison): NoteGroup[] =>
   NOTE_CATEGORIES.map((category) => ({

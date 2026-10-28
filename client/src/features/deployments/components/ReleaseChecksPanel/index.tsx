@@ -1,5 +1,4 @@
 import type React from "react";
-import { useState } from "react";
 import Box from "@mui/material/Box";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import TaskAltOutlined from "@mui/icons-material/TaskAltOutlined";
@@ -8,16 +7,18 @@ import { CardHeader } from "@/components/ui/common/CardHeader";
 import { EmptyState } from "@/components/ui/common/feedback/EmptyState";
 import { useT } from "@/contexts/I18nContext";
 import type { ReleaseComparison } from "@/domains/deployments/types";
-import { SectionFilter } from "@/features/deployments/components/SectionFilter";
 import {
   CHECK_SEVERITY_TONES,
   PANEL_SX,
 } from "@/features/deployments/constants";
 import {
-  releaseCheckGroups,
+  releaseCheckSteps,
   releaseDataGaps,
 } from "@/features/deployments/helpers";
-import type { ReleaseCheckBlock } from "@/features/deployments/types";
+import type {
+  ReleaseCheckBlock,
+  ReleaseCheckStep,
+} from "@/features/deployments/types";
 import { CARD_SX } from "@/helpers/cardSx";
 
 interface Props {
@@ -30,14 +31,11 @@ const ELLIPSIS_SX = {
   whiteSpace: "nowrap",
 } as const;
 
-const CheckBlock: React.FC<{ block: ReleaseCheckBlock; tone: string }> = ({
-  block,
-  tone,
-}) => (
+const CheckBlock: React.FC<{ block: ReleaseCheckBlock }> = ({ block }) => (
   <Box
     component="li"
     sx={{
-      py: "10px",
+      py: "8px",
       borderBottom:
         "1px solid color-mix(in srgb, var(--border) 60%, transparent)",
       "&:last-of-type": { borderBottom: "none" },
@@ -45,40 +43,16 @@ const CheckBlock: React.FC<{ block: ReleaseCheckBlock; tone: string }> = ({
   >
     <AppTooltip title={block.hint} placement="top-start">
       <Box
+        component="span"
         sx={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          gap: "10px",
-          minWidth: 0,
+          ...ELLIPSIS_SX,
+          display: "block",
+          fontSize: "13px",
+          fontWeight: 600,
+          color: "var(--text)",
         }}
       >
-        <Box
-          component="span"
-          sx={{
-            ...ELLIPSIS_SX,
-            minWidth: 0,
-            fontSize: "13px",
-            fontWeight: 600,
-            color: "var(--text)",
-          }}
-        >
-          {block.heading}
-        </Box>
-        {block.entries.length > 0 && (
-          <Box
-            component="span"
-            sx={{
-              flexShrink: 0,
-              fontFamily: "var(--font-mono)",
-              fontSize: "12px",
-              fontWeight: 700,
-              color: tone,
-            }}
-          >
-            {block.entries.length}
-          </Box>
-        )}
+        {block.heading}
       </Box>
     </AppTooltip>
     {block.entries.length > 0 && (
@@ -87,13 +61,11 @@ const CheckBlock: React.FC<{ block: ReleaseCheckBlock; tone: string }> = ({
         sx={{
           listStyle: "none",
           m: 0,
-          mt: "6px",
-          ml: "2px",
-          pl: "12px",
-          borderLeft: `2px solid color-mix(in srgb, ${tone} 30%, transparent)`,
+          mt: "4px",
+          p: 0,
           display: "flex",
           flexDirection: "column",
-          gap: "4px",
+          gap: "2px",
         }}
       >
         {block.entries.map((entry) => (
@@ -114,7 +86,7 @@ const CheckBlock: React.FC<{ block: ReleaseCheckBlock; tone: string }> = ({
                 minWidth: 0,
                 fontFamily: "var(--font-mono)",
                 fontSize: "12px",
-                color: "var(--text)",
+                color: "var(--muted2)",
               }}
             >
               {entry.text}
@@ -127,7 +99,7 @@ const CheckBlock: React.FC<{ block: ReleaseCheckBlock; tone: string }> = ({
                   flexShrink: 0,
                   maxWidth: "45%",
                   fontSize: "11px",
-                  color: "var(--muted2)",
+                  color: "var(--muted)",
                 }}
               >
                 {entry.note}
@@ -139,6 +111,68 @@ const CheckBlock: React.FC<{ block: ReleaseCheckBlock; tone: string }> = ({
     )}
   </Box>
 );
+
+const CheckStep: React.FC<{ step: ReleaseCheckStep; last: boolean }> = ({
+  step,
+  last,
+}) => {
+  const t = useT();
+  const tone = CHECK_SEVERITY_TONES[step.severity];
+
+  return (
+    <Box component="li" sx={{ display: "flex", gap: "14px" }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          flexShrink: 0,
+        }}
+      >
+        <Box
+          sx={{
+            width: 24,
+            height: 24,
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: "var(--font-mono)",
+            fontSize: "12px",
+            fontWeight: 700,
+            color: tone,
+            background: `color-mix(in srgb, ${tone} 14%, transparent)`,
+            border: `1px solid color-mix(in srgb, ${tone} 40%, transparent)`,
+          }}
+        >
+          {step.index}
+        </Box>
+        <Box
+          sx={{
+            flex: 1,
+            width: "1px",
+            mt: "4px",
+            mb: last ? 0 : "4px",
+            background: "var(--border)",
+          }}
+        />
+      </Box>
+      <Box sx={{ flex: 1, minWidth: 0, pb: last ? 0 : "18px" }}>
+        <Box sx={{ fontSize: "14px", fontWeight: 700, color: "var(--text)" }}>
+          {t(`deployments.checks.step.${step.id}`)}
+        </Box>
+        <Box sx={{ fontSize: "12px", color: tone, mb: "4px" }}>
+          {step.summary}
+        </Box>
+        <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+          {step.blocks.map((block) => (
+            <CheckBlock key={block.id} block={block} />
+          ))}
+        </Box>
+      </Box>
+    </Box>
+  );
+};
 
 const DataGapsNote: React.FC<{ gaps: string[] }> = ({ gaps }) => {
   const t = useT();
@@ -174,54 +208,46 @@ const DataGapsNote: React.FC<{ gaps: string[] }> = ({ gaps }) => {
 
 export const ReleaseChecksPanel: React.FC<Props> = ({ comparison }) => {
   const t = useT();
-  const groups = releaseCheckGroups(comparison, t);
+  const steps = releaseCheckSteps(comparison, t);
   const gaps = releaseDataGaps(comparison);
-  const [selected, setSelected] = useState<string>();
-  const active = groups.find((group) => group.kind === selected) ?? groups[0];
 
   return (
     <Box component="section" sx={{ ...CARD_SX, ...PANEL_SX }}>
       <CardHeader label={t("deployments.checks.title")} />
-      {!active ? (
+      {steps.length === 0 ? (
         <EmptyState
           icon={TaskAltOutlined}
-          tone="success"
           title={t("deployments.checks.empty_title")}
           subtitle={t("deployments.checks.empty_subtitle")}
           sx={{ flex: 1, justifyContent: "center" }}
         />
       ) : (
-        <>
-          <SectionFilter
-            sections={groups.map((group) => ({
-              key: group.kind,
-              tone: CHECK_SEVERITY_TONES[group.severity],
-              label: t(`deployments.checks.kind.${group.kind}`),
-              count: group.count,
-            }))}
-            active={active.kind}
-            onChange={setSelected}
-          />
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            px: "20px",
+            py: "16px",
+          }}
+        >
           <Box
+            component="ol"
             sx={{
-              flex: 1,
-              minHeight: 0,
-              overflowY: "auto",
-              px: "20px",
-              py: "8px",
+              listStyle: "none",
+              m: 0,
+              p: 0,
             }}
           >
-            <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-              {active.blocks.map((block) => (
-                <CheckBlock
-                  key={block.id}
-                  block={block}
-                  tone={CHECK_SEVERITY_TONES[active.severity]}
-                />
-              ))}
-            </Box>
+            {steps.map((step, position) => (
+              <CheckStep
+                key={step.id}
+                step={step}
+                last={position === steps.length - 1}
+              />
+            ))}
           </Box>
-        </>
+        </Box>
       )}
       {gaps.length > 0 && <DataGapsNote gaps={gaps} />}
     </Box>

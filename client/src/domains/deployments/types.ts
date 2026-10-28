@@ -10,3 +10,5 @@ export type MigrationChange = components["schemas"]["MigrationChangeDto"];
 
 export type ConfigurationChange =
   components["schemas"]["ConfigurationChangeDto"];
+
+export type RuntimeChange = components["schemas"]["RuntimeChangeDto"];

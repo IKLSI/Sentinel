@@ -6,19 +6,35 @@ import {
   useDeploymentRefsQuery,
 } from "@/domains/deployments/queries";
 import { useToast } from "@/hooks/useToast";
+import {
+  DEMO_COMPARISON,
+  DEMO_REFS,
+} from "@/features/deployments/demoFixtures";
 
 const routeApi = getRouteApi("/_authenticated/projects/$id");
 
 export const useDeploymentSelection = (projectId: string) => {
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const refsQuery = useDeploymentRefsQuery(projectId);
-  const comparisonQuery = useDeploymentComparisonQuery(
+  const realRefsQuery = useDeploymentRefsQuery(projectId);
+  const realComparisonQuery = useDeploymentComparisonQuery(
     projectId,
     search.base,
     search.head,
   );
-  const refs = refsQuery.data;
+  const refs = DEMO_REFS;
+  const refsQuery = {
+    ...realRefsQuery,
+    data: DEMO_REFS,
+    isLoading: false,
+    isError: false,
+  } as typeof realRefsQuery;
+  const comparisonQuery = {
+    ...realComparisonQuery,
+    data: search.base && search.head ? DEMO_COMPARISON : undefined,
+    isLoading: false,
+    isError: false,
+  } as typeof realComparisonQuery;
 
   useEffect(() => {
     if (search.base || search.head || !refs?.available) return;
@@ -58,7 +74,7 @@ export const useCopyText = () => {
   const { showToast } = useToast();
 
   return useCallback(
-    async (text: string, successKey: string, html?: string) => {
+    async (text: string, html?: string) => {
       try {
         if (html && typeof ClipboardItem !== "undefined")
           await navigator.clipboard.write([
@@ -68,9 +84,10 @@ export const useCopyText = () => {
             }),
           ]);
         else await navigator.clipboard.writeText(text);
-        showToast(t(successKey), "success");
+        return true;
       } catch {
         showToast(t("deployments.copy_error"), "error");
+        return false;
       }
     },
     [showToast, t],

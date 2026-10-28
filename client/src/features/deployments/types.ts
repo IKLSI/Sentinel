@@ -1,8 +1,4 @@
 import type { ReleaseItemSeverity } from "@/enums";
-import type {
-  CheckKind,
-  DependencySectionKey,
-} from "@/features/deployments/constants";
 
 export interface VersionRow {
   id: string;
@@ -14,9 +10,11 @@ export interface VersionRow {
   vulnerabilities: string[];
 }
 
-export interface DependencySection {
-  key: DependencySectionKey;
+export interface DependencyGroup {
+  key: string;
+  ecosystem: string | null;
   rows: VersionRow[];
+  vulnerabilityCount: number;
 }
 
 interface ReleaseCheckEntry {
@@ -32,10 +30,11 @@ export interface ReleaseCheckBlock {
   entries: ReleaseCheckEntry[];
 }
 
-export interface ReleaseCheckGroup {
-  kind: CheckKind;
+export interface ReleaseCheckStep {
+  id: string;
+  index: number;
   severity: ReleaseItemSeverity;
-  count: number;
+  summary: string;
   blocks: ReleaseCheckBlock[];
 }
 

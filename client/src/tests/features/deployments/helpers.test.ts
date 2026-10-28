@@ -4,8 +4,8 @@ import type {
   ReleaseComparison,
 } from "@/domains/deployments/types";
 import {
-  dependencySections,
-  releaseCheckGroups,
+  dependencyGroups,
+  releaseCheckSteps,
   releaseDataGaps,
   notesByCategory,
   releaseNotesHtml,
@@ -76,28 +76,53 @@ const comparison: ReleaseComparison = {
   ],
 };
 
-describe("dependencySections", () => {
-  it("lists vulnerable packages, then the other packages by change kind", () => {
+describe("dependencyGroups", () => {
+  it("puts runtimes first, then one group per ecosystem with vulnerable packages first", () => {
     expect(
-      dependencySections(comparison).map((section) => [
-        section.key,
-        section.rows.map((row) => row.name),
+      dependencyGroups(comparison).map((group) => [
+        group.key,
+        group.rows.map((row) => row.name),
+        group.vulnerabilityCount,
       ]),
     ).toEqual([
-      ["Vulnerable", ["lodash"]],
-      ["Upgraded", ["left-pad", "react"]],
-      ["Added", ["zod"]],
+      ["runtimes", [".NET"], 0],
+      ["ecosystem:Npm", ["lodash", "react", "zod"], 1],
     ]);
   });
 });
 
-describe("releaseCheckGroups", () => {
+describe("dependencyGroups ordering", () => {
+  it("clusters rows by change kind instead of interleaving them", () => {
+    const rows = dependencyGroups({
+      ...comparison,
+      runtimes: [],
+      dependencies: [
+        dependency("a-removed", [], "Removed"),
+        dependency("b-added", [], "Added"),
+        dependency("c-removed", [], "Removed"),
+        dependency("react"),
+        dependency("e-added", [], "Added"),
+      ],
+    })[0].rows.map((row) => row.name);
+
+    expect(rows).toEqual([
+      "react",
+      "b-added",
+      "e-added",
+      "a-removed",
+      "c-removed",
+    ]);
+  });
+});
+
+describe("releaseCheckSteps", () => {
   const summarize = (target: ReleaseComparison) =>
-    releaseCheckGroups(target, translate).map((group) => [
-      group.kind,
-      group.severity,
-      group.count,
-      group.blocks.map((block) => [
+    releaseCheckSteps(target, translate).map((step) => [
+      step.index,
+      step.id,
+      step.severity,
+      step.summary,
+      step.blocks.map((block) => [
         block.heading,
         block.entries.map((entry) => [entry.text, entry.note]),
       ]),
@@ -106,9 +131,10 @@ describe("releaseCheckGroups", () => {
   it("lists each migration with its targets and each config file with its keys", () => {
     expect(summarize(comparison)).toEqual([
       [
-        "DestructiveMigration",
-        "Blocking",
         1,
+        "Database",
+        "Blocking",
+        "1 deployments.checks.kind.DestructiveMigration_one",
         [
           [
             "DropLegacy",
@@ -117,9 +143,10 @@ describe("releaseCheckGroups", () => {
         ],
       ],
       [
-        "MissingConfiguration",
+        2,
+        "Configuration",
         "Blocking",
-        1,
+        "1 deployments.checks.kind.MissingConfiguration_one",
         [["appsettings.json", [["Smtp:ApiKey", null]]]],
       ],
     ]);
@@ -139,9 +166,10 @@ describe("releaseCheckGroups", () => {
       }),
     ).toEqual([
       [
-        "MissingConfiguration",
+        1,
+        "Configuration",
         "Blocking",
-        2,
+        "2 deployments.checks.kind.MissingConfiguration_other",
         [
           [
             "Job/appsettings.json",

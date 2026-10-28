@@ -11,6 +11,20 @@ export const fadeInUp = keyframes`
   }
 `;
 
+export const iconPop = keyframes`
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-20deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.25) rotate(4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+`;
+
 export const contentEnter = keyframes`
   from {
     opacity: 0;

@@ -4,31 +4,14 @@ import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import { ReleaseCommitCategory, ReleaseItemSeverity } from "@/enums";
 
-export const DependencySectionKey = {
-  Vulnerable: "Vulnerable",
+export const DependencyChangeKind = {
   Upgraded: "Upgraded",
   Added: "Added",
   Downgraded: "Downgraded",
   Removed: "Removed",
 } as const;
-export type DependencySectionKey =
-  (typeof DependencySectionKey)[keyof typeof DependencySectionKey];
 
-export const DEPENDENCY_SECTIONS: readonly DependencySectionKey[] = [
-  DependencySectionKey.Vulnerable,
-  DependencySectionKey.Upgraded,
-  DependencySectionKey.Added,
-  DependencySectionKey.Downgraded,
-  DependencySectionKey.Removed,
-];
-
-export const DEPENDENCY_SECTION_TONES: Record<DependencySectionKey, string> = {
-  [DependencySectionKey.Vulnerable]: "var(--red)",
-  [DependencySectionKey.Upgraded]: "var(--accent)",
-  [DependencySectionKey.Added]: "var(--green)",
-  [DependencySectionKey.Downgraded]: "var(--orange)",
-  [DependencySectionKey.Removed]: "var(--muted2)",
-};
+export const GROUP_PREVIEW_SIZE = 5;
 
 export const NOTE_CATEGORIES = [
   ReleaseCommitCategory.Feature,
@@ -57,13 +40,20 @@ export const NOTE_CATEGORY_GITMOJI: Record<string, string> = {
   [ReleaseCommitCategory.Maintenance]: "🔧",
 };
 
-export const CHECK_KINDS = [
-  "DestructiveMigration",
-  "MissingConfiguration",
-  "RiskyMigration",
-  "RemovedConfiguration",
-] as const;
-export type CheckKind = (typeof CHECK_KINDS)[number];
+export type CheckKind =
+  | "DestructiveMigration"
+  | "MissingConfiguration"
+  | "RiskyMigration"
+  | "RemovedConfiguration";
+
+export const CHECK_STEPS: readonly {
+  id: string;
+  kinds: readonly CheckKind[];
+}[] = [
+  { id: "Database", kinds: ["DestructiveMigration"] },
+  { id: "Configuration", kinds: ["MissingConfiguration"] },
+  { id: "Review", kinds: ["RiskyMigration", "RemovedConfiguration"] },
+];
 
 export const CHECK_SEVERITY_TONES: Record<ReleaseItemSeverity, string> = {
   [ReleaseItemSeverity.Blocking]: "var(--red)",

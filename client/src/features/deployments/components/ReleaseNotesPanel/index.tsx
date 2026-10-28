@@ -1,6 +1,8 @@
 import type React from "react";
+import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import CheckRounded from "@mui/icons-material/CheckRounded";
 import ContentCopyOutlined from "@mui/icons-material/ContentCopyOutlined";
 import NotesOutlined from "@mui/icons-material/NotesOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
@@ -27,6 +29,9 @@ import {
 } from "@/features/deployments/helpers";
 import { useCopyText } from "@/features/deployments/hooks";
 import { CARD_SX } from "@/helpers/cardSx";
+import { iconPop, REDUCED_MOTION } from "@/styles/keyframes";
+
+const COPIED_DURATION_MS = 1800;
 
 interface Props {
   comparison: ReleaseComparison;
@@ -36,6 +41,13 @@ export const ReleaseNotesPanel: React.FC<Props> = ({ comparison }) => {
   const t = useT();
   const copyText = useCopyText();
   const groups = notesByCategory(comparison);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), COPIED_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [copied]);
 
   return (
     <Box component="section" sx={{ ...CARD_SX, ...PANEL_SX }}>
@@ -60,17 +72,37 @@ export const ReleaseNotesPanel: React.FC<Props> = ({ comparison }) => {
               <Button
                 size="small"
                 color="inherit"
-                startIcon={<ContentCopyOutlined sx={{ fontSize: 14 }} />}
-                onClick={() =>
-                  void copyText(
-                    releaseNotesText(groups, comparison.headReference, t),
-                    "deployments.notes.copied",
-                    releaseNotesHtml(groups, comparison.headReference, t),
+                startIcon={
+                  copied ? (
+                    <CheckRounded
+                      sx={{
+                        fontSize: 14,
+                        animation: `${iconPop} 0.35s ease-out`,
+                        [REDUCED_MOTION]: { animation: "none" },
+                      }}
+                    />
+                  ) : (
+                    <ContentCopyOutlined sx={{ fontSize: 14 }} />
                   )
                 }
-                sx={{ mr: "-8px" }}
+                onClick={async () => {
+                  const done = await copyText(
+                    releaseNotesText(groups, comparison.headReference, t),
+                    releaseNotesHtml(groups, comparison.headReference, t),
+                  );
+                  if (done) setCopied(true);
+                }}
+                sx={{
+                  mr: "-8px",
+                  transition: "color 0.2s",
+                  ...(copied && { color: "var(--green)" }),
+                }}
               >
-                {t("deployments.notes.copy")}
+                {t(
+                  copied
+                    ? "deployments.notes.copy_done"
+                    : "deployments.notes.copy",
+                )}
               </Button>
             </Box>
           )
