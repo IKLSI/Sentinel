@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
@@ -34,6 +35,12 @@ internal sealed class RepositoryHostHttp(ILogger logger)
     }
 
     public static bool IsSuccess(HttpStatusCode status) => (int)status is >= 200 and <= 299;
+
+    public static DateTime? ParseDate(string? value) =>
+        DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal,
+            out DateTimeOffset parsed)
+            ? parsed.UtcDateTime
+            : null;
 
     public static bool IsInSkippedDirectory(string filePath)
     {

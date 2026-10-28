@@ -106,6 +106,75 @@ internal sealed class GitLabRepositoryHost(
         }
     }
 
+    public async Task<List<string>?> ListTagsAsync(string owner, string repo, RepositoryAccess access,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using HttpRequestMessage request = BuildRequest(
+                $"{ProjectApiUrl(access, owner, repo)}/repository/tags?per_page={RepositoryPageSize}",
+                access.Token);
+            (HttpStatusCode status, List<JsonElement>? tags) =
+                await TryGetJsonAsync<List<JsonElement>>(CreateClient(), request, cancellationToken);
+            if (!IsSuccess(status)) return null;
+
+            return (tags ?? []).Select(tag => tag.StringProperty("name")).OfType<string>().ToList();
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(ex, "GitLab tag listing failed for {Owner}/{Repo}", owner, repo);
+            return null;
+        }
+    }
+
+    public async Task<RepositoryComparison?> CompareAsync(string owner, string repo, RepositoryAccess access,
+        string baseReference, string headReference, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using HttpRequestMessage request = BuildRequest(
+                $"{ProjectApiUrl(access, owner, repo)}/repository/compare?from={Uri.EscapeDataString(baseReference)}&to={Uri.EscapeDataString(headReference)}",
+                access.Token);
+            (HttpStatusCode status, JsonElement comparison) =
+                await TryGetJsonAsync<JsonElement>(CreateClient(), request, cancellationToken);
+            if (!IsSuccess(status)) return null;
+
+            List<RepositoryCommit> commits = comparison.TryGetProperty("commits", out JsonElement commitItems)
+                ? commitItems.EnumerateArray().Select(ReadCommit).ToList()
+                : [];
+            List<RepositoryChangedFile> files = comparison.TryGetProperty("diffs", out JsonElement diffItems)
+                ? diffItems.EnumerateArray().Select(ReadChangedFile).OfType<RepositoryChangedFile>().ToList()
+                : [];
+
+            return new RepositoryComparison(commits, files, false);
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(ex, "GitLab comparison failed for {Owner}/{Repo}", owner, repo);
+            return null;
+        }
+    }
+
+    private static RepositoryCommit ReadCommit(JsonElement item) => new(
+        item.StringProperty("message") ?? item.StringProperty("title") ?? "",
+        ParseDate(item.StringProperty("committed_date")));
+
+    private static RepositoryChangedFile? ReadChangedFile(JsonElement item)
+    {
+        string? path = item.StringProperty("new_path") ?? item.StringProperty("old_path");
+        if (string.IsNullOrEmpty(path)) return null;
+
+        RepositoryFileChange change = IsTrue(item, "new_file") ? RepositoryFileChange.Added
+            : IsTrue(item, "deleted_file") ? RepositoryFileChange.Removed
+            : IsTrue(item, "renamed_file") ? RepositoryFileChange.Renamed
+            : RepositoryFileChange.Modified;
+
+        return new RepositoryChangedFile(path, change);
+    }
+
+    private static bool IsTrue(JsonElement item, string propertyName) =>
+        item.TryGetProperty(propertyName, out JsonElement value) && value.ValueKind == JsonValueKind.True;
+
     public async Task<RepositoryFileListing> ListFilesAsync(string owner, string repo, string reference,
         RepositoryAccess access, CancellationToken cancellationToken)
     {
@@ -143,8 +212,7 @@ internal sealed class GitLabRepositoryHost(
             if (type != "blob") continue;
             if (IsInSkippedDirectory(path)) continue;
 
-            string rawUrl = $"{projectApiUrl}/repository/files/{Uri.EscapeDataString(path)}/raw?ref={Uri.EscapeDataString(reference)}";
-            result.Add((name, rawUrl, path));
+            result.Add((name, RawFileUrl(projectApiUrl, reference, path), path));
         }
 
         return new RepositoryFileListing(result, truncated);
@@ -254,6 +322,12 @@ internal sealed class GitLabRepositoryHost(
         if (!string.IsNullOrEmpty(token)) request.Headers.Add("PRIVATE-TOKEN", token);
         return request;
     }
+
+    public static string FileUrl(RepositoryAccess access, string owner, string repo, string reference, string path) =>
+        RawFileUrl(ProjectApiUrl(access, owner, repo), reference, path);
+
+    private static string RawFileUrl(string projectApiUrl, string reference, string path) =>
+        $"{projectApiUrl}/repository/files/{Uri.EscapeDataString(path)}/raw?ref={Uri.EscapeDataString(reference)}";
 
     private static string ProjectApiUrl(RepositoryAccess access, string owner, string repo) =>
         $"{access.GitLab.ApiBaseUrl}/projects/{Uri.EscapeDataString($"{owner}/{repo}")}";

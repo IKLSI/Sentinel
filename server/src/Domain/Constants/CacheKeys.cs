@@ -18,6 +18,7 @@ public static class CacheKeys
     private const string ProjectBadgePrefix = "project-badge";
     private const string AvailableReposPrefix = "available-repos";
     private const string GitHubPublicRepositoryPrefix = "github:public";
+    private const string DeploymentComparisonPrefix = "deployment-comparison";
 
     public const string KnownExploitedCatalog = "kev:catalog";
     public const string KnownExploitedCatalogUnavailable = "kev:unavailable";
@@ -41,6 +42,7 @@ public static class CacheKeys
     public static readonly TimeSpan AvailableReposTtl = TimeSpan.FromMinutes(3);
     public static readonly TimeSpan GitHubPublicRepositoryTtl = TimeSpan.FromMinutes(10);
     public static readonly TimeSpan PublicRuntimeLifecyclesTtl = TimeSpan.FromMinutes(10);
+    public static readonly TimeSpan DeploymentComparisonTtl = TimeSpan.FromMinutes(30);
 
     public static string Dashboard(Guid organizationId) => $"{DashboardPrefix}:{organizationId}";
 
@@ -73,6 +75,9 @@ public static class CacheKeys
 
     public static string GitHubPublicRepository(string owner, string repository) =>
         $"{GitHubPublicRepositoryPrefix}:{owner}/{repository}".ToLowerInvariant();
+
+    public static string DeploymentComparison(Guid projectId, string baseVersion, string headVersion) =>
+        $"{DeploymentComparisonPrefix}:{projectId}:{baseVersion}:{headVersion}";
 
     public static string AvailableRepos(Guid organizationId, RepositoryType platform, string tokenFingerprint) =>
         $"{AvailableReposPrefix}:{organizationId}:{platform}:{tokenFingerprint}";

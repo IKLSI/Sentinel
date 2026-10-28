@@ -12,6 +12,23 @@ public sealed record RepositoryBranchListing(string? DefaultBranch, List<string>
 
 public sealed record RepositoryFileListing(List<(string Name, string Url, string Path)> Files, bool Truncated);
 
+public sealed record RepositoryCommit(string Message, DateTime? Date);
+
+public enum RepositoryFileChange
+{
+    Added,
+    Modified,
+    Removed,
+    Renamed
+}
+
+public sealed record RepositoryChangedFile(string Path, RepositoryFileChange Change);
+
+public sealed record RepositoryComparison(
+    List<RepositoryCommit> Commits,
+    List<RepositoryChangedFile> Files,
+    bool Truncated);
+
 public interface IRepositoryHostClient
 {
     Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform, GitLabInstance gitLab,
@@ -26,8 +43,17 @@ public interface IRepositoryHostClient
     Task<RepositoryBranchListing?> ListBranchesAsync(string host, string owner, string repo,
         RepositoryAccess? access, CancellationToken cancellationToken);
 
+    Task<List<string>?> ListTagsAsync(string host, string owner, string repo, RepositoryAccess? access,
+        CancellationToken cancellationToken);
+
+    Task<RepositoryComparison?> CompareAsync(string host, string owner, string repo, RepositoryAccess? access,
+        string baseReference, string headReference, CancellationToken cancellationToken);
+
     Task<RepositoryFileListing> ListFilesAsync(string host, string owner, string repo,
         RepositoryAccess? access, string? commitSha, CancellationToken cancellationToken);
+
+    string? FileUrl(string host, string owner, string repo, RepositoryAccess? access, string path,
+        string reference);
 
     Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access,
         CancellationToken cancellationToken);

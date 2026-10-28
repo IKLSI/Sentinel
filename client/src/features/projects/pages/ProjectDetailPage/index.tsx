@@ -1,10 +1,11 @@
 import type React from "react";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useTransition } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import { PageContainer } from "@/components/layout/PageContainer";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
+import RocketLaunchOutlined from "@mui/icons-material/RocketLaunchOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useT } from "@/contexts/I18nContext";
@@ -21,17 +22,17 @@ import { TabBar, type TabBarItem } from "@/components/ui/common/TabBar";
 import { VulnerabilitiesTab } from "@/features/projects/pages/ProjectDetailPage/components/VulnerabilitiesTab";
 import { ProjectDependencies } from "@/features/projects/pages/ProjectDetailPage/components/ProjectDependencies";
 import { RuntimesTab } from "@/features/projects/pages/ProjectDetailPage/components/RuntimesTab";
+import { ProjectTab } from "@/features/projects/pages/ProjectDetailPage/searchParams";
+import { DeploymentsTab } from "@/features/deployments/components/DeploymentsTab";
 
 const routeApi = getRouteApi("/_authenticated/projects/$id");
 
-const TAB_INDEX = { vulnerabilities: 0, dependencies: 1, runtimes: 2 } as const;
-
 export const ProjectDetailPage: React.FC = () => {
   const { id } = routeApi.useParams();
+  const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const t = useT();
 
-  const [activeTab, setActiveTab] = useState<number>(TAB_INDEX.vulnerabilities);
   const [, startTransition] = useTransition();
 
   const projectQuery = useProjectOverviewQuery(id);
@@ -57,20 +58,35 @@ export const ProjectDetailPage: React.FC = () => {
 
   const eolRuntimes = project.runtimes.filter((r) => r.isEol).length;
 
-  const tabDefs: TabBarItem[] = [
+  const tabDefs: (TabBarItem & { tab: ProjectTab })[] = [
     {
+      tab: ProjectTab.Vulnerabilities,
       icon: <GppBadOutlined sx={{ fontSize: 16 }} />,
       label: t("tech_health.tab.vulnerabilities"),
     },
     {
+      tab: ProjectTab.Dependencies,
       icon: <InventoryOutlined sx={{ fontSize: 16 }} />,
       label: t("tech_health.tab.dependencies"),
     },
     {
+      tab: ProjectTab.Runtimes,
       icon: <StorageOutlined sx={{ fontSize: 16 }} />,
       label: t("tech_health.tab.runtimes"),
     },
+    ...(project.repositoryUrl
+      ? [
+          {
+            tab: ProjectTab.Deployments,
+            icon: <RocketLaunchOutlined sx={{ fontSize: 16 }} />,
+            label: t("tech_health.tab.deployments"),
+          },
+        ]
+      : []),
   ];
+  const activeTab =
+    tabDefs.find((def) => def.tab === search.tab)?.tab ??
+    ProjectTab.Vulnerabilities;
 
   return (
     <PageContainer>
@@ -82,9 +98,14 @@ export const ProjectDetailPage: React.FC = () => {
 
       <TabBar
         tabs={tabDefs}
-        active={activeTab}
-        onChange={(i) => {
-          startTransition(() => setActiveTab(i));
+        active={tabDefs.findIndex((def) => def.tab === activeTab)}
+        onChange={(index) => {
+          startTransition(() =>
+            navigate({
+              search: (previous) => ({ ...previous, tab: tabDefs[index]?.tab }),
+              replace: true,
+            }),
+          );
         }}
       />
 
@@ -98,7 +119,7 @@ export const ProjectDetailPage: React.FC = () => {
             pt: "20px",
           }}
         >
-          {activeTab === TAB_INDEX.vulnerabilities && (
+          {activeTab === ProjectTab.Vulnerabilities && (
             <VulnerabilitiesTab
               vulns={allVulns}
               toolbarAction={
@@ -112,14 +133,17 @@ export const ProjectDetailPage: React.FC = () => {
               }
             />
           )}
-          {activeTab === TAB_INDEX.dependencies && (
+          {activeTab === ProjectTab.Dependencies && (
             <ProjectDependencies
               projectId={project.id}
               vulnerableDependencies={project.vulnerableDependencies}
             />
           )}
-          {activeTab === TAB_INDEX.runtimes && (
+          {activeTab === ProjectTab.Runtimes && (
             <RuntimesTab runtimes={project.runtimes} />
+          )}
+          {activeTab === ProjectTab.Deployments && (
+            <DeploymentsTab projectId={project.id} />
           )}
         </Box>
       </FindingActionsProvider>

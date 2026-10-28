@@ -86,4 +86,8 @@ public static class ErrorCodes
     public const string ScanNoDependencies = "errors.scan.no_dependencies";
     public const string ScanNotCancellable = "errors.scan.not_cancellable";
     public const string PublicScanBusy = "errors.scan.busy";
+
+    public const string DeploymentRepositoryUnavailable = "errors.deployments.repository_unavailable";
+    public const string DeploymentReferenceNotFound = "errors.deployments.reference_not_found";
+    public const string DeploymentComparisonFailed = "errors.deployments.comparison_failed";
 }

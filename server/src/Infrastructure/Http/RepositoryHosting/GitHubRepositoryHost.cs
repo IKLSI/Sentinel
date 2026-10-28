@@ -21,6 +21,7 @@ internal sealed class GitHubRepositoryHost(
 {
     private const string ApiBaseUrl = "https://api.github.com";
     private const string ShaMediaType = "application/vnd.github.sha";
+    private const int MaxComparedFiles = 300;
 
     public Task<RepositoryListing> ListUserRepositoriesAsync(string token, CancellationToken cancellationToken) =>
         http.ListRepositoriesAsync(CreateClient(),
@@ -117,6 +118,98 @@ internal sealed class GitHubRepositoryHost(
         }
     }
 
+    public async Task<List<string>?> ListTagsAsync(string owner, string repo, RepositoryAccess access,
+        CancellationToken cancellationToken)
+    {
+        string? token = await ResolveTokenAsync(owner, repo, access.Token, cancellationToken);
+
+        try
+        {
+            using HttpRequestMessage request = BuildRequest(
+                $"{ApiBaseUrl}/repos/{owner}/{repo}/tags?per_page={RepositoryPageSize}", token);
+            (HttpStatusCode status, List<JsonElement>? tags) =
+                await TryGetJsonAsync<List<JsonElement>>(CreateClient(), request, cancellationToken);
+            if (!IsSuccess(status)) return null;
+
+            return (tags ?? []).Select(tag => tag.StringProperty("name")).OfType<string>().ToList();
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(ex, "GitHub tag listing failed for {Owner}/{Repo}", owner, repo);
+            return null;
+        }
+    }
+
+    public async Task<RepositoryComparison?> CompareAsync(string owner, string repo, RepositoryAccess access,
+        string baseReference, string headReference, CancellationToken cancellationToken)
+    {
+        string? token = await ResolveTokenAsync(owner, repo, access.Token, cancellationToken);
+
+        try
+        {
+            using HttpRequestMessage request = BuildRequest(
+                $"{ApiBaseUrl}/repos/{owner}/{repo}/compare/{EscapeReference(baseReference)}...{EscapeReference(headReference)}?per_page={RepositoryPageSize}",
+                token);
+            (HttpStatusCode status, JsonElement comparison) =
+                await TryGetJsonAsync<JsonElement>(CreateClient(), request, cancellationToken);
+            if (!IsSuccess(status)) return null;
+
+            List<RepositoryCommit> commits = comparison.TryGetProperty("commits", out JsonElement commitItems)
+                ? commitItems.EnumerateArray().Select(ReadCommit).ToList()
+                : [];
+            List<RepositoryChangedFile> files = comparison.TryGetProperty("files", out JsonElement fileItems)
+                ? fileItems.EnumerateArray().Select(ReadChangedFile).OfType<RepositoryChangedFile>().ToList()
+                : [];
+            int totalCommits = comparison.TryGetProperty("total_commits", out JsonElement total)
+                && total.TryGetInt32(out int count)
+                    ? count
+                    : commits.Count;
+
+            return new RepositoryComparison(commits, files,
+                totalCommits > commits.Count || files.Count >= MaxComparedFiles);
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(ex, "GitHub comparison failed for {Owner}/{Repo}", owner, repo);
+            return null;
+        }
+    }
+
+    private static RepositoryCommit ReadCommit(JsonElement item)
+    {
+        JsonElement commit = item.TryGetProperty("commit", out JsonElement details) ? details : default;
+        JsonElement author = commit.ValueKind == JsonValueKind.Object
+            && commit.TryGetProperty("author", out JsonElement authorElement)
+                ? authorElement
+                : default;
+
+        return new RepositoryCommit(
+            commit.ValueKind == JsonValueKind.Object ? commit.StringProperty("message") ?? "" : "",
+            author.ValueKind == JsonValueKind.Object ? ParseDate(author.StringProperty("date")) : null);
+    }
+
+    private static RepositoryChangedFile? ReadChangedFile(JsonElement item)
+    {
+        string? path = item.StringProperty("filename");
+        if (string.IsNullOrEmpty(path)) return null;
+
+        RepositoryFileChange change = item.StringProperty("status") switch
+        {
+            "added" or "copied" => RepositoryFileChange.Added,
+            "removed" => RepositoryFileChange.Removed,
+            "renamed" => RepositoryFileChange.Renamed,
+            _ => RepositoryFileChange.Modified
+        };
+
+        return new RepositoryChangedFile(path, change);
+    }
+
+    public static string FileUrl(string owner, string repo, string reference, string path) =>
+        $"https://raw.githubusercontent.com/{owner}/{repo}/{reference}/{EscapeReference(path)}";
+
+    private static string EscapeReference(string reference) =>
+        string.Join('/', reference.Split('/').Select(Uri.EscapeDataString));
+
     public async Task<RepositoryFileListing> ListFilesAsync(string owner, string repo, string reference,
         RepositoryAccess access, CancellationToken cancellationToken)
     {
@@ -161,9 +254,7 @@ internal sealed class GitHubRepositoryHost(
             if (type != "blob") continue;
             if (IsInSkippedDirectory(path)) continue;
 
-            string fileName = Path.GetFileName(path);
-            string encodedPath = string.Join('/', path.Split('/').Select(Uri.EscapeDataString));
-            result.Add((fileName, $"https://raw.githubusercontent.com/{owner}/{repo}/{reference}/{encodedPath}", path));
+            result.Add((Path.GetFileName(path), FileUrl(owner, repo, reference, path), path));
         }
 
         return new RepositoryFileListing(result, isTruncated);

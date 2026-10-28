@@ -12,6 +12,7 @@ interface FormSelectFieldProps {
   value?: string;
   onValueChange?: (value: string) => void;
   required?: boolean;
+  disabled?: boolean;
   sx?: SxProps<Theme>;
   children: React.ReactNode;
 }
@@ -23,6 +24,7 @@ export const FormSelectField: React.FC<FormSelectFieldProps> = ({
   value,
   onValueChange,
   required,
+  disabled,
   sx,
   children,
 }) => {
@@ -41,6 +43,7 @@ export const FormSelectField: React.FC<FormSelectFieldProps> = ({
         {...field}
         {...controlled}
         id={id}
+        disabled={disabled}
         inputRef={ref}
         input={<OutlinedInput size="small" />}
       >

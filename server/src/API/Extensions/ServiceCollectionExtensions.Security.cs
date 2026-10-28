@@ -209,7 +209,9 @@ public static partial class ServiceCollectionExtensions
                 .AddFixedWindowPolicy(RateLimitPolicies.PublicRuntimeLifecycles, 60, TimeSpan.FromMinutes(1))
                 .AddFixedWindowPolicy(RateLimitPolicies.RemediationConfig, 30, TimeSpan.FromMinutes(1))
                 .AddFixedWindowPolicy(RateLimitPolicies.RemediationCompletion, 30, TimeSpan.FromMinutes(1))
-                .AddFixedWindowPolicy(RateLimitPolicies.Export, 5, TimeSpan.FromMinutes(1), ResolveUserOrClientKey);
+                .AddFixedWindowPolicy(RateLimitPolicies.Export, 5, TimeSpan.FromMinutes(1), ResolveUserOrClientKey)
+                .AddFixedWindowPolicy(RateLimitPolicies.DeploymentComparison, 10, TimeSpan.FromMinutes(1),
+                    ResolveUserOrClientKey);
 
             options.OnRejected = async (context, cancellationToken) =>
             {

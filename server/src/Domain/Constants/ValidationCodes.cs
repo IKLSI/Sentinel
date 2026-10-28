@@ -40,6 +40,9 @@ public static class ValidationCodes
     public const string ProjectBranchInvalid = "validation.project.branch_invalid";
     public const string ProjectRootPathInvalid = "validation.project.root_path_invalid";
 
+    public const string DeploymentReferenceRequired = "validation.deployment.reference_required";
+    public const string DeploymentReferencesIdentical = "validation.deployment.references_identical";
+
     public const string SuppressionFindingKeyRequired = "validation.suppression.finding_key_required";
     public const string SuppressionReasonInvalid = "validation.suppression.reason_invalid";
     public const string SuppressionExpirationInvalid = "validation.suppression.expiration_invalid";

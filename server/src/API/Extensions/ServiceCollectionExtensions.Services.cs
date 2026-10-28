@@ -9,6 +9,8 @@ using Sentinel.Application.Auth.Login;
 using Sentinel.Application.Auth;
 using Sentinel.Application.Compliance;
 using Sentinel.Application.Dashboard;
+using Sentinel.Application.Deployments;
+using Sentinel.Application.Deployments.Compare;
 using Sentinel.Application.Exports;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Projects;
@@ -94,6 +96,9 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ComplianceReportService>();
         services.AddScoped<ProjectHealthRecalculator>();
         services.AddScoped<ProjectDetailContextLoader>();
+        services.AddScoped<ReleaseRepositoryLoader>();
+        services.AddScoped<ReleaseSnapshotReader>();
+        services.AddScoped<ReleaseVulnerabilityAssessor>();
 
         services.AddTransient<TechHealthScanJob>();
         services.AddTransient<DataRetentionJob>();

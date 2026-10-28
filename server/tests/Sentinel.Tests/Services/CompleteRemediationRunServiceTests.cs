@@ -166,6 +166,19 @@ public class CompleteRemediationRunServiceTests
             RepositoryAccess? access, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
+        public Task<List<string>?> ListTagsAsync(string host, string owner, string repo,
+            RepositoryAccess? access, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<RepositoryComparison?> CompareAsync(string host, string owner, string repo,
+            RepositoryAccess? access, string baseReference, string headReference,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public string? FileUrl(string host, string owner, string repo, RepositoryAccess? access, string path,
+            string reference) =>
+            throw new NotSupportedException();
+
         public Task<RepositoryFileListing> ListFilesAsync(string host, string owner, string repo,
             RepositoryAccess? access, string? commitSha, CancellationToken cancellationToken) =>
             throw new NotSupportedException();

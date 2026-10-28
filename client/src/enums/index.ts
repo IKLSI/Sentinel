@@ -195,3 +195,18 @@ export const ToastSeverity = {
   Info: "info",
 } as const;
 export type ToastSeverity = (typeof ToastSeverity)[keyof typeof ToastSeverity];
+
+export const ReleaseItemSeverity = {
+  Blocking: "Blocking",
+  Warning: "Warning",
+} as const;
+export type ReleaseItemSeverity =
+  (typeof ReleaseItemSeverity)[keyof typeof ReleaseItemSeverity];
+
+export const ReleaseCommitCategory = {
+  Feature: "Feature",
+  Fix: "Fix",
+  Maintenance: "Maintenance",
+} as const;
+export type ReleaseCommitCategory =
+  (typeof ReleaseCommitCategory)[keyof typeof ReleaseCommitCategory];

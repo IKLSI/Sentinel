@@ -591,6 +591,48 @@ export interface paths {
       };
     };
   };
+  "/api/tech-health/projects/{id}/deployments/compare": {
+    get: {
+      parameters: {
+        query?: {
+          Base?: string;
+          Head?: string;
+        };
+        path: {
+          id: string;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["ReleaseComparisonDto"];
+            "text/json": components["schemas"]["ReleaseComparisonDto"];
+            "text/plain": components["schemas"]["ReleaseComparisonDto"];
+          };
+        };
+      };
+    };
+  };
+  "/api/tech-health/projects/{id}/deployments/refs": {
+    get: {
+      parameters: {
+        path: {
+          id: string;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["ReleaseRefsDto"];
+            "text/json": components["schemas"]["ReleaseRefsDto"];
+            "text/plain": components["schemas"]["ReleaseRefsDto"];
+          };
+        };
+      };
+    };
+  };
   "/api/tech-health/projects/{id}/overview": {
     get: {
       parameters: {
@@ -1330,6 +1372,13 @@ export interface components {
       repos: components["schemas"]["AvailableRepoDto"][];
       truncated: boolean;
     };
+    ConfigurationChangeDto: {
+      file: string;
+      key: string;
+      requiresValue: boolean;
+      /** @enum {string} */
+      severity: "Blocking" | "Warning";
+    };
     ConnectIntegrationDto: {
       baseUrl?: string | null;
       token: string;
@@ -1389,6 +1438,30 @@ export interface components {
     };
     DeleteAccountDto: {
       password: string;
+    };
+    DependencyChangeDto: {
+      baseVersion: string | null;
+      /** @enum {string} */
+      change: "Added" | "Removed" | "Upgraded" | "Downgraded";
+      /** @enum {string} */
+      ecosystem:
+        | "Npm"
+        | "PyPI"
+        | "Composer"
+        | "Gem"
+        | "Maven"
+        | "NuGet"
+        | "Go"
+        | "Cargo"
+        | "Hex"
+        | "Pub"
+        | "Swift"
+        | "CocoaPods"
+        | "GitHubActions";
+      headVersion: string | null;
+      introducedVulnerabilities: string[];
+      isMajor: boolean;
+      name: string;
     };
     DependencyCountsDto: {
       /** Format: int32 */
@@ -1482,6 +1555,29 @@ export interface components {
     LoginResponse: {
       accessToken: string;
       user: components["schemas"]["UserProfile"];
+    };
+    MigrationChangeDto: {
+      name: string;
+      operations: components["schemas"]["MigrationOperationDto"][];
+      path: string;
+      /** @enum {string} */
+      risk: "Safe" | "Risky" | "Destructive";
+      /** @enum {string} */
+      severity: "Blocking" | "Warning";
+    };
+    MigrationOperationDto: {
+      /** @enum {string} */
+      kind:
+        | "DropTable"
+        | "DropColumn"
+        | "DropSchema"
+        | "Truncate"
+        | "DeleteRows"
+        | "RenameTable"
+        | "RenameColumn"
+        | "AlterColumn"
+        | "RawSql";
+      target: string | null;
     };
     NextActionDto: {
       kind: components["schemas"]["NextActionKind"];
@@ -1728,6 +1824,34 @@ export interface components {
       organizationName: string;
       password: string;
     };
+    ReleaseCommitDto: {
+      /** @enum {string} */
+      category: "Feature" | "Fix" | "Maintenance";
+      noteTitle: string;
+    };
+    ReleaseComparisonDto: {
+      commits: components["schemas"]["ReleaseCommitDto"][];
+      configuration: components["schemas"]["ConfigurationChangeDto"][];
+      dependencies: components["schemas"]["DependencyChangeDto"][];
+      headReference: string;
+      migrations: components["schemas"]["MigrationChangeDto"][];
+      runtimes: components["schemas"]["RuntimeChangeDto"][];
+      summary: components["schemas"]["ReleaseSummaryDto"];
+    };
+    ReleaseRefsDto: {
+      available: boolean;
+      branches: string[];
+      suggestedBase: string | null;
+      suggestedHead: string | null;
+      tags: string[];
+    };
+    ReleaseSummaryDto: {
+      /** Format: int32 */
+      fixedVulnerabilityCount: number;
+      historyTruncated: boolean;
+      inventoryIncomplete: boolean;
+      vulnerabilityDataIncomplete: boolean;
+    };
     RemediationDto: {
       /** Format: date-time */
       createdAt: string;
@@ -1746,6 +1870,11 @@ export interface components {
     ResetPasswordRequest: {
       password: string;
       token: string;
+    };
+    RuntimeChangeDto: {
+      baseVersion: string | null;
+      headVersion: string | null;
+      name: string;
     };
     RuntimeDto: {
       /** Format: int32 */

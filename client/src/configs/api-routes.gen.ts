@@ -139,6 +139,15 @@ export const ROUTES_API = {
                 "/api/tech-health/projects/:id/dependencies/without-vulnerabilities",
             },
           },
+          deployments: {
+            __path: "/api/tech-health/projects/:id/deployments",
+            compare: {
+              __path: "/api/tech-health/projects/:id/deployments/compare",
+            },
+            refs: {
+              __path: "/api/tech-health/projects/:id/deployments/refs",
+            },
+          },
           overview: {
             __path: "/api/tech-health/projects/:id/overview",
           },

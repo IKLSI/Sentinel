@@ -79,24 +79,34 @@ public class RepositoryScannerService(
 
             progress?.Report(ScanStage.Manifests);
 
-            (List<ParsedManifest> parsed, InventoryGap? gap) = await ParseRepositoryManifestsAsync(projectId,
-                repoUrl, location.Host, listing, rootPath, access, cancellationToken);
-
-            (List<Dependency> dedupedDeps, List<Runtime> dedupedRuntimes) = MergeInventory(parsed);
+            ScanOutcome inventory = await ReadInventoryAsync(projectId, repoUrl, location.Host, listing, rootPath,
+                access, cancellationToken);
 
             progress?.Report(ScanStage.Registries);
-            await registryMetadata.ApplyAsync(RegistryCandidates(dedupedDeps), cancellationToken);
+            await registryMetadata.ApplyAsync(RegistryCandidates(inventory.Dependencies), cancellationToken);
 
-            foreach (Dependency dep in dedupedDeps)
+            foreach (Dependency dep in inventory.Dependencies)
                 dep.Status = DependencyStatusCalculator.For(dep);
 
-            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, parsed.Count, gap);
+            return inventory;
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(ex, "Repository {RepoUrl} scan failed", repoUrl);
             return FailedScan(ErrorCodes.ScanFailed);
         }
+    }
+
+    public async Task<ScanOutcome> ReadInventoryAsync(Guid projectId, string repoUrl, string host,
+        RepositoryFileListing listing, string? rootPath, RepositoryAccess? access,
+        CancellationToken cancellationToken)
+    {
+        (List<ParsedManifest> parsed, InventoryGap? gap) = await ParseRepositoryManifestsAsync(projectId,
+            repoUrl, host, listing, RepositoryScanPaths.NormalizeRootPath(rootPath), access, cancellationToken);
+
+        (List<Dependency> dependencies, List<Runtime> runtimes) = MergeInventory(parsed);
+
+        return new ScanOutcome(dependencies, runtimes, null, parsed.Count, gap);
     }
 
     private async Task<(List<ParsedManifest> Parsed, InventoryGap? Gap)> ParseRepositoryManifestsAsync(

@@ -69,6 +69,32 @@ public class RepositoryHostClient : IRepositoryHostClient
         return null;
     }
 
+    public async Task<List<string>?> ListTagsAsync(string host, string owner, string repo,
+        RepositoryAccess? access, CancellationToken cancellationToken)
+    {
+        RepositoryAccess effectiveAccess = access ?? RepositoryAccess.Anonymous;
+
+        if (RepositoryHosts.IsGitHub(host))
+            return await gitHubHost.ListTagsAsync(owner, repo, effectiveAccess, cancellationToken);
+        if (RepositoryHosts.IsGitLab(host, effectiveAccess.GitLab.Host))
+            return await gitLabHost.ListTagsAsync(owner, repo, effectiveAccess, cancellationToken);
+        return null;
+    }
+
+    public async Task<RepositoryComparison?> CompareAsync(string host, string owner, string repo,
+        RepositoryAccess? access, string baseReference, string headReference, CancellationToken cancellationToken)
+    {
+        RepositoryAccess effectiveAccess = access ?? RepositoryAccess.Anonymous;
+
+        if (RepositoryHosts.IsGitHub(host))
+            return await gitHubHost.CompareAsync(owner, repo, effectiveAccess, baseReference, headReference,
+                cancellationToken);
+        if (RepositoryHosts.IsGitLab(host, effectiveAccess.GitLab.Host))
+            return await gitLabHost.CompareAsync(owner, repo, effectiveAccess, baseReference, headReference,
+                cancellationToken);
+        return null;
+    }
+
     public async Task<RepositoryFileListing> ListFilesAsync(string host, string owner, string repo,
         RepositoryAccess? access, string? commitSha, CancellationToken cancellationToken)
     {
@@ -80,6 +106,18 @@ public class RepositoryHostClient : IRepositoryHostClient
         if (RepositoryHosts.IsGitLab(host, effectiveAccess.GitLab.Host))
             return await gitLabHost.ListFilesAsync(owner, repo, reference, effectiveAccess, cancellationToken);
         return new RepositoryFileListing([], false);
+    }
+
+    public string? FileUrl(string host, string owner, string repo, RepositoryAccess? access, string path,
+        string reference)
+    {
+        RepositoryAccess effectiveAccess = access ?? RepositoryAccess.Anonymous;
+
+        if (RepositoryHosts.IsGitHub(host))
+            return GitHubRepositoryHost.FileUrl(owner, repo, reference, path);
+        if (RepositoryHosts.IsGitLab(host, effectiveAccess.GitLab.Host))
+            return GitLabRepositoryHost.FileUrl(effectiveAccess, owner, repo, reference, path);
+        return null;
     }
 
     public async Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access,
