@@ -1288,7 +1288,7 @@
   "tech_health.stats.dependencies": "Dependencies",
   "tech_health.stats.eol": "End of support",
   "tech_health.stats.vulnerabilities": "Vulnerabilities",
-  "tech_health.tab.deployments": "Deployment",
+  "tech_health.tab.deployments": "Deployments",
   "tech_health.tab.dependencies": "Dependencies",
   "tech_health.tab.runtimes": "Technologies",
   "tech_health.tab.vulnerabilities": "Vulnerabilities",

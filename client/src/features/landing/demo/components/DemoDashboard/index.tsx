@@ -36,10 +36,7 @@ export const DemoDashboard: React.FC = () => {
         gap: "14px",
       }}
     >
-      <ParkHero
-        overview={stats.overview}
-        vulnerabilityFlow={stats.vulnerabilityFlow}
-      />
+      <ParkHero overview={stats.overview} />
 
       <Box
         sx={{

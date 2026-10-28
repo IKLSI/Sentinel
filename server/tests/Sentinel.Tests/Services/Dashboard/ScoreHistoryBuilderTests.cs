@@ -29,13 +29,14 @@ public class ScoreHistoryBuilderTests
     }
 
     [Fact]
-    public void Build_AvantLePremierInstantane_LePointEstVide()
+    public void Build_AvantLePremierInstantane_LaFenetreSeRestreintAuxDonneesConnues()
     {
         ScoreSnapshotRow[] snapshots = [new(Guid.NewGuid(), Today, 75)];
 
         List<ScorePointDto> history = ScoreHistoryBuilder.Build(snapshots, Today.AddDays(-1), Today);
 
-        history.Select(p => p.Score).Should().Equal(null, 75);
+        history.Select(p => p.Score).Should().Equal(75);
+        history[0].Date.Should().Be("2026-10-19");
     }
 
     [Fact]
@@ -65,8 +66,28 @@ public class ScoreHistoryBuilderTests
         Guid project = Guid.NewGuid();
         ScoreSnapshotRow[] snapshots = [new(project, Today.AddDays(-40), 60), new(project, Today.AddDays(-5), 75)];
 
-        IReadOnlyDictionary<Guid, int> scores = ScoreHistoryBuilder.ScoresAt(snapshots, Today.AddDays(-29));
+        IReadOnlyDictionary<Guid, int> scores = ScoreHistoryBuilder.ScoresAt(snapshots, Today.AddDays(-29), Today);
 
         scores.Should().ContainKey(project).WhoseValue.Should().Be(60);
+    }
+
+    [Fact]
+    public void ScoresAt_SansHistoriqueAvantLaFenetre_RetombeSurLePremierScoreConnu()
+    {
+        Guid project = Guid.NewGuid();
+        ScoreSnapshotRow[] snapshots = [new(project, Today.AddDays(-5), 60), new(project, Today, 75)];
+
+        IReadOnlyDictionary<Guid, int> scores = ScoreHistoryBuilder.ScoresAt(snapshots, Today.AddDays(-29), Today);
+
+        scores.Should().ContainKey(project).WhoseValue.Should().Be(60);
+    }
+
+    [Fact]
+    public void ScoresAt_SeulScoreDuJour_EstIndisponible()
+    {
+        Guid project = Guid.NewGuid();
+        ScoreSnapshotRow[] snapshots = [new(project, Today, 75)];
+
+        ScoreHistoryBuilder.ScoresAt(snapshots, Today.AddDays(-29), Today).Should().BeEmpty();
     }
 }

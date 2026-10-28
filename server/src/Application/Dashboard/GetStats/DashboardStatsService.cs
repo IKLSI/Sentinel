@@ -88,7 +88,7 @@ public class DashboardStatsService(
                 flowCounts.Resolutions, windowStart, today),
             UrgentTickets = urgentTickets,
             Projects = ProjectHealthBuilder.Build(priorityIds, priorityProjects,
-                ScoreHistoryBuilder.ScoresAt(snapshots, windowStart), openTickets, deadlines, suppressedIdsByProject),
+                ScoreHistoryBuilder.ScoresAt(snapshots, windowStart, today), openTickets, deadlines, suppressedIdsByProject),
             RecentActivity = recentActivity,
         };
     }

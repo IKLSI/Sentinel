@@ -25,12 +25,14 @@ public static class ScoreHistoryBuilder
                     Score = scores.Count > 0 ? (int)Math.Round(scores.Average()) : null,
                 };
             })
+            .SkipWhile(point => point.Score == null)
             .ToList();
     }
 
-    public static IReadOnlyDictionary<Guid, int> ScoresAt(IReadOnlyList<ScoreSnapshotRow> snapshots, DateOnly day) =>
+    public static IReadOnlyDictionary<Guid, int> ScoresAt(IReadOnlyList<ScoreSnapshotRow> snapshots, DateOnly day,
+        DateOnly today) =>
         GroupByProject(snapshots)
-            .Select(entry => (ProjectId: entry.Key, Score: LatestAt(entry.Value, day)))
+            .Select(entry => (ProjectId: entry.Key, Score: LatestAt(entry.Value, day) ?? EarliestBefore(entry.Value, today)))
             .Where(entry => entry.Score != null)
             .ToDictionary(entry => entry.ProjectId, entry => entry.Score!.Value);
 
@@ -46,6 +48,9 @@ public static class ScoreHistoryBuilder
         snapshots
             .GroupBy(snapshot => snapshot.ProjectId)
             .ToDictionary(group => group.Key, group => group.OrderBy(snapshot => snapshot.Day).ToList());
+
+    private static int? EarliestBefore(List<ScoreSnapshotRow> history, DateOnly today) =>
+        history.FirstOrDefault(snapshot => snapshot.Day < today)?.Score;
 
     private static int? LatestAt(List<ScoreSnapshotRow> history, DateOnly day) =>
         history.LastOrDefault(snapshot => snapshot.Day <= day)?.Score;

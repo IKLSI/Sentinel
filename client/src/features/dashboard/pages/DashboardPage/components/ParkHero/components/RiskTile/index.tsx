@@ -1,22 +1,14 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import { Sparkline } from "@/features/dashboard/pages/DashboardPage/components/ParkHero/components/RiskTile/components/Sparkline";
 
 interface Props {
   value: number;
   label: string;
   hint: string;
   color: string;
-  trend?: ReadonlyArray<number | null>;
 }
 
-export const RiskTile: React.FC<Props> = ({
-  value,
-  label,
-  hint,
-  color,
-  trend,
-}) => (
+export const RiskTile: React.FC<Props> = ({ value, label, hint, color }) => (
   <Box
     sx={{
       borderRadius: "var(--r-md)",
@@ -28,25 +20,15 @@ export const RiskTile: React.FC<Props> = ({
   >
     <Box
       sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "8px",
+        fontSize: "24px",
+        fontWeight: 800,
+        letterSpacing: "-0.03em",
+        lineHeight: 1.05,
+        color: value > 0 ? color : "var(--muted2)",
+        fontVariantNumeric: "tabular-nums",
       }}
     >
-      <Box
-        sx={{
-          fontSize: "24px",
-          fontWeight: 800,
-          letterSpacing: "-0.03em",
-          lineHeight: 1.05,
-          color: value > 0 ? color : "var(--muted2)",
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {value}
-      </Box>
-      {trend && <Sparkline values={trend} color={color} />}
+      {value}
     </Box>
     <Box sx={{ fontSize: "12.5px", color: "var(--text)", mt: "2px" }}>
       {label}

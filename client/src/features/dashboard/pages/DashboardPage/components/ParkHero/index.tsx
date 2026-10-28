@@ -2,10 +2,7 @@ import type React from "react";
 import Box from "@mui/material/Box";
 import { useI18n } from "@/contexts/I18nContext";
 import { SEVERITY_TONES } from "@/constants/severities";
-import type {
-  ParkOverview,
-  VulnerabilityFlowPoint,
-} from "@/domains/dashboard/types";
+import type { ParkOverview } from "@/domains/dashboard/types";
 import { DependencyDonut } from "@/features/dashboard/pages/DashboardPage/components/ParkHero/components/DependencyDonut";
 import { RiskTile } from "@/features/dashboard/pages/DashboardPage/components/ParkHero/components/RiskTile";
 import {
@@ -17,21 +14,19 @@ import {
 import {
   arcPath,
   arcPoint,
-  flowSeries,
   formatDelta,
 } from "@/features/dashboard/pages/DashboardPage/helpers";
 import { pluralKey } from "@/helpers/plural";
 
 interface Props {
   overview: ParkOverview;
-  vulnerabilityFlow: VulnerabilityFlowPoint[];
 }
 
 const GAUGE_CENTER = GAUGE_SIZE / 2;
 const GAUGE_RADIUS = (GAUGE_SIZE - GAUGE_THICKNESS) / 2;
 const GAUGE_MARKER_RADIUS = GAUGE_THICKNESS / 2 + 3;
 
-export const ParkHero: React.FC<Props> = ({ overview, vulnerabilityFlow }) => {
+export const ParkHero: React.FC<Props> = ({ overview }) => {
   const { t } = useI18n();
   const { vulnerabilities } = overview;
   const delta = formatDelta(t, overview.scoreDelta);
@@ -173,7 +168,6 @@ export const ParkHero: React.FC<Props> = ({ overview, vulnerabilityFlow }) => {
         <RiskTile
           value={vulnerabilities.high}
           color={SEVERITY_TONES.High}
-          trend={flowSeries(vulnerabilityFlow, "detected")}
           label={t(pluralKey("dashboard.hero.high", vulnerabilities.high))}
           hint={t(
             pluralKey("dashboard.hero.total_hint", vulnerabilities.total),

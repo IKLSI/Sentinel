@@ -54,10 +54,7 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <Box sx={DASHBOARD_LAYOUT_SX}>
-      <ParkHero
-        overview={stats.overview}
-        vulnerabilityFlow={stats.vulnerabilityFlow}
-      />
+      <ParkHero overview={stats.overview} />
 
       <Box sx={DASHBOARD_TOP_ROW_SX}>
         <Suspense

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   arcPath,
   deltaColor,
-  flowSeries,
   formatDelta,
   gradeMeta,
   nextActionLabel,
@@ -88,17 +87,5 @@ describe("arcPath", () => {
 
     expect(path.startsWith("M50,")).toBe(true);
     expect(path.endsWith("A50,50 0 0 1 150,100")).toBe(true);
-  });
-});
-
-describe("flowSeries", () => {
-  it("extrait la série demandée", () => {
-    const flow = [
-      { date: "2026-10-01", detected: 3, resolved: 1 },
-      { date: "2026-10-02", detected: 5, resolved: 2 },
-    ];
-
-    expect(flowSeries(flow, "detected")).toEqual([3, 5]);
-    expect(flowSeries(flow, "resolved")).toEqual([1, 2]);
   });
 });
