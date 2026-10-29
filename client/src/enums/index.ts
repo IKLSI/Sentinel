@@ -196,6 +196,13 @@ export const ToastSeverity = {
 } as const;
 export type ToastSeverity = (typeof ToastSeverity)[keyof typeof ToastSeverity];
 
+export const ToastActionKind = {
+  View: "view",
+  Undo: "undo",
+} as const;
+export type ToastActionKind =
+  (typeof ToastActionKind)[keyof typeof ToastActionKind];
+
 export const ReleaseItemSeverity = {
   Blocking: "Blocking",
   Warning: "Warning",

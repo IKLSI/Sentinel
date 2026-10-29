@@ -13,6 +13,7 @@ import { useUpdateProjectSettingsMutation } from "@/domains/projects/mutations";
 import { useProjectRepositoryOptionsQuery } from "@/domains/projects/queries";
 import type { ProjectSummary } from "@/domains/projects/types";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useUndoToast } from "@/hooks/useUndoToast";
 import { ScopeAutocomplete } from "@/features/projects/pages/ProjectsPage/components/ProjectSettingsModal/components/ScopeAutocomplete";
 import {
   type ProjectSettingsFormValues,
@@ -65,6 +66,7 @@ export const ProjectSettingsModal: React.FC<Props> = ({ project, onClose }) => {
   const updateSettingsMutation = useUpdateProjectSettingsMutation();
   const saving = updateSettingsMutation.isPending;
   const onSaveError = useApiErrorToast("projects.modal.frequency_error");
+  const showUndoToast = useUndoToast();
 
   const { control, handleSubmit } = useForm<ProjectSettingsFormValues>({
     resolver: zodResolver(projectSettingsSchema),
@@ -119,7 +121,26 @@ export const ProjectSettingsModal: React.FC<Props> = ({ project, onClose }) => {
           rootPath: emptyToNull(values.rootPath),
         },
       },
-      { onSuccess: onClose, onError: onSaveError },
+      {
+        onSuccess: () => {
+          onClose();
+          showUndoToast(
+            t("projects.toast.settings_updated", { name: project.name }),
+            () =>
+              updateSettingsMutation
+                .mutateAsync({
+                  id: project.id,
+                  data: {
+                    scanFrequency: project.scanFrequency,
+                    branch: project.branch ?? null,
+                    rootPath: project.rootPath ?? null,
+                  },
+                })
+                .catch(onSaveError),
+          );
+        },
+        onError: onSaveError,
+      },
     );
   });
 

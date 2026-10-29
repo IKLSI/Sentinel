@@ -6,6 +6,7 @@ import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
 import type { TicketPriority, TicketType } from "@/enums";
+import type { Ticket, UpdateTicket } from "@/domains/tickets/types";
 import type { CreateTicketFormValues } from "@/features/tickets/pages/TicketsPage/schemas";
 
 export const EMPTY_CREATE_TICKET_FORM: CreateTicketFormValues = {
@@ -14,6 +15,18 @@ export const EMPTY_CREATE_TICKET_FORM: CreateTicketFormValues = {
   priority: "Medium",
   type: "Bug",
 };
+
+export const toTicketRestore = (ticket: Ticket): UpdateTicket => ({
+  title: ticket.title,
+  description: ticket.description,
+  priority: ticket.priority as UpdateTicket["priority"],
+  type: ticket.type as UpdateTicket["type"],
+  status: ticket.status,
+  projectId: ticket.projectId,
+  assignedToId: ticket.assignedToId,
+  clearProject: !ticket.projectId,
+  clearAssignee: !ticket.assignedToId,
+});
 
 export const priorityLabelKeys: Record<TicketPriority, string> = {
   critical: "tickets.list.priority_critical",

@@ -8,11 +8,12 @@ import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
 import CloseOutlined from "@mui/icons-material/CloseOutlined";
 import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
+import UndoOutlined from "@mui/icons-material/UndoOutlined";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useT } from "@/contexts/I18nContext";
-import { ToastSeverity } from "@/enums";
+import { ToastActionKind, ToastSeverity } from "@/enums";
 import { ToastContext, useToastState } from "@/hooks/useToast";
 import { REDUCED_MOTION, toastCountdown } from "@/styles/keyframes";
 
@@ -42,6 +43,11 @@ const TOAST_TONES: Record<
   },
 };
 
+const ACTION_ICONS: Record<ToastActionKind, typeof InfoOutlined> = {
+  [ToastActionKind.View]: VisibilityOutlined,
+  [ToastActionKind.Undo]: UndoOutlined,
+};
+
 const SlideFromRight = (
   props: TransitionProps & { children: React.ReactElement },
 ) => <Slide {...props} direction="left" />;
@@ -53,8 +59,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const t = useT();
-  const { toast, actions } = useToastState();
+  const { toast, actions, runAction } = useToastState();
   const { action } = toast;
+  const ActionIcon = ACTION_ICONS[action?.kind ?? ToastActionKind.View];
   const tone = TOAST_TONES[toast.severity];
   const duration = action ? TOAST_WITH_ACTION_DURATION_MS : TOAST_DURATION_MS;
 
@@ -117,10 +124,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
               <IconButton
                 size="small"
                 aria-label={action.label}
-                onClick={() => {
-                  actions.closeToast();
-                  action.onClick();
-                }}
+                onClick={runAction}
                 sx={{
                   flexShrink: 0,
                   color: "var(--accent)",
@@ -130,7 +134,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
                   },
                 }}
               >
-                <VisibilityOutlined sx={{ fontSize: 17 }} />
+                <ActionIcon sx={{ fontSize: 17 }} />
               </IconButton>
             </AppTooltip>
           )}

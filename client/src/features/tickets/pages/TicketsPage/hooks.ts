@@ -3,8 +3,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/useToast";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useUndoToast } from "@/hooks/useUndoToast";
 import { useT } from "@/contexts/I18nContext";
+import { invalidateKeys } from "@/domains/helpers";
+import { ticketKeys } from "@/domains/tickets/constants";
 import {
+  hideCachedTicket,
   useCreateTicketMutation,
   useDeleteTicketMutation,
   useUpdateTicketMutation,
@@ -18,7 +22,10 @@ import type {
   UpdateTicket,
 } from "@/domains/tickets/types";
 import { useTicketCreatedToast } from "@/features/tickets/hooks/useTicketCreatedToast";
-import { EMPTY_CREATE_TICKET_FORM } from "@/features/tickets/pages/TicketsPage/helpers";
+import {
+  EMPTY_CREATE_TICKET_FORM,
+  toTicketRestore,
+} from "@/features/tickets/pages/TicketsPage/helpers";
 import {
   createTicketSchema,
   editTicketSchema,
@@ -110,6 +117,10 @@ export const useDeleteTicketDialog = () => {
     useDeleteTicketMutation(),
     "tickets.list.delete_error",
     ({ reference }) => t("tickets.list.delete_success", { reference }),
+    {
+      hide: ({ id }) => hideCachedTicket(id),
+      restore: () => invalidateKeys([ticketKeys.lists()]),
+    },
   );
   const { setTarget } = dialog;
 
@@ -180,6 +191,8 @@ export const useCreateTicketDialog = () => {
 };
 
 export const useEditTicketDialog = () => {
+  const t = useT();
+  const showUndoToast = useUndoToast();
   const onEditError = useApiErrorToast("tickets.list.edit_error");
   const updateTicketMutation = useUpdateTicketMutation();
   const [target, setTarget] = useState<Ticket | null>(null);
@@ -239,6 +252,13 @@ export const useEditTicketDialog = () => {
         data: payload,
       });
       setTarget(null);
+      showUndoToast(
+        t("tickets.list.edit_success", { reference: target.reference }),
+        () =>
+          updateTicketMutation
+            .mutateAsync({ id: target.id, data: toTicketRestore(target) })
+            .catch(onEditError),
+      );
     } catch (err) {
       onEditError(err);
     }

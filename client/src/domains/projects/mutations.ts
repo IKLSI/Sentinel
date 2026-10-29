@@ -26,6 +26,11 @@ const updateCachedProjects = (
     update(previous ?? []),
   );
 
+export const hideCachedProject = (id: string) =>
+  updateCachedProjects((projects) =>
+    projects.filter((project) => project.id !== id),
+  );
+
 export const useImportProjectsMutation = () =>
   usePostMutation<Project[], Project[], { data: ImportProjects }>(
     ROUTES_API.api.techHealth.projects.import.__path,
@@ -35,10 +40,7 @@ export const useDeleteProjectMutation = () =>
   useDeleteMutation<void, void, { id: string }>(
     ROUTES_API.api.techHealth.projects[":id"].__path,
     {
-      onSuccess: (_result, { id }) =>
-        updateCachedProjects((projects) =>
-          projects.filter((project) => project.id !== id),
-        ),
+      onSuccess: (_result, { id }) => hideCachedProject(id),
     },
   );
 

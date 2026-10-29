@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { invalidateKeys } from "@/domains/helpers";
+import { projectKeys } from "@/domains/projects/constants";
 import {
+  hideCachedProject,
   useCancelProjectScanMutation,
   useDeleteProjectMutation,
   useScanProjectMutation,
@@ -15,6 +18,8 @@ import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useDeleteDialog } from "@/hooks/useDeleteDialog";
 import { useToast } from "@/hooks/useToast";
+import { useUndoToast } from "@/hooks/useUndoToast";
+import { ToastSeverity } from "@/enums";
 import {
   SECTION_ORDER,
   type SectionKey,
@@ -24,6 +29,7 @@ import {
 
 export function useScanFeedback(projects: ProjectSummary[]) {
   const { showToast } = useToast();
+  const showUndoToast = useUndoToast();
   const t = useT();
   const onScanError = useApiErrorToast("projects.toast.scan_start_error");
   const onCancelError = useApiErrorToast("projects.toast.scan_cancel_error");
@@ -77,16 +83,25 @@ export function useScanFeedback(projects: ProjectSummary[]) {
         {
           onSuccess: () => {
             stopTracking(id);
-            showToast(
+            showUndoToast(
               t("projects.toast.scan_cancelled", { name: project?.name ?? "" }),
-              "info",
+              () => startScan(id),
+              { severity: ToastSeverity.Info },
             );
           },
           onError: onCancelError,
         },
       );
     },
-    [projects, showToast, t, cancelProjectScan, onCancelError, stopTracking],
+    [
+      projects,
+      showUndoToast,
+      t,
+      cancelProjectScan,
+      onCancelError,
+      stopTracking,
+      startScan,
+    ],
   );
 
   useEffect(() => {
@@ -198,5 +213,9 @@ export function useDeleteProjectDialog() {
     useDeleteProjectMutation(),
     "projects.toast.delete_error",
     ({ name }) => t("projects.toast.delete_success", { name }),
+    {
+      hide: ({ id }) => hideCachedProject(id),
+      restore: () => invalidateKeys([projectKeys.list()]),
+    },
   );
 }

@@ -8,6 +8,7 @@ import {
 } from "@/domains/helpers";
 import { ticketKeys } from "@/domains/tickets/constants";
 import type {
+  TicketPagedResult,
   CreateComment,
   CreateTicket,
   CreateTicketFromFinding,
@@ -25,6 +26,17 @@ const updateCachedComments = (
     previous
       ? { ...previous, comments: update(previous.comments ?? []) }
       : previous,
+  );
+
+export const hideCachedTicket = (id: string) =>
+  queryClient.setQueriesData<TicketPagedResult>(
+    { queryKey: ticketKeys.lists() },
+    (previous) =>
+      previous && {
+        ...previous,
+        items: previous.items.filter((ticket) => ticket.id !== id),
+        totalCount: previous.totalCount - 1,
+      },
   );
 
 export const useCreateTicketMutation = () =>
