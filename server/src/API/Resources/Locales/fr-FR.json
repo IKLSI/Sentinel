@@ -1622,7 +1622,6 @@
   "errors.remediation.timed_out": "La correction a dépassé le délai maximal",
   "tech_health.remediation.retry": "Relancer la correction",
   "tech_health.remediation.in_progress": "Correction en cours…",
-  "tech_health.remediation.failed": "Échec de la correction",
   "tech_health.remediation.started": "Correction lancée, la merge request sera ouverte dans quelques minutes",
   "tech_health.remediation.opened": "Merge request de correction ouverte",
   "tech_health.remediation.error": "Impossible de lancer la correction",

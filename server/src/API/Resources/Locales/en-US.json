@@ -1622,7 +1622,6 @@
   "errors.remediation.timed_out": "The fix exceeded the maximum duration",
   "tech_health.remediation.retry": "Retry the fix",
   "tech_health.remediation.in_progress": "Fix in progress…",
-  "tech_health.remediation.failed": "Fix failed",
   "tech_health.remediation.started": "Fix started, the merge request will open in a few minutes",
   "tech_health.remediation.opened": "Fix merge request opened",
   "tech_health.remediation.error": "The fix could not be started",

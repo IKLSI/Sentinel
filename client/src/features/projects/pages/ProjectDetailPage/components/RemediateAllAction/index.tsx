@@ -43,13 +43,6 @@ const tooltipLinesSx = {
   gap: "3px",
 } as const;
 
-const failedLabelSx = {
-  fontSize: "12px",
-  fontWeight: 600,
-  color: "var(--red)",
-  whiteSpace: "nowrap",
-};
-
 interface Props {
   projectId: string;
   remediationAvailable: boolean;
@@ -117,18 +110,6 @@ export const RemediateAllAction: React.FC<Props> = ({
         >
           {t("tech_health.remediation.in_progress")}
         </Button>
-      )}
-
-      {canStart && failed && (
-        <AppTooltip
-          title={t(
-            remediation?.failureCode ?? "tech_health.remediation.failed",
-          )}
-        >
-          <Box component="span" sx={failedLabelSx}>
-            {t("tech_health.remediation.failed")}
-          </Box>
-        </AppTooltip>
       )}
 
       {canStart && (
