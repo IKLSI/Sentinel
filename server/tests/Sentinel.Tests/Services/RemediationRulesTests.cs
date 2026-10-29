@@ -7,6 +7,33 @@ namespace Sentinel.Tests.Services;
 public class RemediationRulesTests
 {
     [Fact]
+    public void SupportsHost_GitHubProject_ReturnsTrue()
+    {
+        Project project = new Project { RepositoryType = RepositoryType.GitHub };
+        Organization organization = new Organization { GitlabBaseUrl = "https://gitlab.example.com" };
+
+        RemediationRules.SupportsHost(project, organization).Should().BeTrue();
+    }
+
+    [Fact]
+    public void SupportsHost_GitLabComProject_ReturnsTrue()
+    {
+        Project project = new Project { RepositoryType = RepositoryType.GitLab };
+        Organization organization = new Organization { GitlabBaseUrl = null };
+
+        RemediationRules.SupportsHost(project, organization).Should().BeTrue();
+    }
+
+    [Fact]
+    public void SupportsHost_SelfHostedGitLabProject_ReturnsFalse()
+    {
+        Project project = new Project { RepositoryType = RepositoryType.GitLab };
+        Organization organization = new Organization { GitlabBaseUrl = "https://gitlab.example.com" };
+
+        RemediationRules.SupportsHost(project, organization).Should().BeFalse();
+    }
+
+    [Fact]
     public void IsEligible_DirectDependencyWithNewerFix_ReturnsTrue()
     {
         Dependency dependency = new Dependency { Name = "lodash", CurrentVersion = "4.17.15", IsDirect = true };

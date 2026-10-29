@@ -1,4 +1,5 @@
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.Git;
 using Sentinel.Domain.Versioning;
 
 namespace Sentinel.Domain.TechHealth;
@@ -12,6 +13,10 @@ public static class RemediationRules
     private static readonly TimeSpan StaleMargin = TimeSpan.FromMinutes(15);
 
     public static readonly TimeSpan MaxRunDuration = TimeSpan.FromMinutes(45);
+
+    public static bool SupportsHost(Project project, Organization organization) =>
+        project.RepositoryType == RepositoryType.GitHub
+        || organization.ToGitLabInstance() == GitLabInstance.Public;
 
     public static bool IsStale(VulnerabilityRemediation remediation, DateTime now) =>
         remediation.IsInProgress && now - remediation.UpdatedAt > MaxRunDuration + StaleMargin;

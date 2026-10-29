@@ -1613,6 +1613,7 @@
   "errors.remediation.unavailable": "Automatic remediation is not enabled on this instance",
   "errors.remediation.not_eligible": "No vulnerability in this project can be fixed automatically (transitive dependencies, exceptions or no fixed version)",
   "errors.remediation.token_missing": "No integration token is configured for this host",
+  "errors.remediation.host_unsupported": "Automatic remediation only supports GitHub and gitlab.com: self-hosted GitLab instances are not supported",
   "errors.remediation.in_progress": "A fix is already in progress for this project",
   "errors.remediation.ticket_invalid": "Invalid or expired configuration ticket",
   "errors.remediation.start_failed": "The fix could not be started",

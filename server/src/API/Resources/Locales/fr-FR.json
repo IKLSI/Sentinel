@@ -1613,6 +1613,7 @@
   "errors.remediation.unavailable": "La correction automatique n'est pas activée sur cette instance",
   "errors.remediation.not_eligible": "Aucune vulnérabilité de ce projet ne peut être corrigée automatiquement (dépendances transitives, exceptions ou aucune version corrective)",
   "errors.remediation.token_missing": "Aucun token d'intégration n'est configuré pour cet hébergeur",
+  "errors.remediation.host_unsupported": "La correction automatique est réservée à GitHub et à gitlab.com : les instances GitLab auto-hébergées ne sont pas prises en charge",
   "errors.remediation.in_progress": "Une correction est déjà en cours pour ce projet",
   "errors.remediation.ticket_invalid": "Ticket de configuration invalide ou expiré",
   "errors.remediation.start_failed": "Impossible de lancer la correction",

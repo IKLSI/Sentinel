@@ -45,6 +45,7 @@ public static class ErrorCodes
     public const string RemediationUnavailable = "errors.remediation.unavailable";
     public const string RemediationNotEligible = "errors.remediation.not_eligible";
     public const string RemediationTokenMissing = "errors.remediation.token_missing";
+    public const string RemediationHostUnsupported = "errors.remediation.host_unsupported";
     public const string RemediationInProgress = "errors.remediation.in_progress";
     public const string RemediationTicketInvalid = "errors.remediation.ticket_invalid";
     public const string RemediationStartFailed = "errors.remediation.start_failed";

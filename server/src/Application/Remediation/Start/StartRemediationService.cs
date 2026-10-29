@@ -47,7 +47,10 @@ public class StartRemediationService(
         Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
             QueryTracking.NoTracking, cancellationToken);
 
-        if (string.IsNullOrEmpty(organization?.ProtectedTokenFor(project.RepositoryType)))
+        if (organization == null || !RemediationRules.SupportsHost(project, organization))
+            return Result<RemediationDto>.Error(ErrorCodes.RemediationHostUnsupported);
+
+        if (string.IsNullOrEmpty(organization.ProtectedTokenFor(project.RepositoryType)))
             return Result<RemediationDto>.Error(ErrorCodes.RemediationTokenMissing);
 
         VulnerabilityRemediation? remediation = await remediationRepository.GetOrDefaultByProjectAsync(projectId,

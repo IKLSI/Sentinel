@@ -2,6 +2,7 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
+using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.Projects;
 
@@ -34,6 +35,8 @@ public class ProjectDetailContextLoader(
         Organization? organization = await organizationRepository.GetOrDefaultAsync(project.OrganizationId,
             QueryTracking.NoTracking, cancellationToken);
 
-        return !string.IsNullOrEmpty(organization?.ProtectedTokenFor(project.RepositoryType));
+        return organization != null
+            && RemediationRules.SupportsHost(project, organization)
+            && !string.IsNullOrEmpty(organization.ProtectedTokenFor(project.RepositoryType));
     }
 }
